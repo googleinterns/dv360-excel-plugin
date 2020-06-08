@@ -7,3 +7,13 @@ build/
 
 # Directory created by dartdoc
 doc/api/
+
+# Personal API key
+lib/private_keys.dart
+
+# IntelliJ
+.idea/
+.DS_Store
+
+
+
