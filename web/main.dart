@@ -1,6 +1,6 @@
 import 'package:angular/angular.dart';
-import 'package:dv360_excel_plugin/app_component.template.dart' as ng;
+import 'package:dv360_excel_plugin/root_component.template.dart' as ng;
 
 void main() {
-  runApp(ng.AppComponentNgFactory);
+  runApp(ng.RootComponentNgFactory);
 }

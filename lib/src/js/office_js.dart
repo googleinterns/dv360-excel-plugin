@@ -2,15 +2,17 @@
 library office;
 import 'package:js/js.dart';
 
-/// Type definitions for Office common APIs
-/// documentation: https://docs.microsoft.com/en-us/javascript/api/office?view=excel-js-preview
+/// Wrapper functions Office common APIs
+/// Type definitions can be found at:
+/// https://docs.microsoft.com/en-us/javascript/api/office?view=excel-js-preview
 
-// Invokes `Office.onReady()`
+/// ``` javascript function
+/// Office.onReady()
+/// ```
 @JS('onReady')
 external Future<Info> onReady(dynamic Function(Info) callback);
 
-// Represents the info argument to Office.onReady()
-// info: { host: HostType, platform: PlatformType }
+/// Input argument to [onReady()]
 @JS()
 @anonymous
 class Info {
@@ -20,7 +22,9 @@ class Info {
   external factory Info({HostType host, PlatformType platform});
 }
 
-// `Office.HostType`
+/// ``` javascript enum
+/// Office.HostType
+/// ```
 @JS()
 class HostType {
   external String get Access;
@@ -34,7 +38,9 @@ class HostType {
   external factory HostType();
 }
 
-// `Office.PlatformType`
+/// ``` javascript enum
+/// Office.PlatformType
+/// ```
 @JS()
 class PlatformType {
   external factory PlatformType();

@@ -1,6 +1,6 @@
 import 'dart:js';
-import 'package:dv360_excel_plugin/js/office_js.dart';
-import 'package:dv360_excel_plugin/js/excel_js.dart';
+import 'js/office_js.dart';
+import 'js/excel_js.dart';
 
 class Excel {
   Excel._private();
@@ -14,14 +14,14 @@ class Excel {
   void exec() async {
     try {
       await onReady(allowInterop((info) async {
-        await run(allowInterop(populate));
+        await run(allowInterop(_populate));
       }));
     } catch (e) {
       print(e);
     }
   }
 
-  Future<dynamic> populate(RequestContext context) async {
+  Future<dynamic> _populate(RequestContext context) async {
     var sheet = context.workbook.worksheets.getActiveWorksheet();
     var range = sheet.getRange('A1:E1');
     var values = <List<int>>[
