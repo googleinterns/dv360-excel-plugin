@@ -1,7 +1,7 @@
 import 'package:angular/angular.dart';
 import 'package:angular_components/material_button/material_button.dart';
 
-import 'query_service.dart';
+import 'excel.dart';
 
 @Component(
   selector: 'query',
@@ -10,11 +10,9 @@ import 'query_service.dart';
   ''',
   directives: [MaterialButtonComponent],
 )
-
 class QueryComponent {
   final buttonName = 'populate';
-  final _excelSingular = Excel();
-  Excel get _excel => _excelSingular;
+  final _excel = ExcelDart();
 
   void onClick() {
     _excel.exec();

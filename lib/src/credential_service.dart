@@ -1,8 +1,8 @@
 import 'dart:js';
 
-import 'js/gapi.dart';
-import 'js/json_js.dart';
-import 'package:dv360_excel_plugin/private_keys.dart';
+import 'gapi.dart';
+import 'json_js.dart';
+import 'private_keys.dart' as key_store;
 
 class Credential {
   Credential._private();
@@ -13,46 +13,45 @@ class Credential {
     return _singleton;
   }
 
-  GoogleAuth googleAuth;
-  final scope = 'https://www.googleapis.com/auth/display-video';
+  GoogleAuth _googleAuth;
+  final _scope = 'https://www.googleapis.com/auth/display-video';
 
-  void handleAuthClick() {
-    if (googleAuth.isSignedIn.get()) {
-      googleAuth.signOut();
+  /// Loads gapi.client library and calls [_initClient] when library finishes loading
+  void handleClientLoad() {
+    GoogleAPI.load('client:auth2', allowInterop(_initClient));
+  }
+
+  /// Handles sign-in/out button clicks
+  void handleAuthClick() async {
+    if (_googleAuth.isSignedIn.get()) {
+      await _googleAuth.signOut();
     } else {
-      googleAuth.signIn();
+      await _googleAuth.signIn();
     }
   }
 
-  void handleClientLoad() {
-    load('client:auth2', allowInterop(_initClient));
-  }
-
-  void _initClient() {
+  void _initClient() async {
     // Retrieve the discovery document for version 1 of DV360 public API.
-    var discoveryUrl = 'https://displayvideo.googleapis.com/\$discovery/rest?version=v1';
+    final discoveryUrl =
+        'https://displayvideo.googleapis.com/\$discovery/rest?version=v1';
 
     // Initialize the gapi.client object, which app uses to make API requests.
     // Get API key and client ID from API Console.
     // 'scope' field specifies space-delimited list of access scopes.
-    var initArgs = InitArgs(
-        apiKey: apiKey,
-        clientId: clientID,
+    final initArgs = InitArgs(
+        apiKey: key_store.apiKey,
+        clientId: key_store.clientID,
         discoveryDocs: [discoveryUrl],
-        scope: scope);
+        scope: _scope);
 
-    client.init(initArgs).then(allowInterop((value) {
-      print('JIN: client.init() Success');
-      googleAuth = auth2.getAuthInstance();
+    await GoogleAPI.client.init(initArgs).then(allowInterop((value) {
+      _googleAuth = GoogleAPI.auth2.getAuthInstance();
 
       // Listen for sign-in state changes
-      googleAuth.isSignedIn.listen(allowInterop(_updateSignInStatus));
+      _googleAuth.isSignedIn.listen(allowInterop(_updateSignInStatus));
 
       // Handle initial sign-in state. (Determine if user is already signed in.)
-      _setSignInStatus(googleAuth.isSignedIn.get());
-
-    }), allowInterop((error) {
-      print('JIN: client.init() Error');
+      _setSignInStatus(_googleAuth.isSignedIn.get());
     }));
   }
 
@@ -60,31 +59,27 @@ class Credential {
     _setSignInStatus(isSignedIn);
   }
 
-  void _setSignInStatus(bool isSignedIn) {
-    var user = googleAuth.currentUser.get();
-    var isAuthorized = user.hasGrantedScopes(scope);
+  void _setSignInStatus(bool isSignedIn) async {
+    final user = _googleAuth.currentUser.get();
+    final isAuthorized = user.hasGrantedScopes(_scope);
     if (isSignedIn && isAuthorized) {
       // User is signed in and has granted access to this app
-      print('User is signed in and has granted access to this app');
+      // Update components, display query page
 
-      // Client request testing, will be moved to query_service.dart
-      var advertiserID = '164337';
-      var ioID = '8127549';
-      var requestArgs = RequestArgs(
-        path: 'https://displayvideo.googleapis.com/v1/advertisers/$advertiserID/insertionOrders/$ioID',
-        method: 'GET'
-      );
+      // Client request testing, always request the same io
+      final advertiserID = '164337';
+      final ioID = '8127549';
+      final requestArgs = RequestArgs(
+          path:
+              'https://displayvideo.googleapis.com/v1/advertisers/$advertiserID/insertionOrders/$ioID',
+          method: 'GET');
 
-      client.request(requestArgs).then(allowInterop((response) {
-        print('JIN: query request fulfilled');
+      await GoogleAPI.client.request(requestArgs).then(allowInterop((response) {
         print(stringify(response.result));
-      }), allowInterop((error) {
-        print('JIN: query request rejected');
       }));
-
     } else {
       // User is signed out or has not granted access to this app
-      print('User is signed out or has not granted access to this app');
+      // Update components, display sign-in page
     }
   }
 }

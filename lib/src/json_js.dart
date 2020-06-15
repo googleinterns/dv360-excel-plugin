@@ -1,11 +1,12 @@
-@JS()
+@JS('JSON')
 library stringify;
+
 import 'package:js/js.dart';
 
 /// Wrapper function for JSON.stringify()
 
-/// ``` javascript function
+/// ``` js
 ///   JSON.stringify()
 /// ```
-@JS('JSON.stringify')
+@JS('stringify')
 external String stringify(Object obj);

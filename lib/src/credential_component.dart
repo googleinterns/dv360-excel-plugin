@@ -11,11 +11,9 @@ import 'credential_service.dart';
   ''',
   directives: [MaterialButtonComponent],
 )
-
 class SignOnComponent implements OnInit {
   var buttonName = 'sign on';
-  final _credentialSingular = Credential();
-  Credential get _credential => _credentialSingular;
+  final _credential = Credential();
 
   @override
   void ngOnInit() {
@@ -23,6 +21,6 @@ class SignOnComponent implements OnInit {
   }
 
   void onClick() {
-    _credentialSingular.handleAuthClick();
+    _credential.handleAuthClick();
   }
 }

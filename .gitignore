@@ -10,11 +10,10 @@ build/
 doc/api/
 
 # Personal API key
-lib/private_keys.dart
+lib/src/private_keys.dart
 
 # IntelliJ
 .idea/
+
+# mac
 .DS_Store
-
-
-
