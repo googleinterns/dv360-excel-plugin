@@ -8,8 +8,7 @@ abstract class CredentialComponentPageObject {
   factory CredentialComponentPageObject.create(PageLoaderElement context) =
       $CredentialComponentPageObject.create;
 
-  @ByTagName('material-button')
-  @WithVisibleText('sign on')
+  @ByDebugId('signOnButton')
   PageLoaderElement get _button;
 
   Future<void> signOn() async => _button.click();

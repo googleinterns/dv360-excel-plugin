@@ -3,11 +3,11 @@ library office;
 
 import 'package:js/js.dart';
 
-/// Wrapper functions Office common APIs
-/// Type definitions can be found at:
-/// https://docs.microsoft.com/en-us/javascript/api/office?view=excel-js-preview
+/// Below are wrapper functions for Office common APIs.
+/// Type definitions can be found at
+/// https://docs.microsoft.com/en-us/javascript/api/office?view=excel-js-preview.
 
-/// Top level JS class Office
+/// Top level JS class Office.
 ///
 /// ``` js
 ///   Office.onReady()
@@ -17,7 +17,7 @@ class Office {
   external static Future<Info> onReady(dynamic Function(Info) callback);
 }
 
-/// Input argument to [onReady()]
+/// Input argument to [onReady()].
 @JS()
 @anonymous
 class Info {
@@ -27,7 +27,7 @@ class Info {
   external factory Info({HostType host, PlatformType platform});
 }
 
-/// Wrapper for Office.HostType enum
+/// Wrapper for Office.HostType enum.
 ///
 /// ``` js
 ///   Office.HostType
@@ -45,7 +45,7 @@ class HostType {
   external factory HostType();
 }
 
-/// Wrapper for Office.PlatformType enum
+/// Wrapper for Office.PlatformType enum.
 ///
 /// ``` js
 ///   Office.PlatformType

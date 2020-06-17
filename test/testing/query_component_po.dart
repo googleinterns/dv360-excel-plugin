@@ -8,8 +8,7 @@ abstract class QueryComponentPageObject {
   factory QueryComponentPageObject.create(PageLoaderElement context) =
       $QueryComponentPageObject.create;
 
-  @ByTagName('material-button')
-  @WithVisibleText('populate')
+  @ByDebugId('populateButton')
   PageLoaderElement get _button;
 
   Future<void> populate() async => _button.click();

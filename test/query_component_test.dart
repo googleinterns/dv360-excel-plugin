@@ -8,28 +8,37 @@ import 'package:mockito/mockito.dart';
 import 'package:pageloader/html.dart';
 import 'package:test/test.dart';
 
-import 'query_component_po.dart';
+import 'testing/query_component_po.dart';
 import 'query_component_test.template.dart' as ng;
-import 'util/js_injector.dart';
 
-class MockExcelDart extends Mock implements ExcelDart {}
+@Injectable()
+class MockExcelDart extends Mock implements ExcelDart {
+  MockExcelDart._private();
+
+  static final MockExcelDart _singleton = MockExcelDart._private();
+
+  factory MockExcelDart() {
+    return _singleton;
+  }
+}
+
+@Directive(
+  selector: '[override]',
+  providers: [
+    ClassProvider(ExcelDart, useClass: MockExcelDart),
+  ],
+)
+class OverrideDirective {}
 
 @Component(
   selector: 'query-test-component',
-  template: '''
-    <query></query>
-  ''',
-  directives: [QueryComponent],
+  template: '<query override></query>',
+  directives: [
+    QueryComponent,
+    OverrideDirective,
+  ],
 )
-class QueryTestComponent implements OnInit {
-  @override
-  void ngOnInit() => JSInjector.injectOfficeJS();
-}
-
-@GenerateInjector([
-  Provider(ExcelDart, useClass: MockExcelDart),
-])
-final InjectorFactory injector = ng.injector$Injector;
+class QueryTestComponent {}
 
 void main() {
   NgTestBed testBed;
@@ -39,14 +48,12 @@ void main() {
 
   setUp(() async {
     testBed = NgTestBed.forComponent<QueryTestComponent>(
-        ng.QueryTestComponentNgFactory,
-        rootInjector: injector);
-    fixture = await testBed.create(
-        beforeComponentCreated: (injector) =>
-            mockExcel = injector.get(ExcelDart));
+        ng.QueryTestComponentNgFactory);
+    fixture = await testBed.create();
     final context =
         HtmlPageLoaderElement.createFromElement((fixture.rootElement));
     queryComponentPO = QueryComponentPageObject.create(context);
+    mockExcel = MockExcelDart();
   });
 
   tearDown(disposeAnyRunningTest);

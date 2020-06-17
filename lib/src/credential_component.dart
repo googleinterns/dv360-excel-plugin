@@ -8,8 +8,11 @@ import 'credential_service.dart';
 @Component(
   selector: 'credential',
   template: '''
-    <material-button (click)="onClick()">{{buttonName}}</material-button>
+    <material-button (click)="onClick()" debugId="signOnButton">
+    {{buttonName}}
+    </material-button>
   ''',
+  providers: [ClassProvider(CredentialService)],
   directives: [MaterialButtonComponent],
 )
 class CredentialComponent implements OnInit {

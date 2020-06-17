@@ -3,11 +3,11 @@ library gapi;
 
 import 'package:js/js.dart';
 
-/// Wrapper functions for gapi
-/// Type definitions can be found at:
-/// https://github.com/google/google-api-javascript-client/blob/master/docs/reference.md
+/// Below are wrapper functions for gapi APIs.
+/// Type definitions can be found at
+/// https://github.com/google/google-api-javascript-client/blob/master/docs/reference.md.
 
-/// Top level JS class gapi
+/// Top level JS class gapi.
 ///
 /// ``` js
 ///   gapi.load()
@@ -16,18 +16,18 @@ import 'package:js/js.dart';
 /// ```
 @JS('gapi')
 class GoogleAPI {
-  /// Load gapi.client library
+  /// Loads gapi.client library.
   external static void load(String libraries, Function callback,
       [Function onerror, int timeout, Function ontimeout]);
 
-  /// Get the current gapi.client instance
+  /// The current gapi.client instance.
   external static Client get client;
 
-  /// Get the current gapi.auth2 instance
+  /// The current gapi.auth2 instance.
   external static Auth2 get auth2;
 }
 
-/// Wrappers for two gapi.client functions
+/// Wrappers for two gapi.client functions.
 ///
 /// ``` js
 ///   gapi.client.init(args)
@@ -35,16 +35,16 @@ class GoogleAPI {
 /// ```
 @JS()
 class Client {
-  /// Initializes the JavaScript client with [InitArgs]
+  /// Initializes the JavaScript client with [InitArgs].
   external GoogleAuth init(InitArgs args);
 
   /// Creates a HTTP request with [RequestArgs] for making RESTful requests.
   external Request request(RequestArgs args);
 }
 
-/// Wrapper for gapi.client.Request function
+/// Wrapper for gapi.client.Request function.
 ///
-/// gapi.client.Request object implements goog.Thenable and can be used like a Promise
+/// gapi.client.Request object implements goog.Thenable, similar to a Promise.
 /// ``` js
 ///   gapi.client.Request.then()
 /// ```
@@ -53,7 +53,7 @@ class Request {
   external Future<dynamic> then(Function onFulfilled, [Function onRejected]);
 }
 
-/// Input argument to [Client.init()]
+/// Input argument to [Client.init()].
 @JS()
 @anonymous
 class InitArgs {
@@ -69,7 +69,7 @@ class InitArgs {
       String scope});
 }
 
-/// Input argument to [Client.request()]
+/// Input argument to [Client.request()].
 @JS()
 @anonymous
 class RequestArgs {
@@ -87,18 +87,18 @@ class RequestArgs {
       String body});
 }
 
-/// Wrapper for gapi.auth2 function
+/// Wrapper for gapi.auth2 function.
 ///
 /// ``` js
 ///   gapi.auth2.getAuthInstance()
 /// ```
 @JS()
 class Auth2 {
-  /// Returns the GoogleAuth object
+  /// Returns the GoogleAuth object.
   external GoogleAuth getAuthInstance();
 }
 
-/// Wrapper for gapi.auth2.GoogleAuth functions
+/// Wrapper for gapi.auth2.GoogleAuth functions.
 ///
 /// ``` js
 ///   gapi.auth2.GoogleAuth.isSignedIn
@@ -109,23 +109,26 @@ class Auth2 {
 /// ```
 @JS()
 class GoogleAuth {
-  /// Get the current gapi.auth2.GoogleAuth.isSignedIn object
+  /// The current gapi.auth2.GoogleAuth.isSignedIn object.
   external IsSignedIn get isSignedIn;
 
-  /// Get the current gapi.auth2.GoogleAuth.currentUser object
+  /// The current gapi.auth2.GoogleAuth.currentUser object.
   external GoogleUser get currentUser;
 
-  /// Signs in the user with the options specified to gapi.auth2.init()
+  /// Signs in the user with the options specified to gapi.auth2.init().
   external Future<dynamic> signIn([SignInArgs args]);
 
   /// Signs out the current account from the application.
   external Future<dynamic> signOut();
 
+  /// Revokes all of the scopes that the user granted.
+  external void disconnect();
+
   /// Calls the onInit function when the GoogleAuth object is fully initialized.
   external Future<dynamic> then(Function onInit, [Function onError]);
 }
 
-/// Input argument to [GoogleAuth.signIn()]
+/// Input argument to [GoogleAuth.signIn()].
 @JS()
 @anonymous
 class SignInArgs {
@@ -138,7 +141,7 @@ class SignInArgs {
       {String prompt, String scope, String ux_mode, String redirect_uri});
 }
 
-/// Wrapper for gapi.auth2.GoogleAuth.isSignedIn functions
+/// Wrapper for gapi.auth2.GoogleAuth.isSignedIn functions.
 ///
 /// ``` js
 ///   gapi.auth2.GoogleAuth.isSignedIn.listen()
@@ -146,14 +149,14 @@ class SignInArgs {
 /// ```
 @JS()
 class IsSignedIn {
-  /// Listen for changes in the current user's sign-in state.
+  /// Listens for changes in the current user's sign-in state.
   external void listen(Function listener);
 
-  /// Returns whether the current user is currently signed in.
+  /// Returns `true` if the user is currently signed in.
   external bool get();
 }
 
-/// Wrapper for gapi.auth2.GoogleUser functions
+/// Wrapper for gapi.auth2.GoogleUser functions.
 ///
 /// ``` js
 ///   gapi.auth2.GoogleUser.get()
@@ -161,9 +164,9 @@ class IsSignedIn {
 /// ```
 @JS()
 class GoogleUser {
-  /// Returns a GoogleUser object that represents the current user
+  /// Returns a GoogleUser object that represents the current user.
   external GoogleUser get();
 
-  /// Returns true if the user granted the specified scopes.
+  /// Returns `true` if the user granted the specified scopes.
   external bool hasGrantedScopes(String scope);
 }
