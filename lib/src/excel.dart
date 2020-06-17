@@ -5,6 +5,7 @@ import 'package:js/js.dart';
 
 import 'office_js.dart';
 
+/// Functions interacting with Excel elements
 class ExcelDart {
   ExcelDart._private();
 
@@ -14,15 +15,11 @@ class ExcelDart {
     return _singleton;
   }
 
-  /// Wait for Office APIs to be ready and then execute the [_populate] function
+  /// Waits for Office APIs to be ready and then executes the [_populate] function
   void exec() async {
-    try {
-      await Office.onReady(allowInterop((info) async {
-        await ExcelJS.run(allowInterop(_populate));
-      }));
-    } catch (e) {
-      print(e);
-    }
+    await Office.onReady(allowInterop((info) async {
+      await ExcelJS.run(allowInterop(_populate));
+    }));
   }
 
   Future<dynamic> _populate(RequestContext context) async {
@@ -33,11 +30,11 @@ class ExcelDart {
     ];
     range.values = values;
     range.format.autofitColumns();
-    await context.sync();
+    return context.sync();
   }
 }
 
-/// Below are Wrapper functions for Office Excel APIs
+/// Below are wrapper functions for Office Excel APIs
 /// Type definitions can be found at:
 /// documentation: https://docs.microsoft.com/en-us/javascript/api/excel?view=excel-js-preview
 

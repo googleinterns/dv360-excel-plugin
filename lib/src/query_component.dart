@@ -12,9 +12,9 @@ import 'excel.dart';
 )
 class QueryComponent {
   final buttonName = 'populate';
-  final _excel = ExcelDart();
+  final ExcelDart _excel;
 
-  void onClick() {
-    _excel.exec();
-  }
+  QueryComponent(this._excel);
+
+  void onClick() => _excel.exec();
 }

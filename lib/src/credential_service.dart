@@ -1,15 +1,14 @@
 import 'dart:js';
 
 import 'gapi.dart';
-import 'json_js.dart';
 import 'private_keys.dart' as key_store;
 
-class Credential {
-  Credential._private();
+class CredentialService {
+  CredentialService._private();
 
-  static final Credential _singleton = Credential._private();
+  static final CredentialService _singleton = CredentialService._private();
 
-  factory Credential() {
+  factory CredentialService() {
     return _singleton;
   }
 
@@ -48,38 +47,22 @@ class Credential {
       _googleAuth = GoogleAPI.auth2.getAuthInstance();
 
       // Listen for sign-in state changes
-      _googleAuth.isSignedIn.listen(allowInterop(_updateSignInStatus));
+      _googleAuth.isSignedIn.listen(allowInterop(_setSignInStatus));
 
       // Handle initial sign-in state. (Determine if user is already signed in.)
       _setSignInStatus(_googleAuth.isSignedIn.get());
     }));
   }
 
-  void _updateSignInStatus(bool isSignedIn) {
-    _setSignInStatus(isSignedIn);
-  }
-
   void _setSignInStatus(bool isSignedIn) async {
     final user = _googleAuth.currentUser.get();
     final isAuthorized = user.hasGrantedScopes(_scope);
     if (isSignedIn && isAuthorized) {
-      // User is signed in and has granted access to this app
-      // Update components, display query page
-
-      // Client request testing, always request the same io
-      final advertiserID = '164337';
-      final ioID = '8127549';
-      final requestArgs = RequestArgs(
-          path:
-              'https://displayvideo.googleapis.com/v1/advertisers/$advertiserID/insertionOrders/$ioID',
-          method: 'GET');
-
-      await GoogleAPI.client.request(requestArgs).then(allowInterop((response) {
-        print(stringify(response.result));
-      }));
+      // User is signed in and has granted access to this app.
+      // Update the page to display query components.
     } else {
       // User is signed out or has not granted access to this app
-      // Update components, display sign-in page
+      // Update the page to display sign-in components.
     }
   }
 }
