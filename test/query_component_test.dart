@@ -59,7 +59,7 @@ void main() {
   tearDown(disposeAnyRunningTest);
 
   test('populate button clicks invokes exec()', () async {
-    await queryComponentPO.populate();
+    await queryComponentPO.clickPopulate();
     verify(mockExcel.exec());
   });
 }

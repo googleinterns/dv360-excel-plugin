@@ -8,7 +8,7 @@ abstract class RootComponentPageObject {
   factory RootComponentPageObject.create(PageLoaderElement context) =
       $RootComponentPageObject.create;
 
-  @ByTagName('h2')
+  @ByDebugId('title')
   PageLoaderElement get _title;
 
   String get title => _title.visibleText;

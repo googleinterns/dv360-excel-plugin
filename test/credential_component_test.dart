@@ -64,7 +64,7 @@ void main() {
   });
 
   test('sign-on button click invokes handleAuthClick()', () async {
-    await credentialComponentPO.signOn();
+    await credentialComponentPO.clickSignOn();
     verify(mockCredential.handleAuthClick());
   });
 }

@@ -6,7 +6,7 @@ import 'excel.dart';
 @Component(
   selector: 'query',
   template: '''
-    <material-button (click)="onClick()" debugId="populateButton">
+    <material-button (click)="onClick()" debugId="populate-btn">
     {{buttonName}}
     </material-button>
   ''',

@@ -8,8 +8,8 @@ abstract class QueryComponentPageObject {
   factory QueryComponentPageObject.create(PageLoaderElement context) =
       $QueryComponentPageObject.create;
 
-  @ByDebugId('populateButton')
+  @ByDebugId('populate-btn')
   PageLoaderElement get _button;
 
-  Future<void> populate() async => _button.click();
+  Future<void> clickPopulate() async => _button.click();
 }

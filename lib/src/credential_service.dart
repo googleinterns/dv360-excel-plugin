@@ -28,7 +28,7 @@ class CredentialService {
       await _googleAuth.signOut();
       await _googleAuth.disconnect();
     } else {
-      var arg = SignInArgs(ux_mode: 'redirect', redirect_uri: _redirectURI);
+      final arg = SignInArgs(ux_mode: 'redirect', redirect_uri: _redirectURI);
       await _googleAuth.signIn(arg);
     }
   }

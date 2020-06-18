@@ -8,8 +8,8 @@ abstract class CredentialComponentPageObject {
   factory CredentialComponentPageObject.create(PageLoaderElement context) =
       $CredentialComponentPageObject.create;
 
-  @ByDebugId('signOnButton')
+  @ByDebugId('sign-on-btn')
   PageLoaderElement get _button;
 
-  Future<void> signOn() async => _button.click();
+  Future<void> clickSignOn() async => _button.click();
 }

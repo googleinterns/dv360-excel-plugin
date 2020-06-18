@@ -1,5 +1,3 @@
-import 'dart:html';
-
 import 'package:angular/angular.dart';
 import 'package:angular_components/material_button/material_button.dart';
 
@@ -8,7 +6,7 @@ import 'credential_service.dart';
 @Component(
   selector: 'credential',
   template: '''
-    <material-button (click)="onClick()" debugId="signOnButton">
+    <material-button (click)="onClick()" debugId="sign-on-btn">
     {{buttonName}}
     </material-button>
   ''',
