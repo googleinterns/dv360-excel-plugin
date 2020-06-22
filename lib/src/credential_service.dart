@@ -1,6 +1,7 @@
 import 'dart:js';
 
 import 'gapi.dart';
+import 'json_js.dart';
 import 'private_keys.dart' as key_store;
 
 class CredentialService {
@@ -14,7 +15,7 @@ class CredentialService {
 
   GoogleAuth _googleAuth;
   final _scope = 'https://www.googleapis.com/auth/display-video';
-  final _redirectURI = 'http://localhost:8080/';
+  final _redirectURI = 'http://localhost:8080';
 
   /// Loads gapi.client library and calls [_initClient]
   /// when library finishes loading.

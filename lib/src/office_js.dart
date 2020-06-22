@@ -84,7 +84,7 @@ class Context {
 class UI {
   /// Displays a dialog box.
   external void displayDialogAsync(
-      String address, {DialogOptions options, Function(AsyncResult) callback});
+      String address, [DialogOptions options, Function(AsyncResult) callback]);
 }
 
 /// Input argument to [UI.displayDialogAsync()].
