@@ -5,34 +5,34 @@ package dv360_excel_plugin;
  * Each InsertionOrder represents a row in the spreadsheet with its fields as the column entries.
  */
 message InsertionOrder {
-  // require
+  // required
   optional string advertiser_id = 1;
 
-  // require
+  // required
   optional string campaign_id = 2;
 
-  // require
+  // required
   optional string insertion_order_id = 3;
 
-  // require
+  // required
   optional string display_name = 4;
 
-  /* require
+  /* required
    * Controls whether or not the insertion order can spend its budget and bid on inventory.
    */
   optional EntityStatus entity_status = 5;
 
-  /* require
+  /* required
    * The timestamp when the insertion order was last updated. Assigned by the system.
    */
   optional string update_time = 6;
 
-  /* require
+  /* required
    * The budget spending speed setting of the insertion order.
    */
   optional Pacing pacing = 7;
 
-  /* require
+  /* required
    * The budget allocation settings of the insertion order.
    */
   optional InsertionOrderBudget budget = 8;
@@ -47,12 +47,12 @@ message InsertionOrder {
   }
 
   message Pacing {
-    /* require
+    /* required
      * The time period in which the pacing budget will be spent.
      */
     optional PacingPeriod pacing_period = 1;
 
-    /* require
+    /* required
      * The type of pacing that defines how the budget amount will be spent across the pacing_period.
      */
     optional PacingType pacing_type = 2;
@@ -82,7 +82,7 @@ message InsertionOrder {
   }
 
   message InsertionOrderBudget {
-    /* require
+    /* required
      * The budget unit specifies whether the budget is currency based or impression based.
      */
     optional BudgetUnit budget_unit = 1;
@@ -109,7 +109,7 @@ message InsertionOrder {
     }
 
     message InsertionOrderBudgetSegment {
-      /* require
+      /* required
        * The budget amount the insertion order will spend for
        * the given [dateRange][InsertionOrderBudget.BudgetSegment.date_range].
        * The amount is in micros. */
@@ -118,7 +118,7 @@ message InsertionOrder {
       // The budget segment description.
       optional string description = 2;
 
-      /* require
+      /* required
        * The start and end date settings of the budget segment.
        * They are resolved relative to the parent advertiser's time zone. */
       required DateRange date_range = 3;
