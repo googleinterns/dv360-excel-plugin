@@ -1,0 +1,109 @@
+syntax = "proto2";
+package dv360_excel_plugin;
+
+/* A mini InsertionOrder proto defined for spreadsheet population purpose
+ * More columns will be covered in later phase.
+ * TODO: https://github.com/DV360-spreadsheet-plugin/dv360-excel-plugin/issues/29
+ */
+message InsertionOrder {
+  required string advertiser_id = 1;
+  required string campaign_id = 2;
+  required string insertion_order_id = 3;
+  required string display_name = 4;
+
+  // Controls whether or not the insertion order can spend its budget and bid on inventory.
+  enum EntityStatus {
+    ENTITY_STATUS_UNSPECIFIED = 0;
+    ENTITY_STATUS_ACTIVE = 1;
+    ENTITY_STATUS_ARCHIVED = 2;
+    ENTITY_STATUS_DRAFT = 3;
+    ENTITY_STATUS_PAUSED = 4;
+    ENTITY_STATUS_SCHEDULED_FOR_DELETION = 5;
+  }
+
+  required EntityStatus entity_status = 5;
+
+  // The timestamp when the insertion order was last updated. Assigned by the system.
+  required string update_time = 6;
+
+  // The budget spending speed setting of the insertion order.
+  message Pacing {
+    // The time period in which the pacing budget will be spent.
+    enum PacingPeriod {
+      PACING_PERIOD_UNSPECIFIED = 0;
+      PACING_PERIOD_DAILY = 1;
+      PACING_PERIOD_FLIGHT = 2;
+    }
+
+    required PacingPeriod pacing_period = 1;
+
+    // The type of pacing that defines how the budget amount will be spent across the pacing_period.
+    enum PacingType {
+      PACING_TYPE_UNSPECIFIED = 0;
+      PACING_TYPE_AHEAD = 1;
+      PACING_TYPE_ASAP = 2;
+      PACING_TYPE_EVEN = 3;
+    }
+
+    required PacingType pacing_type = 2;
+
+    /* Union field daily_max_value. Applicable when pacing_period is set to be PACING_PERIOD_DAILY.
+     * daily_max_value can be only be either daily_max_micros or daily_max_impressions. */
+    oneof daily_max_value {
+      // Maximum currency amount to spend every day in micros of advertiser's currency.
+      string daily_max_micros = 3;
+
+      // Maximum number of impressions to serve every day.
+      string daily_max_impressions = 4;
+    }
+  }
+
+  required Pacing pacing = 7;
+
+  // The budget allocation settings of the insertion order.
+  message InsertionOrderBudget {
+    // The budget unit specifies whether the budget is currency based or impression based.
+    enum BudgetUnit {
+      BUDGET_UNIT_UNSPECIFIED = 0;
+      BUDGET_UNIT_CURRENCY = 1;
+      BUDGET_UNIT_IMPRESSIONS = 2;
+    }
+
+    required BudgetUnit budget_unit = 1;
+
+    /* The type of automation used to manage bid and budget for the insertion order.
+     * If this field is unspecified in creation, the value defaults to INSERTION_ORDER_AUTOMATION_TYPE_NONE. */
+    enum InsertionOrderAutomationType {
+      INSERTION_ORDER_AUTOMATION_TYPE_NONE = 0;
+      INSERTION_ORDER_AUTOMATION_TYPE_UNSPECIFIED = 1;
+      INSERTION_ORDER_AUTOMATION_TYPE_BUDGET = 2;
+      INSERTION_ORDER_AUTOMATION_TYPE_BID_BUDGET = 3;
+    }
+
+    optional InsertionOrderAutomationType automation_type = 2;
+
+    /* The list of budget segments.
+     * Use a budget segment to specify a specific budget for a given period of time an insertion order is running. */
+    message InsertionOrderBudgetSegment {
+      required string budget_amount_micros = 1;
+      optional string description = 2;
+      required DateRange date_range = 3;
+      optional string campaign_budget_id = 4;
+
+      message DateRange {
+        optional Date start_date = 1;
+        optional Date end_date = 2;
+
+        message Date {
+          optional string year = 1;
+          optional string month = 2;
+          optional string day = 3;
+        }
+      }
+    }
+
+    repeated InsertionOrderBudgetSegment budget_segments = 3;
+  }
+
+  required InsertionOrderBudget budget = 8;
+}
