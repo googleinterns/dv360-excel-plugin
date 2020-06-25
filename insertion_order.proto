@@ -17,10 +17,19 @@ message InsertionOrder {
   // required
   optional string display_name = 4;
 
+  enum EntityStatus {
+    ENTITY_STATUS_UNSPECIFIED = 0;
+    ENTITY_STATUS_ACTIVE = 1;
+    ENTITY_STATUS_ARCHIVED = 2;
+    ENTITY_STATUS_DRAFT = 3;
+    ENTITY_STATUS_PAUSED = 4;
+    ENTITY_STATUS_SCHEDULED_FOR_DELETION = 5;
+  }
+
   /* required
    * Controls whether or not the insertion order can spend its budget and bid on inventory.
    */
-  optional string entity_status = 5;
+  optional EntityStatus entity_status = 5;
 
   /* required
    * The timestamp when the insertion order was last updated. Assigned by the system.
@@ -28,15 +37,28 @@ message InsertionOrder {
   optional string update_time = 6;
 
   message Pacing {
+    enum PacingPeriod {
+      PACING_PERIOD_UNSPECIFIED = 0;
+      PACING_PERIOD_DAILY = 1;
+      PACING_PERIOD_FLIGHT = 2;
+    }
+
     /* required
      * The time period in which the pacing budget will be spent.
      */
-    optional string pacing_period = 1;
+    optional PacingPeriod pacing_period = 1;
+
+    enum PacingType {
+      PACING_TYPE_UNSPECIFIED = 0;
+      PACING_TYPE_AHEAD = 1;
+      PACING_TYPE_ASAP = 2;
+      PACING_TYPE_EVEN = 3;
+    }
 
     /* required
      * The type of pacing that defines how the budget amount will be spent across the pacing_period.
      */
-    optional string pacing_type = 2;
+    optional PacingType pacing_type = 2;
 
     /* Union field daily_max_value. Applicable when pacing_period is set to be PACING_PERIOD_DAILY.
      * daily_max_value can be only be either daily_max_micros or daily_max_impressions. */
@@ -54,15 +76,28 @@ message InsertionOrder {
    */
   optional Pacing pacing = 7;
 
-  message Budget {
+  message InsertionOrderBudget {
+    enum BudgetUnit {
+      BUDGET_UNIT_UNSPECIFIED = 0;
+      BUDGET_UNIT_CURRENCY = 1;
+      BUDGET_UNIT_IMPRESSIONS = 2;
+    }
+
     /* required
      * The budget unit specifies whether the budget is currency based or impression based.
      */
-    optional string budget_unit = 1;
+    optional BudgetUnit budget_unit = 1;
+
+    enum InsertionOrderAutomationType {
+      INSERTION_ORDER_AUTOMATION_TYPE_NONE = 0;
+      INSERTION_ORDER_AUTOMATION_TYPE_UNSPECIFIED = 1;
+      INSERTION_ORDER_AUTOMATION_TYPE_BUDGET = 2;
+      INSERTION_ORDER_AUTOMATION_TYPE_BID_BUDGET = 3;
+    }
 
     /* The type of automation used to manage bid and budget for the insertion order.
      * If this field is unspecified in creation, the value defaults to INSERTION_ORDER_AUTOMATION_TYPE_NONE. */
-    optional string automation_type = 2;
+    optional InsertionOrderAutomationType automation_type = 2;
 
     message InsertionOrderBudgetSegment {
       /* required
@@ -109,5 +144,5 @@ message InsertionOrder {
   /* required
    * The budget allocation settings of the insertion order.
    */
-  optional Budget budget = 8;
+  optional InsertionOrderBudget budget = 8;
 }
