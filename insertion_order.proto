@@ -1,0 +1,148 @@
+syntax = "proto2";
+package dv360_excel_plugin;
+
+/* A mini InsertionOrder proto defined for spreadsheet population purpose.
+ * Each InsertionOrder represents a row in the spreadsheet with its fields as the column entries.
+ */
+message InsertionOrder {
+  // required
+  optional string advertiser_id = 1;
+
+  // required
+  optional string campaign_id = 2;
+
+  // required
+  optional string insertion_order_id = 3;
+
+  // required
+  optional string display_name = 4;
+
+  enum EntityStatus {
+    ENTITY_STATUS_UNSPECIFIED = 0;
+    ENTITY_STATUS_ACTIVE = 1;
+    ENTITY_STATUS_ARCHIVED = 2;
+    ENTITY_STATUS_DRAFT = 3;
+    ENTITY_STATUS_PAUSED = 4;
+    ENTITY_STATUS_SCHEDULED_FOR_DELETION = 5;
+  }
+
+  /* required
+   * Controls whether or not the insertion order can spend its budget and bid on inventory.
+   */
+  optional EntityStatus entity_status = 5;
+
+  /* required
+   * The timestamp when the insertion order was last updated. Assigned by the system.
+   */
+  optional string update_time = 6;
+
+  message Pacing {
+    enum PacingPeriod {
+      PACING_PERIOD_UNSPECIFIED = 0;
+      PACING_PERIOD_DAILY = 1;
+      PACING_PERIOD_FLIGHT = 2;
+    }
+
+    /* required
+     * The time period in which the pacing budget will be spent.
+     */
+    optional PacingPeriod pacing_period = 1;
+
+    enum PacingType {
+      PACING_TYPE_UNSPECIFIED = 0;
+      PACING_TYPE_AHEAD = 1;
+      PACING_TYPE_ASAP = 2;
+      PACING_TYPE_EVEN = 3;
+    }
+
+    /* required
+     * The type of pacing that defines how the budget amount will be spent across the pacing_period.
+     */
+    optional PacingType pacing_type = 2;
+
+    /* Union field daily_max_value. Applicable when pacing_period is set to be PACING_PERIOD_DAILY.
+     * daily_max_value can be only be either daily_max_micros or daily_max_impressions. */
+    oneof daily_max_value {
+      // Maximum currency amount to spend every day in micros of advertiser's currency.
+      string daily_max_micros = 3;
+
+      // Maximum number of impressions to serve every day.
+      string daily_max_impressions = 4;
+    }
+  }
+
+  /* required
+   * The budget spending speed setting of the insertion order.
+   */
+  optional Pacing pacing = 7;
+
+  message InsertionOrderBudget {
+    enum BudgetUnit {
+      BUDGET_UNIT_UNSPECIFIED = 0;
+      BUDGET_UNIT_CURRENCY = 1;
+      BUDGET_UNIT_IMPRESSIONS = 2;
+    }
+
+    /* required
+     * The budget unit specifies whether the budget is currency based or impression based.
+     */
+    optional BudgetUnit budget_unit = 1;
+
+    enum InsertionOrderAutomationType {
+      INSERTION_ORDER_AUTOMATION_TYPE_NONE = 0;
+      INSERTION_ORDER_AUTOMATION_TYPE_UNSPECIFIED = 1;
+      INSERTION_ORDER_AUTOMATION_TYPE_BUDGET = 2;
+      INSERTION_ORDER_AUTOMATION_TYPE_BID_BUDGET = 3;
+    }
+
+    /* The type of automation used to manage bid and budget for the insertion order.
+     * If this field is unspecified in creation, the value defaults to INSERTION_ORDER_AUTOMATION_TYPE_NONE. */
+    optional InsertionOrderAutomationType automation_type = 2;
+
+    message InsertionOrderBudgetSegment {
+      /* required
+       * The budget amount the insertion order will spend for
+       * the given [dateRange][InsertionOrderBudget.BudgetSegment.date_range].
+       * The amount is in micros. */
+      optional string budget_amount_micros = 1;
+
+      // The budget segment description.
+      optional string description = 2;
+
+      message DateRange {
+        optional Date start_date = 1;
+        optional Date end_date = 2;
+
+        message Date {
+          // Year of date. Must be from 1 to 9999, or 0 if specifying a date without a year.
+          optional int32 year = 1;
+
+          // Month of year. Must be from 1 to 12, or 0 if specifying a year without a month and day.
+          optional int32 month = 2;
+
+          /* Day of month. Must be from 1 to 31 and valid for the year and month, or 0
+           * if specifying a year by itself or a year and month where the day is not significant.
+           */
+          optional int32 day = 3;
+        }
+      }
+
+      /* required
+       * The start and end date settings of the budget segment.
+       * They are resolved relative to the parent advertiser's time zone. */
+      required DateRange date_range = 3;
+
+      // The ID of the campaign budget linked to this insertion order budget segment.
+      optional string campaign_budget_id = 4;
+    }
+
+    /* The list of budget segments.
+     * Use a budget segment to specify a specific budget for a given period of time an insertion order is running. */
+    repeated InsertionOrderBudgetSegment budget_segments = 3;
+  }
+
+  /* required
+   * The budget allocation settings of the insertion order.
+   */
+  optional InsertionOrderBudget budget = 8;
+}
