@@ -1,23 +1,29 @@
 import 'package:angular/angular.dart';
-import 'package:angular_components/material_button/material_button.dart';
+import 'package:angular_forms/angular_forms.dart';
 
-import 'excel.dart';
+import 'query_builder.dart';
+import 'query_service.dart';
 
 @Component(
   selector: 'query',
   template: '''
-    <material-button (click)="onClick()" debugId="populate-btn">
+    <input [(ngModel)]="queryBuilder.advertiserId" 
+           placeholder="Advertiser ID: 164337" debugId="advertiser-id-input">
+    <input [(ngModel)]="queryBuilder.insertionOrderId" 
+           placeholder="Insertion Order ID: 8127549" debugId="io-id-input">
+    <button (click)="onClick()" debugId="populate-btn">
     {{buttonName}}
-    </material-button>
+    </button>
   ''',
-  providers: [ClassProvider(ExcelDart)],
-  directives: [MaterialButtonComponent],
+  providers: [ClassProvider(QueryBuilder), ClassProvider(QueryService)],
+  directives: [formDirectives],
 )
 class QueryComponent {
   final buttonName = 'populate';
-  final ExcelDart _excel;
+  final QueryBuilder queryBuilder;
+  final QueryService queryService;
 
-  QueryComponent(this._excel);
+  QueryComponent(this.queryBuilder, this.queryService);
 
-  void onClick() => _excel.exec();
+  void onClick() => queryService.execQuery();
 }

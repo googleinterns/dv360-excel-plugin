@@ -12,6 +12,10 @@ doc/api/
 # Personal API key
 lib/src/private_keys.dart
 
+# Generated code
+lib/src/proto/
+test/testing/*.g.dart
+
 # IntelliJ
 .idea/
 
