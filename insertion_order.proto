@@ -130,7 +130,7 @@ message InsertionOrder {
       /* required
        * The start and end date settings of the budget segment.
        * They are resolved relative to the parent advertiser's time zone. */
-      required DateRange date_range = 3;
+      optional DateRange date_range = 3;
 
       // The ID of the campaign budget linked to this insertion order budget segment.
       optional string campaign_budget_id = 4;
