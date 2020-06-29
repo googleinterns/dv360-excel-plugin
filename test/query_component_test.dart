@@ -1,9 +1,7 @@
 @TestOn('browser')
-import 'dart:math';
-
 import 'package:angular/angular.dart';
 import 'package:angular_test/angular_test.dart';
-import 'package:dv360_excel_plugin/src/query_builder.dart';
+import 'package:dv360_excel_plugin/src/dv360_query_builder.dart';
 import 'package:dv360_excel_plugin/src/query_component.dart';
 import 'package:dv360_excel_plugin/src/query_service.dart';
 import 'package:mockito/mockito.dart';
@@ -28,7 +26,7 @@ class MockQueryService extends Mock implements QueryService {
   selector: '[override]',
   providers: [
     ClassProvider(QueryService, useClass: MockQueryService),
-    ClassProvider(QueryBuilder, useClass: QueryBuilder),
+    ClassProvider(DV360QueryBuilder, useClass: DV360QueryBuilder),
   ],
 )
 class OverrideDirective {}
@@ -48,8 +46,7 @@ void main() {
   NgTestFixture<QueryTestComponent> fixture;
   QueryComponentPageObject queryComponentPO;
   MockQueryService mockQueryService;
-  QueryBuilder queryBuilder;
-  Random random;
+  DV360QueryBuilder queryBuilder;
 
   setUp(() async {
     testBed = NgTestBed.forComponent<QueryTestComponent>(
@@ -58,9 +55,8 @@ void main() {
     final context =
         HtmlPageLoaderElement.createFromElement((fixture.rootElement));
     queryComponentPO = QueryComponentPageObject.create(context);
-    queryBuilder = QueryBuilder();
+    queryBuilder = DV360QueryBuilder();
     mockQueryService = MockQueryService();
-    random = Random();
   });
 
   tearDown(disposeAnyRunningTest);
@@ -71,27 +67,27 @@ void main() {
   });
 
   group('update:', () {
-    String id;
+    final advertiserId = '111111';
+    final insertionOrderId = '2222222';
 
     setUp(() async {
-      id = random.nextInt(10000).toString();
-      await queryComponentPO.typeAdvertiserId(id);
-      await queryComponentPO.typeInsertionOrderId(id);
+      await queryComponentPO.typeAdvertiserId(advertiserId);
+      await queryComponentPO.typeInsertionOrderId(insertionOrderId);
     });
 
     test('typing ids stores value back to QueryBuilder', () {
-      expect(queryBuilder.advertiserId, id);
-      expect(queryBuilder.insertionOrderId, id);
+      expect(queryBuilder.advertiserId, advertiserId);
+      expect(queryBuilder.insertionOrderId, insertionOrderId);
     });
   });
 
   group('clear:', () {
-    String id;
+    final advertiserId = '111111';
+    final insertionOrderId = '2222222';
 
     setUp(() async {
-      id = random.nextInt(10000).toString();
-      await queryComponentPO.typeAdvertiserId(id);
-      await queryComponentPO.typeInsertionOrderId(id);
+      await queryComponentPO.typeAdvertiserId(advertiserId);
+      await queryComponentPO.typeInsertionOrderId(insertionOrderId);
       await queryComponentPO.clearAdvertiserId();
       await queryComponentPO.clearInsertionOrderId();
     });

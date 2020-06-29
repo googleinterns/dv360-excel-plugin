@@ -1,11 +1,11 @@
 enum QueryType { singleIO }
 
-class QueryBuilder {
-  QueryBuilder._private();
+class DV360QueryBuilder {
+  DV360QueryBuilder._private();
 
-  static final QueryBuilder _singleton = QueryBuilder._private();
+  static final DV360QueryBuilder _singleton = DV360QueryBuilder._private();
 
-  factory QueryBuilder() {
+  factory DV360QueryBuilder() {
     return _singleton;
   }
 

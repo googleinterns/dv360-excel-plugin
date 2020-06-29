@@ -2,9 +2,9 @@ import 'dart:js';
 
 import 'gapi.dart';
 import 'json_js.dart';
-import 'parser.dart';
+import 'insertion_order_parser.dart';
 import 'proto/insertion_order.pb.dart';
-import 'query_builder.dart';
+import 'dv360_query_builder.dart';
 
 class QueryService {
   QueryService._private();
@@ -15,7 +15,7 @@ class QueryService {
     return _singleton;
   }
 
-  final queryBuilder = QueryBuilder();
+  final queryBuilder = DV360QueryBuilder();
   final _table = <InsertionOrder>[];
 
   /// Executes the query and passes the returned result to the parser.
@@ -25,7 +25,7 @@ class QueryService {
 
     await GoogleAPI.client.request(requestArgs).then(allowInterop((response) {
       final rawResponse = stringify(response.result);
-      _table.add(Parser.ioFromJson(rawResponse));
+      _table.add(InsertionOrderParser.parse(rawResponse));
     }));
   }
 }

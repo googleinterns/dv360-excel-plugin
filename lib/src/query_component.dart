@@ -1,7 +1,7 @@
 import 'package:angular/angular.dart';
 import 'package:angular_forms/angular_forms.dart';
 
-import 'query_builder.dart';
+import 'dv360_query_builder.dart';
 import 'query_service.dart';
 
 @Component(
@@ -15,12 +15,12 @@ import 'query_service.dart';
     {{buttonName}}
     </button>
   ''',
-  providers: [ClassProvider(QueryBuilder), ClassProvider(QueryService)],
+  providers: [ClassProvider(DV360QueryBuilder), ClassProvider(QueryService)],
   directives: [formDirectives],
 )
 class QueryComponent {
   final buttonName = 'populate';
-  final QueryBuilder queryBuilder;
+  final DV360QueryBuilder queryBuilder;
   final QueryService queryService;
 
   QueryComponent(this.queryBuilder, this.queryService);
