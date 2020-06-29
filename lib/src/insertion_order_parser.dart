@@ -3,7 +3,32 @@ import 'dart:convert';
 import 'proto/insertion_order.pb.dart';
 
 class InsertionOrderParser {
-  static const emptyEntry = '';
+  static const _emptyEntry = '';
+
+  static final _entityStatusMap = {
+    for (var status in InsertionOrder_EntityStatus.values) status.name: status
+  };
+
+  static final _pacingPeriodMap = {
+    for (var period in InsertionOrder_Pacing_PacingPeriod.values)
+      period.name: period
+  };
+
+  static final _pacingTypeMap = {
+    for (var type in InsertionOrder_Pacing_PacingType.values) type.name: type
+  };
+
+  static final _budgetUnitMap = {
+    for (var unit in InsertionOrder_InsertionOrderBudget_BudgetUnit.values)
+      unit.name: unit
+  };
+
+  static final _automationTypeMap = {
+    for (var type
+        in InsertionOrder_InsertionOrderBudget_InsertionOrderAutomationType
+            .values)
+      type.name: type
+  };
 
   /// Parses a json string to [InsertionOrder].
   static InsertionOrder parse(String jsonString) {
@@ -16,11 +41,11 @@ class InsertionOrderParser {
     if (map == null || map.isEmpty) return InsertionOrder();
 
     final insertionOrder = InsertionOrder()
-      ..advertiserId = map['advertiserId'] ?? emptyEntry
-      ..campaignId = map['campaignId'] ?? emptyEntry
-      ..insertionOrderId = map['insertionOrderId'] ?? emptyEntry
-      ..displayName = map['displayName'] ?? emptyEntry
-      ..updateTime = map['updateTime'] ?? emptyEntry
+      ..advertiserId = map['advertiserId'] ?? _emptyEntry
+      ..campaignId = map['campaignId'] ?? _emptyEntry
+      ..insertionOrderId = map['insertionOrderId'] ?? _emptyEntry
+      ..displayName = map['displayName'] ?? _emptyEntry
+      ..updateTime = map['updateTime'] ?? _emptyEntry
       ..entityStatus = _createEntityStatus(map['entityStatus'])
       ..pacing = _createPacing(map['pacing'])
       ..budget = _createBudget(map['budget']);
@@ -35,8 +60,8 @@ class InsertionOrderParser {
     final pacing = InsertionOrder_Pacing()
       ..pacingPeriod = _createPacingPeriod(map['pacingPeriod'])
       ..pacingType = _createPacingType(map['pacingType'])
-      ..dailyMaxMicros = map['dailyMaxMicros'] ?? emptyEntry
-      ..dailyMaxImpressions = map['dailyMaxImpressions'] ?? emptyEntry;
+      ..dailyMaxMicros = map['dailyMaxMicros'] ?? _emptyEntry
+      ..dailyMaxImpressions = map['dailyMaxImpressions'] ?? _emptyEntry;
 
     return pacing;
   }
@@ -44,14 +69,15 @@ class InsertionOrderParser {
   /// Creates an [InsertionOrder_InsertionOrderBudget] instance from [map].
   static InsertionOrder_InsertionOrderBudget _createBudget(
       Map<String, dynamic> map) {
-    if (map == null || map.isEmpty)
+    if (map == null || map.isEmpty) {
       return InsertionOrder_InsertionOrderBudget();
+    }
 
     final budget = InsertionOrder_InsertionOrderBudget()
       ..budgetUnit = _createBudgetUnit(map['budgetUnit'])
       ..automationType = _createAutomationType(map['automationType']);
 
-    for (var segmentMap in map['budgetSegments'] ?? []) {
+    for (Map segmentMap in map['budgetSegments'] ?? []) {
       budget.budgetSegments.add(_createBudgetSegment(segmentMap));
     }
     return budget;
@@ -68,9 +94,9 @@ class InsertionOrderParser {
 
     final budgetSegment =
         InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment()
-          ..budgetAmountMicros = map['budgetAmountMicros'] ?? emptyEntry
-          ..description = map['description'] ?? emptyEntry
-          ..campaignBudgetId = map['campaignBudgetId'] ?? emptyEntry
+          ..budgetAmountMicros = map['budgetAmountMicros'] ?? _emptyEntry
+          ..description = map['description'] ?? _emptyEntry
+          ..campaignBudgetId = map['campaignBudgetId'] ?? _emptyEntry
           ..dateRange = _createDateRange(map['dateRange']);
 
     return budgetSegment;
@@ -104,9 +130,9 @@ class InsertionOrderParser {
 
     final date =
         InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment_DateRange_Date()
-          ..year = map['year'] ?? emptyEntry
-          ..month = map['month'] ?? emptyEntry
-          ..day = map['day'] ?? emptyEntry;
+          ..year = map['year'] ?? _emptyEntry
+          ..month = map['month'] ?? _emptyEntry
+          ..day = map['day'] ?? _emptyEntry;
 
     return date;
   }
@@ -116,11 +142,7 @@ class InsertionOrderParser {
   /// Returns default value [ENTITY_STATUS_UNSPECIFIED]
   /// if [target] doesn't correspond to any enum values.
   static InsertionOrder_EntityStatus _createEntityStatus(String target) {
-    for (var status in InsertionOrder_EntityStatus.values) {
-      if (status.name == target) {
-        return status;
-      }
-    }
+    if (_entityStatusMap.containsKey(target)) return _entityStatusMap[target];
     return InsertionOrder_EntityStatus.ENTITY_STATUS_UNSPECIFIED;
   }
 
@@ -129,11 +151,7 @@ class InsertionOrderParser {
   /// Returns default value [PACING_PERIOD_UNSPECIFIED]
   /// if [target] doesn't correspond to any enum values.
   static InsertionOrder_Pacing_PacingPeriod _createPacingPeriod(String target) {
-    for (var period in InsertionOrder_Pacing_PacingPeriod.values) {
-      if (period.name == target) {
-        return period;
-      }
-    }
+    if (_pacingPeriodMap.containsKey(target)) return _pacingPeriodMap[target];
     return InsertionOrder_Pacing_PacingPeriod.PACING_PERIOD_UNSPECIFIED;
   }
 
@@ -142,11 +160,7 @@ class InsertionOrderParser {
   /// Returns default value [PACING_TYPE_UNSPECIFIED]
   /// if [target] doesn't correspond to any enum values.
   static InsertionOrder_Pacing_PacingType _createPacingType(String target) {
-    for (var type in InsertionOrder_Pacing_PacingType.values) {
-      if (type.name == target) {
-        return type;
-      }
-    }
+    if (_pacingTypeMap.containsKey(target)) return _pacingTypeMap[target];
     return InsertionOrder_Pacing_PacingType.PACING_TYPE_UNSPECIFIED;
   }
 
@@ -156,11 +170,7 @@ class InsertionOrderParser {
   /// if [target] doesn't correspond to any enum values.
   static InsertionOrder_InsertionOrderBudget_BudgetUnit _createBudgetUnit(
       String target) {
-    for (var unit in InsertionOrder_InsertionOrderBudget_BudgetUnit.values) {
-      if (unit.name == target) {
-        return unit;
-      }
-    }
+    if (_budgetUnitMap.containsKey(target)) return _budgetUnitMap[target];
     return InsertionOrder_InsertionOrderBudget_BudgetUnit
         .BUDGET_UNIT_UNSPECIFIED;
   }
@@ -179,12 +189,8 @@ class InsertionOrderParser {
           .INSERTION_ORDER_AUTOMATION_TYPE_NONE;
     }
 
-    for (var type
-        in InsertionOrder_InsertionOrderBudget_InsertionOrderAutomationType
-            .values) {
-      if (type.name == target) {
-        return type;
-      }
+    if (_automationTypeMap.containsKey(target)) {
+      return _automationTypeMap[target];
     }
 
     return InsertionOrder_InsertionOrderBudget_InsertionOrderAutomationType

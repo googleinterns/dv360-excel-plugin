@@ -11,20 +11,5 @@ abstract class QueryComponentPageObject {
   @ByDebugId('populate-btn')
   PageLoaderElement get _button;
 
-  @ByDebugId('advertiser-id-input')
-  PageLoaderElement get _advertiserInput;
-
-  @ByDebugId('io-id-input')
-  PageLoaderElement get _insertionOrderInput;
-
-  Future<void> clickPopulate() async => _button.click();
-
-  Future<void> typeAdvertiserId(String id) async => _advertiserInput.type(id);
-
-  Future<void> clearAdvertiserId() async => _advertiserInput.clear();
-
-  Future<void> typeInsertionOrderId(String id) async =>
-      _insertionOrderInput.type(id);
-
-  Future<void> clearInsertionOrderId() async => _insertionOrderInput.clear();
+  Future<void> clickExecQuery() async => _button.click();
 }

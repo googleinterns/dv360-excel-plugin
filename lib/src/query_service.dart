@@ -4,7 +4,6 @@ import 'gapi.dart';
 import 'json_js.dart';
 import 'insertion_order_parser.dart';
 import 'proto/insertion_order.pb.dart';
-import 'dv360_query_builder.dart';
 
 class QueryService {
   QueryService._private();
@@ -15,17 +14,23 @@ class QueryService {
     return _singleton;
   }
 
-  final queryBuilder = DV360QueryBuilder();
-  final _table = <InsertionOrder>[];
+  final _insertionOrderLists = <InsertionOrder>[];
 
   /// Executes the query and passes the returned result to the parser.
-  void execQuery() async {
-    final requestArgs =
-        RequestArgs(path: queryBuilder.generateQuery(), method: 'GET');
+  void execQuery(String advertiserId, String insertionOrderId) async {
+    final requestArgs = RequestArgs(
+        path: _generateQuery(advertiserId, insertionOrderId), method: 'GET');
 
     await GoogleAPI.client.request(requestArgs).then(allowInterop((response) {
       final rawResponse = stringify(response.result);
-      _table.add(InsertionOrderParser.parse(rawResponse));
+      _insertionOrderLists.add(InsertionOrderParser.parse(rawResponse));
+      print(_insertionOrderLists[0]);
     }));
+  }
+
+  /// Generates query based on user inputs.
+  String _generateQuery(String advertiserId, String insertionOrderId) {
+    return 'https://displayvideo.googleapis.com/v1/advertisers/$advertiserId/'
+        'insertionOrders/$insertionOrderId';
   }
 }
