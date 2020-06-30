@@ -1,36 +1,128 @@
 @JS()
 library excel;
 
+import 'package:fixnum/fixnum.dart';
 import 'package:js/js.dart';
 
 import 'office_js.dart';
+import 'proto/insertion_order.pb.dart';
 
 /// Service class that provides dart functions to interact with Excel.
 class ExcelDart {
-  ExcelDart._private();
+  static final _startAddressInt = 'A'.codeUnitAt(0);
+  static final _fontName = 'Roboto';
+  static final _fontSize = 12;
+  static final _horizontalAlignment = 'Center';
+  static final _borderStyle = 'Continuous';
 
-  static final ExcelDart _singleton = ExcelDart._private();
+  static final _tableHeader = [
+    'Insertion Order ID',
+    'Advertiser ID',
+    'Campaign ID',
+    'Display Name',
+    'Entity Status',
+    'Update Time',
+    'Pacing Period',
+    'Pacing Type',
+    'Daily Max Micros',
+    'Daily Max Impressions',
+    'Budget Unit',
+    'Automation Type',
+    'Budget',
+    'Start Date',
+    'End Date'
+  ];
 
-  factory ExcelDart() {
-    return _singleton;
-  }
-
-  /// Waits for Office APIs to be ready and then executes function [_populate].
-  void exec() async {
+  /// Waits for Office APIs to be ready and then populates the spreadsheet with
+  /// entries in the [insertionOrderList]
+  static void populate(List insertionOrderList) async {
     await Office.onReady(allowInterop((info) async {
-      await ExcelJS.run(allowInterop(_populate));
+      await ExcelJS.run(allowInterop((context) {
+        // Grabs the current worksheet
+        final sheet = context.workbook.worksheets.getActiveWorksheet();
+
+        // Adds a master table
+        final endAddressInt = _startAddressInt + _tableHeader.length - 1;
+        final tableAddress = 'A1:${String.fromCharCode(endAddressInt)}1';
+        final table = context.workbook.tables.add(tableAddress, true);
+
+        // Adds and formats table header
+        table.getHeaderRowRange()
+          ..values = [_tableHeader]
+          ..format.font.name = _fontName
+          ..format.font.size = _fontSize
+          ..format.font.bold = true
+          ..format.horizontalAlignment = _horizontalAlignment
+          ..format.borders.getItem('EdgeTop').style = _borderStyle
+          ..format.borders.getItem('EdgeBottom').style = _borderStyle;
+
+        // Adds and formats table body
+        table.getDataBodyRange()
+          ..formulas = _generateTableBody(insertionOrderList)
+          ..format.font.name = _fontName
+          ..format.font.size = _fontSize
+          ..format.horizontalAlignment = _horizontalAlignment;
+
+        // Auto-fits all used cells
+        sheet.getUsedRange().getEntireColumn().format.autofitColumns();
+        sheet.getUsedRange().getEntireRow().format.autofitRows();
+
+        // Sets the sheet as active
+        sheet.activate();
+        return context.sync();
+      }));
     }));
   }
 
-  Future<void> _populate(RequestContext context) async {
-    final sheet = context.workbook.worksheets.getActiveWorksheet();
-    final range = sheet.getRange('A1');
-    final values = <List<String>>[
-      ['test test']
-    ];
-    range.values = values;
-    range.format.autofitColumns();
-    return context.sync();
+  static List _generateTableBody(List insertionOrderList) {
+    final tableBody = [];
+
+    for (InsertionOrder io in insertionOrderList) {
+      tableBody.add([
+        io.insertionOrderId,
+        io.advertiserId,
+        io.campaignId,
+        io.displayName,
+        io.entityStatus.toString(),
+        io.updateTime,
+        io.pacing.pacingPeriod.toString(),
+        io.pacing.pacingType.toString(),
+        io.pacing.dailyMaxMicros,
+        io.pacing.dailyMaxImpressions,
+        io.budget.budgetUnit.toString(),
+        io.budget.automationType.toString(),
+        _calculateTotalBudgetAmount(io.budget.budgetSegments),
+        _getStartDate(io.budget.budgetSegments.first),
+        _getEndDate(io.budget.budgetSegments.last),
+      ]);
+    }
+    return tableBody;
+  }
+
+  static String _calculateTotalBudgetAmount(
+      List<InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment>
+          budgetSegments) {
+    var totalBudgetMicros = Int64.ZERO;
+
+    for (var segment in budgetSegments) {
+      totalBudgetMicros += Int64.parseInt(segment.budgetAmountMicros);
+    }
+
+    return (totalBudgetMicros.toDouble() / 1000000).toString();
+  }
+
+  static String _getStartDate(
+      InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment
+          firstSegment) {
+    final startDate = firstSegment.dateRange.startDate;
+    return '${startDate.month}/${startDate.day}/${startDate.year}';
+  }
+
+  static String _getEndDate(
+      InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment
+          lastSegment) {
+    final endDate = lastSegment.dateRange.endDate;
+    return '${endDate.month}/${endDate.day}/${endDate.year}';
   }
 }
 
@@ -82,6 +174,9 @@ class WorkBook {
   /// The collection of worksheets in the workbook.
   external WorksheetCollection get worksheets;
 
+  /// The collection of tables associated with the workbook.
+  external TableCollection get tables;
+
   /// Returns the currently selected one or more ranges from the workbook.
   external Range getSelectedRange();
 }
@@ -95,18 +190,60 @@ class WorkBook {
 class WorksheetCollection {
   /// Returns the currently active worksheet in the workbook.
   external Worksheet getActiveWorksheet();
+
+  /// Adds a new worksheet to the workbook.
+  external Worksheet add(String name);
+}
+
+/// Wrapper for Excel.TableCollection class.
+///
+/// ``` js
+///   Excel.TableCollection.add()
+/// ```
+@JS()
+class TableCollection {
+  /// Adds a new table to the workbook.
+  external Table add(String address, bool hasHeader);
 }
 
 /// Wrapper for Excel.Worksheet class.
 ///
 /// ``` js
 ///   Excel.Worksheet.getRange()
+///   Excel.Worksheet.activate()
+///   Excel.Worksheet.getUsedRange()
 /// ```
 @JS()
 class Worksheet {
   /// Returns the range object, representing a single rectangular
   /// block of cells, specified by the address.
   external Range getRange(String address);
+
+  /// Activates the worksheet in the Excel UI.
+  external void activate();
+
+  /// The smallest range that encompasses any cells that
+  /// have a value or formatting assigned to them.
+  external Range getUsedRange();
+}
+
+/// Wrapper for Excel.Table class.
+///
+/// ``` js
+///   Excel.Table.name
+///   Excel.Table.getHeaderRowRange()
+///   Excel.Table.getDataBodyRange()
+/// ```
+@JS()
+class Table {
+  /// Name of the table.
+  external set name(String name);
+
+  /// Gets the range object associated with header row of the table.
+  external Range getHeaderRowRange();
+
+  /// Gets the range object associated with the data body of the table.
+  external Range getDataBodyRange();
 }
 
 /// Wrapper for Excel.Range class.
@@ -114,7 +251,8 @@ class Worksheet {
 /// ``` js
 ///   Excel.Range.format
 ///   Excel.Range.values
-///   Excel.Range.load()
+///   Excel.Range.getEntireColumn()
+///   Excel.Range.getEntireRow()
 /// ```
 @JS()
 class Range {
@@ -123,20 +261,94 @@ class Range {
   external RangeFormat get format;
 
   /// The raw values of the specified range.
-  external set values(List<List<dynamic>> v);
+  external set values(dynamic v);
 
-  /// Loads the specified properties of the object.
-  external Range load(String v);
+  /// Gets an object that represents the entire column of the range.
+  external Range getEntireColumn();
+
+  /// Gets an object that represents the entire row of the range.
+  external Range getEntireRow();
+
+  /// Represents the formula in A1-style notation.
+  external set formulas(dynamic formulas);
 }
 
 /// Wrapper for Excel.RangeFormat class.
 ///
 /// ``` js
 ///   Excel.RangeFormat.autofitColumns()
+///   Excel.RangeFormat.autofitRows()
+///   Excel.RangeFormat.font
+///   Excel.RangeFormat.borders
 /// ```
 @JS()
 class RangeFormat {
   /// Changes the width of the columns of the current range to
   /// achieve the best fit.
   external void autofitColumns();
+
+  /// Changes the height of the rows of the current range to
+  /// achieve the best fit.
+  external void autofitRows();
+
+  /// Returns the font object defined on the overall range.
+  external RangeFont get font;
+
+  /// Collection of border objects that apply to the overall range.
+  external RangeBorderCollection get borders;
+
+  /// Represents the horizontal alignment for the specified object.
+  /// Valid values are:  "General", "Left", "Center", "Right", "Fill"
+  /// "Justify", "CenterAcrossSelection", "Distributed".
+  external set horizontalAlignment(String alignment);
+}
+
+/// Wrapper for Excel.RangeFont class.
+///
+/// ``` js
+///   Excel.RangeFont.name
+///   Excel.RangeFont.size
+///   Excel.RangeFont.color
+///   Excel.RangeFont.bold
+/// ```
+@JS()
+class RangeFont {
+  /// Font name (e.g., "Calibri").
+  external set name(String name);
+
+  /// Font size.
+  external set size(int size);
+
+  /// HTML color code representation of the text color
+  /// (e.g., #FF0000 represents Red).
+  external set color(String color);
+
+  /// Specifies the bold status of font.
+  external set bold(bool bold);
+}
+
+/// Wrapper for Excel.RangeBorderCollection class.
+///
+/// ``` js
+///   Excel.RangeBorderCollection.getItem()
+/// ```
+@JS()
+class RangeBorderCollection {
+  /// Gets a border object using its name.
+  /// Valid values are: "EdgeTop", "EdgeBottom", "EdgeLeft", "EdgeRight",
+  /// "InsideVertical", "InsideHorizontal", "DiagonalDown", "DiagonalUp".
+  external RangeBorder getItem(String value);
+}
+
+/// Wrapper for Excel.RangeBorder class.
+///
+/// ``` js
+///   Excel.RangeBorder.style
+/// ```
+@JS()
+class RangeBorder {
+  /// Specifies the line style for the border.
+  /// Valid values are: "None", "Continuous", "Dash", "DashDot", "DashDotDot",
+  /// "Dot", "Double", "SlantDashDot"
+  external set style(String style);
 }
