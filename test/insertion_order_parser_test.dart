@@ -1,8 +1,7 @@
 import 'package:angular_test/angular_test.dart';
-import 'package:test/test.dart';
-
 import 'package:dv360_excel_plugin/src/insertion_order_parser.dart';
 import 'package:dv360_excel_plugin/src/proto/insertion_order.pb.dart';
+import 'package:test/test.dart';
 
 void main() {
   group(InsertionOrderParser, () {
@@ -48,94 +47,85 @@ void main() {
 
     tearDown(disposeAnyRunningTest);
 
-    group('parse insertionOrder from empty json:', () {
-      setUp(() => input = '{}');
+    test(
+        'parse insertionOrder from empty json should return '
+        'an empty insertionOrder instance', () {
+      input = '{}';
 
-      test('result is an empty insertionOrder instance', () {
-        final actual = InsertionOrderParser.parse(input);
+      final actual = InsertionOrderParser.parse(input);
 
-        final expected = InsertionOrder();
-        expect(actual, expected);
-      });
+      final expected = InsertionOrder();
+      expect(actual, expected);
     });
 
-    group('parse insertionOrder from json that contains only advertiserId:',
-        () {
-      setUp(() => input = '{"advertiserId":"111111"}');
+    test(
+        'parse insertionOrder from json that contains only advertiserId '
+        'should return an instance with only advertiserId set', () {
+      input = '{"advertiserId":"111111"}';
 
-      test('result is an insertionOrder with only advertiserId', () {
-        final actual = InsertionOrderParser.parse(input);
+      final actual = InsertionOrderParser.parse(input);
 
-        final expected = insertionOrderTemplate..advertiserId = '111111';
-        expect(actual, expected);
-      });
+      final expected = insertionOrderTemplate..advertiserId = '111111';
+      expect(actual, expected);
     });
 
-    group('parse insertionOrder from json that contains everything:', () {
-      setUp(() {
-        final advertiserId = '"advertiserId":"11111"';
-        final campaignId = '"campaignId":"2222222"';
-        final insertionOrderId = '"insertionOrderId":"3333333"';
-        final displayName = '"displayName":"display name"';
-        final entityStatus = '"entityStatus":"ENTITY_STATUS_ACTIVE"';
-        final updateTime = '"updateTime":"2020-06-23T17:14:58.685Z"';
-        final pacing = '"pacing":{"pacingPeriod":"PACING_PERIOD_FLIGHT",'
-            '"pacingType":"PACING_TYPE_AHEAD"}';
+    test('parse insertionOrder from json that contains everything', () {
+      final advertiserId = '"advertiserId":"11111"';
+      final campaignId = '"campaignId":"2222222"';
+      final insertionOrderId = '"insertionOrderId":"3333333"';
+      final displayName = '"displayName":"display name"';
+      final entityStatus = '"entityStatus":"ENTITY_STATUS_ACTIVE"';
+      final updateTime = '"updateTime":"2020-06-23T17:14:58.685Z"';
+      final pacing = '"pacing":{"pacingPeriod":"PACING_PERIOD_FLIGHT",'
+          '"pacingType":"PACING_TYPE_AHEAD"}';
+      final budgetSegment = '"budgetSegments":['
+          '{"budgetAmountMicros":"4000000","description":"year-2019",'
+          '"dateRange":{"startDate":{"year":2019,"month":1,"day":1},'
+          '"endDate":{"year":2019,"month":12,"day":31}}},'
+          '{"budgetAmountMicros":"2000000",'
+          '"dateRange":{"startDate":{"year":2019,"month":1,"day":1},'
+          '"endDate":{"year":2019,"month":12,"day":31}}}]';
+      final budget = '"budget":{"budgetUnit":"BUDGET_UNIT_CURRENCY",'
+          '"automationType":"INSERTION_ORDER_AUTOMATION_TYPE_NONE",'
+          '$budgetSegment}';
+      input = '{$advertiserId, $campaignId, $insertionOrderId, $displayName,'
+          '$entityStatus, $updateTime, $pacing, $budget}';
 
-        final budgetSegment = '"budgetSegments":['
-            '{"budgetAmountMicros":"4000000","description":"year-2019",'
-            '"dateRange":{"startDate":{"year":2019,"month":1,"day":1},'
-            '"endDate":{"year":2019,"month":12,"day":31}}},'
-            '{"budgetAmountMicros":"2000000",'
-            '"dateRange":{"startDate":{"year":2019,"month":1,"day":1},'
-            '"endDate":{"year":2019,"month":12,"day":31}}}]';
+      final actual = InsertionOrderParser.parse(input);
 
-        final budget = '"budget":{"budgetUnit":"BUDGET_UNIT_CURRENCY",'
-            '"automationType":"INSERTION_ORDER_AUTOMATION_TYPE_NONE",'
-            '$budgetSegment}';
-
-        input = '{$advertiserId, $campaignId, $insertionOrderId, $displayName,'
-            '$entityStatus, $updateTime, $pacing, $budget}';
-      });
-
-      test('result is an insertionOrder with all required fields', () {
-        final actual = InsertionOrderParser.parse(input);
-
-        final pacing = InsertionOrder_Pacing()
-          ..pacingPeriod =
-              InsertionOrder_Pacing_PacingPeriod.PACING_PERIOD_FLIGHT
-          ..pacingType = InsertionOrder_Pacing_PacingType.PACING_TYPE_AHEAD
-          ..dailyMaxImpressions = emptyEntry;
-        final firstSegment =
-            InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment()
-              ..budgetAmountMicros = '4000000'
-              ..description = 'year-2019'
-              ..campaignBudgetId = emptyEntry
-              ..dateRange = oneDateRange;
-        final secondSegment =
-            InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment()
-              ..budgetAmountMicros = '2000000'
-              ..description = emptyEntry
-              ..campaignBudgetId = emptyEntry
-              ..dateRange = oneDateRange;
-        final budget = InsertionOrder_InsertionOrderBudget()
-          ..budgetUnit = InsertionOrder_InsertionOrderBudget_BudgetUnit
-              .BUDGET_UNIT_CURRENCY
-          ..automationType =
-              InsertionOrder_InsertionOrderBudget_InsertionOrderAutomationType
-                  .INSERTION_ORDER_AUTOMATION_TYPE_NONE
-          ..budgetSegments.addAll([firstSegment, secondSegment]);
-        final expected = InsertionOrder()
-          ..advertiserId = '11111'
-          ..campaignId = '2222222'
-          ..insertionOrderId = '3333333'
-          ..displayName = 'display name'
-          ..updateTime = '2020-06-23T17:14:58.685Z'
-          ..entityStatus = InsertionOrder_EntityStatus.ENTITY_STATUS_ACTIVE
-          ..pacing = pacing
-          ..budget = budget;
-        expect(actual, expected);
-      });
+      final expectedPacing = InsertionOrder_Pacing()
+        ..pacingPeriod = InsertionOrder_Pacing_PacingPeriod.PACING_PERIOD_FLIGHT
+        ..pacingType = InsertionOrder_Pacing_PacingType.PACING_TYPE_AHEAD
+        ..dailyMaxImpressions = emptyEntry;
+      final firstSegment =
+          InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment()
+            ..budgetAmountMicros = '4000000'
+            ..description = 'year-2019'
+            ..campaignBudgetId = emptyEntry
+            ..dateRange = oneDateRange;
+      final secondSegment =
+          InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment()
+            ..budgetAmountMicros = '2000000'
+            ..description = emptyEntry
+            ..campaignBudgetId = emptyEntry
+            ..dateRange = oneDateRange;
+      final expectedBudget = InsertionOrder_InsertionOrderBudget()
+        ..budgetUnit =
+            InsertionOrder_InsertionOrderBudget_BudgetUnit.BUDGET_UNIT_CURRENCY
+        ..automationType =
+            InsertionOrder_InsertionOrderBudget_InsertionOrderAutomationType
+                .INSERTION_ORDER_AUTOMATION_TYPE_NONE
+        ..budgetSegments.addAll([firstSegment, secondSegment]);
+      final expected = InsertionOrder()
+        ..advertiserId = '11111'
+        ..campaignId = '2222222'
+        ..insertionOrderId = '3333333'
+        ..displayName = 'display name'
+        ..updateTime = '2020-06-23T17:14:58.685Z'
+        ..entityStatus = InsertionOrder_EntityStatus.ENTITY_STATUS_ACTIVE
+        ..pacing = expectedPacing
+        ..budget = expectedBudget;
+      expect(actual, expected);
     });
 
     group('parse Pacing from json that contains:', () {
@@ -216,6 +206,25 @@ void main() {
           ..automationType =
               InsertionOrder_InsertionOrderBudget_InsertionOrderAutomationType
                   .INSERTION_ORDER_AUTOMATION_TYPE_BUDGET;
+        final expected = insertionOrderTemplate..budget = budget;
+        expect(actual, expected);
+      });
+
+      test('empty budgetSegment', () {
+        input = '{"budget":{"budgetUnit":"BUDGET_UNIT_CURRENCY",'
+            '"automationType":"INSERTION_ORDER_AUTOMATION_TYPE_BUDGET",'
+            '"budgetSegments": [{}]}}';
+
+        final actual = InsertionOrderParser.parse(input);
+
+        final budget = InsertionOrder_InsertionOrderBudget()
+          ..budgetUnit = InsertionOrder_InsertionOrderBudget_BudgetUnit
+              .BUDGET_UNIT_CURRENCY
+          ..automationType =
+              InsertionOrder_InsertionOrderBudget_InsertionOrderAutomationType
+                  .INSERTION_ORDER_AUTOMATION_TYPE_BUDGET
+          ..budgetSegments.add(
+              InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment());
         final expected = insertionOrderTemplate..budget = budget;
         expect(actual, expected);
       });

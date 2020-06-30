@@ -83,13 +83,10 @@ class InsertionOrderParser {
     return budget;
   }
 
-  /// Creates an
-  /// [InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment]
-  /// instance from [map].
   static InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment
       _createBudgetSegment(Map<String, dynamic> map) {
     if (map == null || map.isEmpty) {
-      InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment();
+      return InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment();
     }
 
     final budgetSegment =
@@ -102,9 +99,6 @@ class InsertionOrderParser {
     return budgetSegment;
   }
 
-  /// Creates an
-  /// [InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment_DateRange]
-  /// instance from [map].
   static InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment_DateRange
       _createDateRange(Map<String, dynamic> map) {
     if (map == null || map.isEmpty) {
@@ -119,9 +113,6 @@ class InsertionOrderParser {
     return dateRange;
   }
 
-  /// Creates an
-  /// [InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment_DateRange_Date]
-  /// instance from [map].
   static InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment_DateRange_Date
       _createDate(Map<String, dynamic> map) {
     if (map == null || map.isEmpty) {
@@ -137,63 +128,37 @@ class InsertionOrderParser {
     return date;
   }
 
-  /// Creates an [InsertionOrder_EntityStatus] enum from [map].
-  ///
-  /// Returns default value [ENTITY_STATUS_UNSPECIFIED]
-  /// if [target] doesn't correspond to any enum values.
   static InsertionOrder_EntityStatus _createEntityStatus(String target) {
-    if (_entityStatusMap.containsKey(target)) return _entityStatusMap[target];
-    return InsertionOrder_EntityStatus.ENTITY_STATUS_UNSPECIFIED;
+    return _entityStatusMap[target] ?? InsertionOrder_EntityStatus.values[0];
   }
 
-  /// Creates an [InsertionOrder_Pacing_PacingPeriod] enum from [map].
-  ///
-  /// Returns default value [PACING_PERIOD_UNSPECIFIED]
-  /// if [target] doesn't correspond to any enum values.
   static InsertionOrder_Pacing_PacingPeriod _createPacingPeriod(String target) {
-    if (_pacingPeriodMap.containsKey(target)) return _pacingPeriodMap[target];
-    return InsertionOrder_Pacing_PacingPeriod.PACING_PERIOD_UNSPECIFIED;
+    return _pacingPeriodMap[target] ??
+        InsertionOrder_Pacing_PacingPeriod.values[0];
   }
 
-  /// Creates an [InsertionOrder_Pacing_PacingType] enum from [map].
-  ///
-  /// Returns default value [PACING_TYPE_UNSPECIFIED]
-  /// if [target] doesn't correspond to any enum values.
   static InsertionOrder_Pacing_PacingType _createPacingType(String target) {
-    if (_pacingTypeMap.containsKey(target)) return _pacingTypeMap[target];
-    return InsertionOrder_Pacing_PacingType.PACING_TYPE_UNSPECIFIED;
+    return _pacingTypeMap[target] ?? InsertionOrder_Pacing_PacingType.values[0];
   }
 
-  /// Creates an [InsertionOrder_InsertionOrderBudget_BudgetUnit] from [map].
-  ///
-  /// Returns default value [BUDGET_UNIT_UNSPECIFIED]
-  /// if [target] doesn't correspond to any enum values.
   static InsertionOrder_InsertionOrderBudget_BudgetUnit _createBudgetUnit(
       String target) {
-    if (_budgetUnitMap.containsKey(target)) return _budgetUnitMap[target];
-    return InsertionOrder_InsertionOrderBudget_BudgetUnit
-        .BUDGET_UNIT_UNSPECIFIED;
+    return _budgetUnitMap[target] ??
+        InsertionOrder_InsertionOrderBudget_BudgetUnit.values[0];
   }
 
-  /// Creates an
-  /// [InsertionOrder_InsertionOrderBudget_InsertionOrderAutomationType] enum
-  /// from [map].
-  ///
-  /// Returns [INSERTION_ORDER_AUTOMATION_TYPE_NONE] if [target] is null.
-  /// Returns default value [INSERTION_ORDER_AUTOMATION_TYPE_UNSPECIFIED]
-  /// if [target] doesn't correspond to any enum values.
   static InsertionOrder_InsertionOrderBudget_InsertionOrderAutomationType
       _createAutomationType(String target) {
+    /// Returns default value if [target] is null
     if (target == null) {
       return InsertionOrder_InsertionOrderBudget_InsertionOrderAutomationType
-          .INSERTION_ORDER_AUTOMATION_TYPE_NONE;
+          .values[0];
     }
 
-    if (_automationTypeMap.containsKey(target)) {
-      return _automationTypeMap[target];
-    }
-
-    return InsertionOrder_InsertionOrderBudget_InsertionOrderAutomationType
-        .INSERTION_ORDER_AUTOMATION_TYPE_UNSPECIFIED;
+    /// Returns [INSERTION_ORDER_AUTOMATION_TYPE_UNSPECIFIED]
+    /// if [target] doesn't correspond to any enum values.
+    return _automationTypeMap[target] ??
+        InsertionOrder_InsertionOrderBudget_InsertionOrderAutomationType
+            .INSERTION_ORDER_AUTOMATION_TYPE_UNSPECIFIED;
   }
 }
