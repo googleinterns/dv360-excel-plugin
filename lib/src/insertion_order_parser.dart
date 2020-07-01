@@ -134,25 +134,20 @@ class InsertionOrderParser {
     return date;
   }
 
-  static InsertionOrder_EntityStatus _createEntityStatus(String target) {
-    return _entityStatusMap[target] ?? InsertionOrder_EntityStatus.valueOf(0);
-  }
+  static InsertionOrder_EntityStatus _createEntityStatus(String target) =>
+      _entityStatusMap[target] ?? InsertionOrder_EntityStatus.valueOf(0);
 
-  static InsertionOrder_Pacing_PacingPeriod _createPacingPeriod(String target) {
-    return _pacingPeriodMap[target] ??
-        InsertionOrder_Pacing_PacingPeriod.valueOf(0);
-  }
+  static InsertionOrder_Pacing_PacingPeriod _createPacingPeriod(
+          String target) =>
+      _pacingPeriodMap[target] ?? InsertionOrder_Pacing_PacingPeriod.valueOf(0);
 
-  static InsertionOrder_Pacing_PacingType _createPacingType(String target) {
-    return _pacingTypeMap[target] ??
-        InsertionOrder_Pacing_PacingType.valueOf(0);
-  }
+  static InsertionOrder_Pacing_PacingType _createPacingType(String target) =>
+      _pacingTypeMap[target] ?? InsertionOrder_Pacing_PacingType.valueOf(0);
 
   static InsertionOrder_InsertionOrderBudget_BudgetUnit _createBudgetUnit(
-      String target) {
-    return _budgetUnitMap[target] ??
-        InsertionOrder_InsertionOrderBudget_BudgetUnit.valueOf(0);
-  }
+          String target) =>
+      _budgetUnitMap[target] ??
+      InsertionOrder_InsertionOrderBudget_BudgetUnit.valueOf(0);
 
   static InsertionOrder_InsertionOrderBudget_InsertionOrderAutomationType
       _createAutomationType(String target) {
