@@ -1,23 +1,22 @@
 @TestOn('browser')
-
 import 'package:angular/angular.dart';
 import 'package:angular_test/angular_test.dart';
-import 'package:dv360_excel_plugin/src/excel.dart';
 import 'package:dv360_excel_plugin/src/query_component.dart';
+import 'package:dv360_excel_plugin/src/query_service.dart';
 import 'package:mockito/mockito.dart';
 import 'package:pageloader/html.dart';
 import 'package:test/test.dart';
 
-import 'testing/query_component_po.dart';
 import 'query_component_test.template.dart' as ng;
+import 'testing/query_component_po.dart';
 
 @Injectable()
-class MockExcelDart extends Mock implements ExcelDart {
-  MockExcelDart._private();
+class MockQueryService extends Mock implements QueryService {
+  MockQueryService._private();
 
-  static final MockExcelDart _singleton = MockExcelDart._private();
+  static final MockQueryService _singleton = MockQueryService._private();
 
-  factory MockExcelDart() {
+  factory MockQueryService() {
     return _singleton;
   }
 }
@@ -25,7 +24,7 @@ class MockExcelDart extends Mock implements ExcelDart {
 @Directive(
   selector: '[override]',
   providers: [
-    ClassProvider(ExcelDart, useClass: MockExcelDart),
+    ClassProvider(QueryService, useClass: MockQueryService),
   ],
 )
 class OverrideDirective {}
@@ -44,7 +43,7 @@ void main() {
   NgTestBed testBed;
   NgTestFixture<QueryTestComponent> fixture;
   QueryComponentPageObject queryComponentPO;
-  MockExcelDart mockExcel;
+  MockQueryService mockQueryService;
 
   setUp(() async {
     testBed = NgTestBed.forComponent<QueryTestComponent>(
@@ -53,13 +52,13 @@ void main() {
     final context =
         HtmlPageLoaderElement.createFromElement((fixture.rootElement));
     queryComponentPO = QueryComponentPageObject.create(context);
-    mockExcel = MockExcelDart();
+    mockQueryService = MockQueryService();
   });
 
   tearDown(disposeAnyRunningTest);
 
-  test('populate button clicks invokes exec()', () async {
-    await queryComponentPO.clickPopulate();
-    verify(mockExcel.exec());
+  test('populate button clicks invokes execQuery()', () async {
+    await queryComponentPO.clickExecQuery();
+    verify(mockQueryService.execQuery(any, any));
   });
 }
