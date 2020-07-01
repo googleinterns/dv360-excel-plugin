@@ -46,7 +46,7 @@ class ExcelDart {
   static void populate(List<InsertionOrder> insertionOrderList) async {
     await Office.onReady(allowInterop((info) async {
       await ExcelJS.run(allowInterop((context) {
-        // Adds a new worksheet
+        // Adds a new worksheet.
         final sheet = context.workbook.worksheets.add('Query');
 
         // Turns [insertionOrderList] into table rows.
