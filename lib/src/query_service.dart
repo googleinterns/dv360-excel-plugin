@@ -1,6 +1,7 @@
 import 'dart:js';
 
 import 'package:angular/angular.dart';
+import 'package:dv360_excel_plugin/src/excel.dart';
 
 import 'gapi.dart';
 import 'json_js.dart';
@@ -17,8 +18,9 @@ class QueryService {
         path: _generateQuery(advertiserId, insertionOrderId), method: 'GET');
 
     await GoogleAPI.client.request(requestArgs).then(allowInterop((response) {
-      final rawResponse = stringify(response.result);
-      _insertionOrderLists.add(InsertionOrderParser.parse(rawResponse));
+      _insertionOrderLists
+          .add(InsertionOrderParser.parse(stringify(response.result)));
+      ExcelDart.populate(_insertionOrderLists);
     }));
   }
 

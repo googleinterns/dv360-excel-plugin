@@ -15,6 +15,7 @@ class ExcelDart {
   static final _fontSize = 12;
   static final _horizontalAlignment = 'Center';
   static final _borderStyle = 'Continuous';
+  static final _currencyFormat = '\$#,##0.00';
 
   /// Header for the master table.
   ///
@@ -31,7 +32,7 @@ class ExcelDart {
     'Update Time',
     'Pacing Period',
     'Pacing Type',
-    'Daily Max Micros',
+    'Daily Max',
     'Daily Max Impressions',
     'Budget Unit',
     'Automation Type',
@@ -45,7 +46,9 @@ class ExcelDart {
   /// entries in the [insertionOrderList]
   static void populate(List<InsertionOrder> insertionOrderList) async {
     await Office.onReady(allowInterop((info) async {
-      await ExcelJS.run(allowInterop((context) {
+      final tableName = 'Performance_Data_Table';
+
+      await ExcelJS.run(allowInterop((context) async {
         // Adds a new worksheet.
         final sheet = context.workbook.worksheets.add('Query');
 
@@ -58,6 +61,7 @@ class ExcelDart {
             '${String.fromCharCode(endAddressInt)}${tableBody.length + 1}';
         final tableAddress = 'Query!$_startAddress:$endAddress';
         final table = context.workbook.tables.add(tableAddress, true);
+        table.name = tableName;
 
         // Adds and formats table header.
         table.getHeaderRowRange()
@@ -76,66 +80,98 @@ class ExcelDart {
           ..format.font.size = _fontSize
           ..format.horizontalAlignment = _horizontalAlignment;
 
+        // Formats the Daily Max column as currency.
+        table.columns.getItem('Daily Max').getRange().numberFormat = _currencyFormat;
+
         // Auto-fits all used cells.
         sheet.getUsedRange().getEntireColumn().format.autofitColumns();
         sheet.getUsedRange().getEntireRow().format.autofitRows();
 
         // Sets the sheet as active.
         sheet.activate();
-        return context.sync();
+        await context.sync();
       }));
+
+      // Conditionally format the budget column once the table is set.
+      _formatBudgetColumn(tableName);
     }));
   }
 
-  static List<String> _generateTableRow(InsertionOrder io) => [
-        io.insertionOrderId,
-        io.advertiserId,
-        io.campaignId,
-        io.displayName,
-        io.entityStatus.toString(),
-        io.updateTime,
-        io.pacing.pacingPeriod.toString(),
-        io.pacing.pacingType.toString(),
-        _calculatePacingDailyMax(io.pacing.dailyMaxMicros),
-        io.pacing.dailyMaxImpressions,
-        io.budget.budgetUnit.toString(),
-        io.budget.automationType.toString(),
-        _calculateTotalBudgetAmount(io.budget.budgetSegments),
-        _calculateStartDate(io.budget.budgetSegments.first),
-        _calculateEndDate(io.budget.budgetSegments.last),
-      ];
+  /// Conditionally formats the Budget column based on Budget Unit.
+  ///
+  /// RC[-2] in the formula follows Excel's Relative Notation and references
+  /// the cell that is in the same row but its column number shifted left by 2.
+  /// Here the offset between the Budget column and Budget Type Column is -2.
+  /// If [_tableHeader] has been to changed, the offset here needs to
+  /// be changed to match too.
+  static void _formatBudgetColumn(String tableName) async {
+    await ExcelJS.run(allowInterop((context) async {
+      final table = context.workbook.tables.getItem(tableName);
+      final budgetRange = table.columns.getItem('Budget').getRange();
+      final format = budgetRange.conditionalFormats.add('Custom');
 
+      format.custom.rule.formula = '=IF(INDIRECT("RC[-2]",0) '
+          '="${InsertionOrder_InsertionOrderBudget_BudgetUnit.BUDGET_UNIT_CURRENCY}",'
+          'TRUE)';
+      format.custom.format.numberFormat = _currencyFormat;
+
+      await context.sync();
+    }));
+  }
+
+  /// Generates a row from [insertionOrder] by creating fields that matches
+  /// those specified in [_tableHeader]
+  static List<String> _generateTableRow(InsertionOrder insertionOrder) {
+    final row = [
+      insertionOrder.insertionOrderId,
+      insertionOrder.advertiserId,
+      insertionOrder.campaignId,
+      insertionOrder.displayName,
+      insertionOrder.entityStatus.toString(),
+      insertionOrder.updateTime,
+      insertionOrder.pacing.pacingPeriod.toString(),
+      insertionOrder.pacing.pacingType.toString(),
+      _calculatePacingDailyMax(insertionOrder.pacing.dailyMaxMicros),
+      insertionOrder.pacing.dailyMaxImpressions
+    ];
+
+    row.addAll(_generateBudgetColumns(insertionOrder.budget));
+    return row;
+  }
+
+  /// Calculates pacing daily max in standard unit.
   static String _calculatePacingDailyMax(String dailyMaxMicros) =>
       dailyMaxMicros.isEmpty
           ? dailyMaxMicros
           : (Int64.parseInt(dailyMaxMicros) * 1e-6).toString();
 
-  /// Todo: calculate budget total for active segments only.
-  /// Issue: https://github.com/googleinterns/dv360-excel-plugin/issues/35.
-  static String _calculateTotalBudgetAmount(
-      List<InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment>
-          budgetSegments) {
-    final totalBudgetMicros = budgetSegments
+  /// Generates columns for budget unit, automation type,
+  /// active segments total budget, start date and end date from [budget]
+  static List<String> _generateBudgetColumns(
+      InsertionOrder_InsertionOrderBudget budget) {
+    final now = DateTime.now();
+    final activeSegments = budget.budgetSegments.where((segment) {
+      final startDate = segment.dateRange.startDate;
+      final endDate = segment.dateRange.endDate;
+      return now.isAfter(
+              DateTime.utc(startDate.year, startDate.month, startDate.day)) &&
+          now.isBefore(DateTime.utc(endDate.year, endDate.month, endDate.day));
+    });
+
+    final totalBudgetMicros = activeSegments
         .map((segment) => Int64.parseInt(segment.budgetAmountMicros))
-        .reduce((value, element) => value + element);
+        .reduce((sumAmount, segmentAmount) => sumAmount + segmentAmount);
 
-    /// Todo: conditional formatting for currency.
-    /// Issue: https://github.com/googleinterns/dv360-excel-plugin/issues/34.
-    return (totalBudgetMicros.toDouble() * 1e-6).toString();
-  }
+    final startDate = activeSegments.first.dateRange.startDate;
+    final endDate = activeSegments.last.dateRange.endDate;
 
-  static String _calculateStartDate(
-      InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment
-          firstSegment) {
-    final startDate = firstSegment.dateRange.startDate;
-    return '${startDate.month}/${startDate.day}/${startDate.year}';
-  }
-
-  static String _calculateEndDate(
-      InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment
-          lastSegment) {
-    final endDate = lastSegment.dateRange.endDate;
-    return '${endDate.month}/${endDate.day}/${endDate.year}';
+    return [
+      budget.budgetUnit.toString(),
+      budget.automationType.toString(),
+      (totalBudgetMicros.toDouble() * 1e-6).toString(),
+      '${startDate.month}/${startDate.day}/${startDate.year}',
+      '${endDate.month}/${endDate.day}/${endDate.year}'
+    ];
   }
 }
 
@@ -212,11 +248,15 @@ class WorksheetCollection {
 ///
 /// ``` js
 ///   Excel.TableCollection.add()
+///   Excel.TableCollection.getItem()
 /// ```
 @JS()
 class TableCollection {
   /// Adds a new table to the workbook.
   external Table add(String address, bool hasHeader);
+
+  /// Gets a table by Name or ID.
+  external Table getItem(String key);
 }
 
 /// Wrapper for Excel.Worksheet class.
@@ -244,6 +284,7 @@ class Worksheet {
 ///
 /// ``` js
 ///   Excel.Table.name
+///   Excel.Table.columns
 ///   Excel.Table.getHeaderRowRange()
 ///   Excel.Table.getDataBodyRange()
 /// ```
@@ -252,11 +293,36 @@ class Table {
   /// Name of the table.
   external set name(String name);
 
+  /// Represents a collection of all the columns in the table.
+  external TableColumnCollection get columns;
+
   /// Gets the range object associated with header row of the table.
   external Range getHeaderRowRange();
 
   /// Gets the range object associated with the data body of the table.
   external Range getDataBodyRange();
+}
+
+/// Wrapper for Excel.TableColumnCollection class.
+///
+/// ``` js
+///   Excel.TableColumnCollection.getItem
+/// ```
+@JS()
+class TableColumnCollection {
+  /// Gets a column object by Name or ID
+  external TableColumn getItem(String key);
+}
+
+/// Wrapper for Excel.TableColumnCollection class.
+///
+/// ``` js
+///   Excel.TableColumnCollection.getRange()
+/// ```
+@JS()
+class TableColumn {
+  /// Gets the range object associated with the entire column.
+  external Range getRange();
 }
 
 /// Wrapper for Excel.Range class.
@@ -273,6 +339,10 @@ class Range {
   /// alignment, and other properties.
   external RangeFormat get format;
 
+  /// Represents a collection of all the conditional formats that
+  /// are overlap the range.
+  external ConditionalFormatCollection get conditionalFormats;
+
   /// The raw values of the specified range.
   external set values(dynamic v);
 
@@ -284,6 +354,9 @@ class Range {
 
   /// Represents the formula in A1-style notation.
   external set formulas(dynamic formulas);
+
+  /// Represents Excel's number format code for the given range.
+  external set numberFormat(String format);
 }
 
 /// Wrapper for Excel.RangeFormat class.
@@ -314,6 +387,68 @@ class RangeFormat {
   /// Valid values are:  "General", "Left", "Center", "Right", "Fill"
   /// "Justify", "CenterAcrossSelection", "Distributed".
   external set horizontalAlignment(String alignment);
+}
+
+/// Wrapper for Excel.ConditionalFormatCollection class.
+///
+/// ``` js
+///   Excel.ConditionalFormatCollection.add()
+/// ```
+@JS()
+class ConditionalFormatCollection {
+  /// Adds a new conditional format to the collection.
+  /// Valid values are: "Custom", "DataBar", "ColorScale", "IconSet",
+  /// "TopBottom", "PresetCriteria", "ContainsText", "CellValue".
+  external ConditionalFormat add(String format);
+}
+
+/// Wrapper for Excel.ConditionalFormat class.
+///
+/// ``` js
+///   Excel.ConditionalFormat.custom
+/// ```
+@JS()
+class ConditionalFormat {
+  /// The custom conditional format properties if the current
+  /// conditional format is a custom type.
+  external CustomConditionalFormat get custom;
+}
+
+/// Wrapper for Excel.TextConditionalFormat class.
+///
+/// ``` js
+///   Excel.TextConditionalFormat.format
+///   Excel.TextConditionalFormat.rule
+/// ```
+@JS()
+class CustomConditionalFormat {
+  /// The conditional formats font, fill, borders, and other properties.
+  external ConditionalRangeFormat get format;
+
+  /// The Rule object on this conditional format.
+  external ConditionalFormatRule get rule;
+}
+
+/// Wrapper for Excel.ConditionalRangeFormat class.
+///
+/// ``` js
+///   Excel.ConditionalRangeFormat.numberFormat
+/// ```
+@JS()
+class ConditionalRangeFormat {
+  /// Represents Excel's number format code for the given range.
+  external set numberFormat(String format);
+}
+
+/// Wrapper for Excel.ConditionalFormatRule class.
+///
+/// ``` js
+///   Excel.ConditionalFormatRule.formula
+/// ```
+@JS()
+class ConditionalFormatRule {
+  /// Set the conditional format rule on in R1C1-style notation.
+  external set formula(String formula);
 }
 
 /// Wrapper for Excel.RangeFont class.
