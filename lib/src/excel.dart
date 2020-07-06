@@ -81,8 +81,7 @@ class ExcelDart {
           ..format.horizontalAlignment = _horizontalAlignment;
 
         // Formats the Daily Max column as currency.
-        table.columns.getItem('Daily Max').getRange().numberFormat =
-            _currencyFormat;
+        table.columns.getItem('Daily Max').getRange().numberFormat = _currencyFormat;
 
         // Auto-fits all used cells.
         sheet.getUsedRange().getEntireColumn().format.autofitColumns();
@@ -112,7 +111,7 @@ class ExcelDart {
       final format = budgetRange.conditionalFormats.add('Custom');
 
       format.custom.rule.formula = '=IF(INDIRECT("RC[-2]",0) '
-          '="${InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY}",'
+          '="${InsertionOrder_InsertionOrderBudget_BudgetUnit.BUDGET_UNIT_CURRENCY}",'
           'TRUE)';
       format.custom.format.numberFormat = _currencyFormat;
 
@@ -148,7 +147,8 @@ class ExcelDart {
 
   /// Generates columns for budget unit, automation type,
   /// active segments total budget, start date and end date from [budget]
-  static List<String> _generateBudgetColumns(InsertionOrder_Budget budget) {
+  static List<String> _generateBudgetColumns(
+      InsertionOrder_InsertionOrderBudget budget) {
     final now = DateTime.now();
     final activeSegments = budget.budgetSegments.where((segment) {
       final startDate = segment.dateRange.startDate;
