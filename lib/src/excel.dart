@@ -9,13 +9,13 @@ import 'proto/insertion_order.pb.dart';
 
 /// Service class that provides dart functions to interact with Excel.
 class ExcelDart {
-  static final _startAddress = 'A1';
+  static const _startAddress = 'A1';
   static final _startAddressInt = 'A'.codeUnitAt(0);
-  static final _fontName = 'Roboto';
-  static final _fontSize = 12;
-  static final _horizontalAlignment = 'Center';
-  static final _borderStyle = 'Continuous';
-  static final _currencyFormat = '\$#,##0.00';
+  static const _fontName = 'Roboto';
+  static const _fontSize = 12;
+  static const _horizontalAlignment = 'Center';
+  static const _borderStyle = 'Continuous';
+  static const _currencyFormat = '\$#,##0.00';
 
   /// Header for the master table.
   ///
@@ -43,7 +43,7 @@ class ExcelDart {
 
   /// Waits for Office APIs to be ready and then creates
   /// a new spreadsheet with [sheetName] and populates the spreadsheet with
-  /// entries in the [insertionOrderList]
+  /// entries in the [insertionOrderList].
   static void populate(List<InsertionOrder> insertionOrderList) async {
     await Office.onReady(allowInterop((info) async {
       final tableName = 'Performance_Data_Table';
@@ -90,7 +90,7 @@ class ExcelDart {
 
         // Sets the sheet as active.
         sheet.activate();
-        await context.sync();
+        return context.sync();
       }));
 
       // Conditionally format the budget column once the table is set.
@@ -100,10 +100,10 @@ class ExcelDart {
 
   /// Conditionally formats the Budget column based on Budget Unit.
   ///
-  /// RC[-2] in the formula follows Excel's Relative Notation and references
+  /// 'RC[-2]' in the formula follows Excel's Relative Notation and references
   /// the cell that is in the same row but its column number shifted left by 2.
   /// Here the offset between the Budget column and Budget Type Column is -2.
-  /// If [_tableHeader] has been to changed, the offset here needs to
+  /// If [_tableHeader] has been changed, the offset here needs to
   /// be changed to match too.
   static void _formatBudgetColumn(String tableName) async {
     await ExcelJS.run(allowInterop((context) async {
@@ -116,13 +116,16 @@ class ExcelDart {
           'TRUE)';
       format.custom.format.numberFormat = _currencyFormat;
 
-      await context.sync();
+      return context.sync();
     }));
   }
 
   /// Generates a row from [insertionOrder] by creating fields that matches
-  /// those specified in [_tableHeader]
+  /// those specified in [_tableHeader].
   static List<String> _generateTableRow(InsertionOrder insertionOrder) {
+    final activeBudgetSegments =
+        _extractActiveBudgetSegments(insertionOrder.budget.budgetSegments);
+
     final row = [
       insertionOrder.insertionOrderId,
       insertionOrder.advertiserId,
@@ -133,10 +136,14 @@ class ExcelDart {
       insertionOrder.pacing.pacingPeriod.toString(),
       insertionOrder.pacing.pacingType.toString(),
       _calculatePacingDailyMax(insertionOrder.pacing.dailyMaxMicros),
-      insertionOrder.pacing.dailyMaxImpressions
+      insertionOrder.pacing.dailyMaxImpressions,
+      insertionOrder.budget.budgetUnit.toString(),
+      insertionOrder.budget.automationType.toString(),
+      _calculateTotalBudgetAmount(activeBudgetSegments),
+      _calculateStartDate(activeBudgetSegments.first),
+      _calculateEndDate(activeBudgetSegments.last),
     ];
 
-    row.addAll(_generateBudgetColumns(insertionOrder.budget));
     return row;
   }
 
@@ -146,11 +153,11 @@ class ExcelDart {
           ? dailyMaxMicros
           : (Int64.parseInt(dailyMaxMicros) * 1e-6).toString();
 
-  /// Generates columns for budget unit, automation type,
-  /// active segments total budget, start date and end date from [budget]
-  static List<String> _generateBudgetColumns(InsertionOrder_Budget budget) {
+  /// Extracts active budget segments based on start and end dates.
+  static List<InsertionOrder_Budget_BudgetSegment> _extractActiveBudgetSegments(
+      List<InsertionOrder_Budget_BudgetSegment> budgetSegments) {
     final now = DateTime.now();
-    final activeSegments = budget.budgetSegments.where((segment) {
+    final activeSegments = budgetSegments.where((segment) {
       final startDate = segment.dateRange.startDate;
       final endDate = segment.dateRange.endDate;
       return now.isAfter(
@@ -158,20 +165,27 @@ class ExcelDart {
           now.isBefore(DateTime.utc(endDate.year, endDate.month, endDate.day));
     });
 
+    return activeSegments.toList();
+  }
+
+  static String _calculateTotalBudgetAmount(
+      List<InsertionOrder_Budget_BudgetSegment> activeSegments) {
     final totalBudgetMicros = activeSegments
         .map((segment) => Int64.parseInt(segment.budgetAmountMicros))
         .reduce((sumAmount, segmentAmount) => sumAmount + segmentAmount);
 
-    final startDate = activeSegments.first.dateRange.startDate;
-    final endDate = activeSegments.last.dateRange.endDate;
+    return (totalBudgetMicros.toDouble() * 1e-6).toString();
+  }
 
-    return [
-      budget.budgetUnit.toString(),
-      budget.automationType.toString(),
-      (totalBudgetMicros.toDouble() * 1e-6).toString(),
-      '${startDate.month}/${startDate.day}/${startDate.year}',
-      '${endDate.month}/${endDate.day}/${endDate.year}'
-    ];
+  static String _calculateStartDate(
+      InsertionOrder_Budget_BudgetSegment segment) {
+    final startDate = segment.dateRange.startDate;
+    return '${startDate.month}/${startDate.day}/${startDate.year}';
+  }
+
+  static String _calculateEndDate(InsertionOrder_Budget_BudgetSegment segment) {
+    final endDate = segment.dateRange.endDate;
+    return '${endDate.month}/${endDate.day}/${endDate.year}';
   }
 }
 
