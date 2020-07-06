@@ -25,14 +25,14 @@ class InsertionOrderParser {
           value: (v) => v);
 
   static final _budgetUnitMap =
-      Map<String, InsertionOrder_Budget_BudgetUnit>.fromIterable(
-          InsertionOrder_Budget_BudgetUnit.values,
+      Map<String, InsertionOrder_InsertionOrderBudget_BudgetUnit>.fromIterable(
+          InsertionOrder_InsertionOrderBudget_BudgetUnit.values,
           key: (v) => v.name,
           value: (v) => v);
 
   static final _automationTypeMap = Map<String,
-          InsertionOrder_Budget_InsertionOrderAutomationType>.fromIterable(
-      InsertionOrder_Budget_InsertionOrderAutomationType.values,
+          InsertionOrder_InsertionOrderBudget_InsertionOrderAutomationType>.fromIterable(
+      InsertionOrder_InsertionOrderBudget_InsertionOrderAutomationType.values,
       key: (v) => v.name,
       value: (v) => v);
 
@@ -73,12 +73,13 @@ class InsertionOrderParser {
   }
 
   /// Creates an [InsertionOrder_InsertionOrderBudget] instance from [map].
-  static InsertionOrder_Budget _createBudget(Map<String, dynamic> map) {
+  static InsertionOrder_InsertionOrderBudget _createBudget(
+      Map<String, dynamic> map) {
     if (map == null || map.isEmpty) {
-      return InsertionOrder_Budget();
+      return InsertionOrder_InsertionOrderBudget();
     }
 
-    final budget = InsertionOrder_Budget()
+    final budget = InsertionOrder_InsertionOrderBudget()
       ..budgetUnit = _createBudgetUnit(map['budgetUnit'])
       ..automationType = _createAutomationType(map['automationType']);
 
@@ -88,44 +89,47 @@ class InsertionOrderParser {
     return budget;
   }
 
-  static InsertionOrder_Budget_BudgetSegment _createBudgetSegment(
-      Map<String, dynamic> map) {
+  static InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment
+      _createBudgetSegment(Map<String, dynamic> map) {
     if (map == null || map.isEmpty) {
-      return InsertionOrder_Budget_BudgetSegment();
+      return InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment();
     }
 
-    final budgetSegment = InsertionOrder_Budget_BudgetSegment()
-      ..budgetAmountMicros = map['budgetAmountMicros'] ?? _emptyEntry
-      ..description = map['description'] ?? _emptyEntry
-      ..campaignBudgetId = map['campaignBudgetId'] ?? _emptyEntry
-      ..dateRange = _createDateRange(map['dateRange']);
+    final budgetSegment =
+        InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment()
+          ..budgetAmountMicros = map['budgetAmountMicros'] ?? _emptyEntry
+          ..description = map['description'] ?? _emptyEntry
+          ..campaignBudgetId = map['campaignBudgetId'] ?? _emptyEntry
+          ..dateRange = _createDateRange(map['dateRange']);
 
     return budgetSegment;
   }
 
-  static InsertionOrder_Budget_BudgetSegment_DateRange _createDateRange(
-      Map<String, dynamic> map) {
+  static InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment_DateRange
+      _createDateRange(Map<String, dynamic> map) {
     if (map == null || map.isEmpty) {
-      return InsertionOrder_Budget_BudgetSegment_DateRange();
+      return InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment_DateRange();
     }
 
-    final dateRange = InsertionOrder_Budget_BudgetSegment_DateRange()
-      ..startDate = _createDate(map['startDate'])
-      ..endDate = _createDate(map['endDate']);
+    final dateRange =
+        InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment_DateRange()
+          ..startDate = _createDate(map['startDate'])
+          ..endDate = _createDate(map['endDate']);
 
     return dateRange;
   }
 
-  static InsertionOrder_Budget_BudgetSegment_DateRange_Date _createDate(
-      Map<String, dynamic> map) {
+  static InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment_DateRange_Date
+      _createDate(Map<String, dynamic> map) {
     if (map == null || map.isEmpty) {
-      return InsertionOrder_Budget_BudgetSegment_DateRange_Date();
+      return InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment_DateRange_Date();
     }
 
-    final date = InsertionOrder_Budget_BudgetSegment_DateRange_Date()
-      ..year = map['year'] ?? _emptyEntry
-      ..month = map['month'] ?? _emptyEntry
-      ..day = map['day'] ?? _emptyEntry;
+    final date =
+        InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment_DateRange_Date()
+          ..year = map['year'] ?? _emptyEntry
+          ..month = map['month'] ?? _emptyEntry
+          ..day = map['day'] ?? _emptyEntry;
 
     return date;
   }
@@ -140,20 +144,23 @@ class InsertionOrderParser {
   static InsertionOrder_Pacing_PacingType _createPacingType(String target) =>
       _pacingTypeMap[target] ?? InsertionOrder_Pacing_PacingType.valueOf(0);
 
-  static InsertionOrder_Budget_BudgetUnit _createBudgetUnit(String target) =>
-      _budgetUnitMap[target] ?? InsertionOrder_Budget_BudgetUnit.valueOf(0);
+  static InsertionOrder_InsertionOrderBudget_BudgetUnit _createBudgetUnit(
+          String target) =>
+      _budgetUnitMap[target] ??
+      InsertionOrder_InsertionOrderBudget_BudgetUnit.valueOf(0);
 
-  static InsertionOrder_Budget_InsertionOrderAutomationType
+  static InsertionOrder_InsertionOrderBudget_InsertionOrderAutomationType
       _createAutomationType(String target) {
     /// Returns default value if [target] is null
     if (target == null) {
-      return InsertionOrder_Budget_InsertionOrderAutomationType.valueOf(0);
+      return InsertionOrder_InsertionOrderBudget_InsertionOrderAutomationType
+          .valueOf(0);
     }
 
     /// Returns [INSERTION_ORDER_AUTOMATION_TYPE_UNSPECIFIED]
     /// if [target] doesn't correspond to any enum values.
     return _automationTypeMap[target] ??
-        InsertionOrder_Budget_InsertionOrderAutomationType
+        InsertionOrder_InsertionOrderBudget_InsertionOrderAutomationType
             .INSERTION_ORDER_AUTOMATION_TYPE_UNSPECIFIED;
   }
 }
