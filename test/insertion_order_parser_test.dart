@@ -9,12 +9,9 @@ void main() {
     const emptyEntry = '';
 
     InsertionOrder insertionOrderTemplate;
-    InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment_DateRange
-        oneDateRange;
-    InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment_DateRange_Date
-        oneStartDate;
-    InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment_DateRange_Date
-        oneEndDate;
+    InsertionOrder_Budget_BudgetSegment_DateRange oneDateRange;
+    InsertionOrder_Budget_BudgetSegment_DateRange_Date oneStartDate;
+    InsertionOrder_Budget_BudgetSegment_DateRange_Date oneEndDate;
 
     setUp(() {
       insertionOrderTemplate = InsertionOrder()
@@ -25,24 +22,21 @@ void main() {
         ..updateTime = emptyEntry
         ..entityStatus = InsertionOrder_EntityStatus.ENTITY_STATUS_UNSPECIFIED
         ..pacing = InsertionOrder_Pacing()
-        ..budget = InsertionOrder_InsertionOrderBudget();
+        ..budget = InsertionOrder_Budget();
 
-      oneStartDate =
-          InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment_DateRange_Date()
-            ..year = 2019
-            ..month = 1
-            ..day = 1;
+      oneStartDate = InsertionOrder_Budget_BudgetSegment_DateRange_Date()
+        ..year = 2019
+        ..month = 1
+        ..day = 1;
 
-      oneEndDate =
-          InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment_DateRange_Date()
-            ..year = 2019
-            ..month = 12
-            ..day = 31;
+      oneEndDate = InsertionOrder_Budget_BudgetSegment_DateRange_Date()
+        ..year = 2019
+        ..month = 12
+        ..day = 31;
 
-      oneDateRange =
-          InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment_DateRange()
-            ..startDate = oneStartDate
-            ..endDate = oneEndDate;
+      oneDateRange = InsertionOrder_Budget_BudgetSegment_DateRange()
+        ..startDate = oneStartDate
+        ..endDate = oneEndDate;
     });
 
     tearDown(disposeAnyRunningTest);
@@ -115,24 +109,20 @@ void main() {
         ..pacingPeriod = InsertionOrder_Pacing_PacingPeriod.PACING_PERIOD_FLIGHT
         ..pacingType = InsertionOrder_Pacing_PacingType.PACING_TYPE_AHEAD
         ..dailyMaxImpressions = emptyEntry;
-      final firstSegment =
-          InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment()
-            ..budgetAmountMicros = '4000000'
-            ..description = 'year-2019'
-            ..campaignBudgetId = emptyEntry
-            ..dateRange = oneDateRange;
-      final secondSegment =
-          InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment()
-            ..budgetAmountMicros = '2000000'
-            ..description = emptyEntry
-            ..campaignBudgetId = emptyEntry
-            ..dateRange = oneDateRange;
-      final expectedBudget = InsertionOrder_InsertionOrderBudget()
-        ..budgetUnit =
-            InsertionOrder_InsertionOrderBudget_BudgetUnit.BUDGET_UNIT_CURRENCY
-        ..automationType =
-            InsertionOrder_InsertionOrderBudget_InsertionOrderAutomationType
-                .INSERTION_ORDER_AUTOMATION_TYPE_NONE
+      final firstSegment = InsertionOrder_Budget_BudgetSegment()
+        ..budgetAmountMicros = '4000000'
+        ..description = 'year-2019'
+        ..campaignBudgetId = emptyEntry
+        ..dateRange = oneDateRange;
+      final secondSegment = InsertionOrder_Budget_BudgetSegment()
+        ..budgetAmountMicros = '2000000'
+        ..description = emptyEntry
+        ..campaignBudgetId = emptyEntry
+        ..dateRange = oneDateRange;
+      final expectedBudget = InsertionOrder_Budget()
+        ..budgetUnit = InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY
+        ..automationType = InsertionOrder_Budget_InsertionOrderAutomationType
+            .INSERTION_ORDER_AUTOMATION_TYPE_NONE
         ..budgetSegments.addAll([firstSegment, secondSegment]);
       final expected = InsertionOrder()
         ..advertiserId = '11111'
@@ -214,12 +204,10 @@ void main() {
 
         final actual = InsertionOrderParser.parse(input);
 
-        final budget = InsertionOrder_InsertionOrderBudget()
-          ..budgetUnit = InsertionOrder_InsertionOrderBudget_BudgetUnit
-              .BUDGET_UNIT_CURRENCY
-          ..automationType =
-              InsertionOrder_InsertionOrderBudget_InsertionOrderAutomationType
-                  .INSERTION_ORDER_AUTOMATION_TYPE_NONE;
+        final budget = InsertionOrder_Budget()
+          ..budgetUnit = InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY
+          ..automationType = InsertionOrder_Budget_InsertionOrderAutomationType
+              .INSERTION_ORDER_AUTOMATION_TYPE_NONE;
         final expected = insertionOrderTemplate..budget = budget;
         expect(actual, expected);
       });
@@ -236,12 +224,10 @@ void main() {
 
         final actual = InsertionOrderParser.parse(input);
 
-        final budget = InsertionOrder_InsertionOrderBudget()
-          ..budgetUnit = InsertionOrder_InsertionOrderBudget_BudgetUnit
-              .BUDGET_UNIT_CURRENCY
-          ..automationType =
-              InsertionOrder_InsertionOrderBudget_InsertionOrderAutomationType
-                  .INSERTION_ORDER_AUTOMATION_TYPE_BUDGET;
+        final budget = InsertionOrder_Budget()
+          ..budgetUnit = InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY
+          ..automationType = InsertionOrder_Budget_InsertionOrderAutomationType
+              .INSERTION_ORDER_AUTOMATION_TYPE_BUDGET;
         final expected = insertionOrderTemplate..budget = budget;
         expect(actual, expected);
       });
@@ -259,14 +245,11 @@ void main() {
 
         final actual = InsertionOrderParser.parse(input);
 
-        final budget = InsertionOrder_InsertionOrderBudget()
-          ..budgetUnit = InsertionOrder_InsertionOrderBudget_BudgetUnit
-              .BUDGET_UNIT_CURRENCY
-          ..automationType =
-              InsertionOrder_InsertionOrderBudget_InsertionOrderAutomationType
-                  .INSERTION_ORDER_AUTOMATION_TYPE_BUDGET
-          ..budgetSegments.add(
-              InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment());
+        final budget = InsertionOrder_Budget()
+          ..budgetUnit = InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY
+          ..automationType = InsertionOrder_Budget_InsertionOrderAutomationType
+              .INSERTION_ORDER_AUTOMATION_TYPE_BUDGET
+          ..budgetSegments.add(InsertionOrder_Budget_BudgetSegment());
         final expected = insertionOrderTemplate..budget = budget;
         expect(actual, expected);
       });
@@ -287,18 +270,16 @@ void main() {
 
         final actual = InsertionOrderParser.parse(input);
 
-        final segment =
-            InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment()
-              ..budgetAmountMicros = '5000000'
-              ..description = emptyEntry
-              ..campaignBudgetId = emptyEntry
-              ..dateRange = oneDateRange;
-        final budget = InsertionOrder_InsertionOrderBudget()
-          ..budgetUnit = InsertionOrder_InsertionOrderBudget_BudgetUnit
-              .BUDGET_UNIT_UNSPECIFIED
-          ..automationType =
-              InsertionOrder_InsertionOrderBudget_InsertionOrderAutomationType
-                  .INSERTION_ORDER_AUTOMATION_TYPE_NONE
+        final segment = InsertionOrder_Budget_BudgetSegment()
+          ..budgetAmountMicros = '5000000'
+          ..description = emptyEntry
+          ..campaignBudgetId = emptyEntry
+          ..dateRange = oneDateRange;
+        final budget = InsertionOrder_Budget()
+          ..budgetUnit =
+              InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_UNSPECIFIED
+          ..automationType = InsertionOrder_Budget_InsertionOrderAutomationType
+              .INSERTION_ORDER_AUTOMATION_TYPE_NONE
           ..budgetSegments.add(segment);
         final expected = insertionOrderTemplate..budget = budget;
         expect(actual, expected);
@@ -332,31 +313,26 @@ void main() {
 
         final actual = InsertionOrderParser.parse(input);
 
-        final firstSegment =
-            InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment()
-              ..budgetAmountMicros = '5000000'
-              ..description = emptyEntry
-              ..campaignBudgetId = emptyEntry
-              ..dateRange = oneDateRange;
-        final secondSegment =
-            InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment()
-              ..budgetAmountMicros = '4000000'
-              ..description = emptyEntry
-              ..campaignBudgetId = '111111'
-              ..dateRange = oneDateRange;
-        final thirdSegment =
-            InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment()
-              ..budgetAmountMicros = '3000000'
-              ..description = 'no date range'
-              ..campaignBudgetId = emptyEntry
-              ..dateRange =
-                  InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment_DateRange();
-        final budget = InsertionOrder_InsertionOrderBudget()
-          ..budgetUnit = InsertionOrder_InsertionOrderBudget_BudgetUnit
-              .BUDGET_UNIT_UNSPECIFIED
-          ..automationType =
-              InsertionOrder_InsertionOrderBudget_InsertionOrderAutomationType
-                  .INSERTION_ORDER_AUTOMATION_TYPE_NONE
+        final firstSegment = InsertionOrder_Budget_BudgetSegment()
+          ..budgetAmountMicros = '5000000'
+          ..description = emptyEntry
+          ..campaignBudgetId = emptyEntry
+          ..dateRange = oneDateRange;
+        final secondSegment = InsertionOrder_Budget_BudgetSegment()
+          ..budgetAmountMicros = '4000000'
+          ..description = emptyEntry
+          ..campaignBudgetId = '111111'
+          ..dateRange = oneDateRange;
+        final thirdSegment = InsertionOrder_Budget_BudgetSegment()
+          ..budgetAmountMicros = '3000000'
+          ..description = 'no date range'
+          ..campaignBudgetId = emptyEntry
+          ..dateRange = InsertionOrder_Budget_BudgetSegment_DateRange();
+        final budget = InsertionOrder_Budget()
+          ..budgetUnit =
+              InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_UNSPECIFIED
+          ..automationType = InsertionOrder_Budget_InsertionOrderAutomationType
+              .INSERTION_ORDER_AUTOMATION_TYPE_NONE
           ..budgetSegments.addAll([firstSegment, secondSegment, thirdSegment]);
         final expected = insertionOrderTemplate..budget = budget;
         expect(actual, expected);
