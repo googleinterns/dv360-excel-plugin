@@ -8,7 +8,8 @@ import 'gapi.dart';
 @Injectable()
 class QueryService {
   /// Executes the query and returns the raw javascript object.
-  Future<dynamic> execQuery(String advertiserId, String insertionOrderId) async {
+  Future<dynamic> execQuery(
+      String advertiserId, String insertionOrderId) async {
     final requestArgs = RequestArgs(
         path: _generateQuery(advertiserId, insertionOrderId), method: 'GET');
 

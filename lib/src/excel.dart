@@ -115,7 +115,7 @@ class ExcelDart {
       final format = budgetRange.conditionalFormats.add('Custom');
 
       format.custom.rule.formula = '=IF(INDIRECT("RC[-2]",0) '
-          '="${InsertionOrder_InsertionOrderBudget_BudgetUnit.BUDGET_UNIT_CURRENCY}",'
+          '="${InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY}",'
           'TRUE)';
       format.custom.format.numberFormat = _currencyFormat;
 
@@ -158,10 +158,8 @@ class ExcelDart {
   /// Extracts the active budget segment based on start and end dates.
   ///
   /// There can only be 1 active budget segment at a time.
-  static InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment
-      _extractActiveBudgetSegment(
-          List<InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment>
-              budgetSegments) {
+  static InsertionOrder_Budget_BudgetSegment _extractActiveBudgetSegment(
+      List<InsertionOrder_Budget_BudgetSegment> budgetSegments) {
     final now = DateTime.now();
     final activeSegments = budgetSegments.where((segment) {
       final startDate = segment.dateRange.startDate;
@@ -179,8 +177,7 @@ class ExcelDart {
           Int64.parseInt(budgetAmountMicros));
 
   static String _calculateDate(
-          InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment_DateRange_Date
-              date) =>
+          InsertionOrder_Budget_BudgetSegment_DateRange_Date date) =>
       '${date.month}/${date.day}/${date.year}';
 }
 
