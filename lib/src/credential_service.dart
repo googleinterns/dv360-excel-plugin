@@ -1,21 +1,15 @@
 import 'dart:js';
 
+import 'package:angular/angular.dart';
+
 import 'gapi.dart';
-import 'json_js.dart';
 import 'private_keys.dart' as key_store;
 
+@Injectable()
 class CredentialService {
-  CredentialService._private();
-
-  static final CredentialService _singleton = CredentialService._private();
-
-  factory CredentialService() {
-    return _singleton;
-  }
-
-  GoogleAuth _googleAuth;
-  final _scope = 'https://www.googleapis.com/auth/display-video';
-  final _redirectURI = 'http://localhost:8080';
+  static GoogleAuth _googleAuth;
+  static const _scope = 'https://www.googleapis.com/auth/display-video';
+  static const _redirectURI = 'http://localhost:8080';
 
   /// Loads gapi.client library and calls [_initClient]
   /// when library finishes loading.
@@ -34,7 +28,7 @@ class CredentialService {
     }
   }
 
-  void _initClient() async {
+  static void _initClient() async {
     // Retrieve the discovery document for version 1 of DV360 public API.
     final discoveryUrl =
         'https://displayvideo.googleapis.com/\$discovery/rest?version=v1';
@@ -59,7 +53,7 @@ class CredentialService {
     }));
   }
 
-  void _setSignInStatus(bool isSignedIn) async {
+  static void _setSignInStatus(bool isSignedIn) async {
     final user = _googleAuth.currentUser.get();
     final isAuthorized = user.hasGrantedScopes(_scope);
 
