@@ -8,11 +8,11 @@ import 'gapi.dart';
 @Injectable()
 class QueryService {
   /// Executes the query and returns the raw javascript object.
-  Future<T> execQuery<T>(String advertiserId, String insertionOrderId) async {
+  Future<dynamic> execQuery(String advertiserId, String insertionOrderId) async {
     final requestArgs = RequestArgs(
         path: _generateQuery(advertiserId, insertionOrderId), method: 'GET');
 
-    final responseCompleter = Completer<T>();
+    final responseCompleter = Completer<dynamic>();
     GoogleAPI.client
         .request(requestArgs)
         .execute(allowInterop((jsonResp, rawResp) {
