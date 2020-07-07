@@ -46,11 +46,12 @@ class Client {
 ///
 /// gapi.client.Request object implements goog.Thenable, similar to a Promise.
 /// ``` js
-///   gapi.client.Request.then()
+///   gapi.client.Request.execute()
 /// ```
 @JS()
 class Request {
-  external Future<dynamic> then(Function onFulfilled, [Function onRejected]);
+  /// Executes the request and runs the supplied callback on response.
+  external void execute(Function(dynamic jsonResp, dynamic rawResp) callback);
 }
 
 /// Input argument to [Client.init()].

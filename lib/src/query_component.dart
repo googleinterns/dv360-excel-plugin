@@ -1,6 +1,9 @@
 import 'package:angular/angular.dart';
 import 'package:angular_forms/angular_forms.dart';
 
+import 'excel.dart';
+import 'insertion_order_parser.dart';
+import 'json_js.dart';
 import 'query_service.dart';
 
 @Component(
@@ -14,17 +17,23 @@ import 'query_service.dart';
     {{buttonName}}
     </button>
   ''',
-  providers: [ClassProvider(QueryService)],
+  providers: [ClassProvider(QueryService), ClassProvider(ExcelDart)],
   directives: [formDirectives],
 )
 class QueryComponent {
   final buttonName = 'populate';
-  final QueryService queryService;
+  final QueryService _queryService;
+  final ExcelDart _excel;
 
   String advertiserId;
   String insertionOrderId;
 
-  QueryComponent(this.queryService);
+  QueryComponent(this._queryService, this._excel);
 
-  void onClick() => queryService.execQuery(advertiserId, insertionOrderId);
+  void onClick() async {
+    final jsonResponse =
+        await _queryService.execQuery(advertiserId, insertionOrderId);
+    final parsedResponse = InsertionOrderParser.parse(stringify(jsonResponse));
+    await _excel.populate([parsedResponse]);
+  }
 }

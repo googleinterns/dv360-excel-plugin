@@ -1,6 +1,7 @@
 @TestOn('browser')
 import 'package:angular/angular.dart';
 import 'package:angular_test/angular_test.dart';
+import 'package:dv360_excel_plugin/src/excel.dart';
 import 'package:dv360_excel_plugin/src/query_component.dart';
 import 'package:dv360_excel_plugin/src/query_service.dart';
 import 'package:mockito/mockito.dart';
@@ -21,10 +22,22 @@ class MockQueryService extends Mock implements QueryService {
   }
 }
 
+@Injectable()
+class MockExcelDart extends Mock implements ExcelDart {
+  MockExcelDart._private();
+
+  static final MockExcelDart _singleton = MockExcelDart._private();
+
+  factory MockExcelDart() {
+    return _singleton;
+  }
+}
+
 @Directive(
   selector: '[override]',
   providers: [
     ClassProvider(QueryService, useClass: MockQueryService),
+    ClassProvider(ExcelDart, useClass: MockExcelDart)
   ],
 )
 class OverrideDirective {}
@@ -44,6 +57,7 @@ void main() {
   NgTestFixture<QueryTestComponent> fixture;
   QueryComponentPageObject queryComponentPO;
   MockQueryService mockQueryService;
+  MockExcelDart mockExcelDart;
 
   setUp(() async {
     testBed = NgTestBed.forComponent<QueryTestComponent>(
@@ -53,12 +67,18 @@ void main() {
         HtmlPageLoaderElement.createFromElement((fixture.rootElement));
     queryComponentPO = QueryComponentPageObject.create(context);
     mockQueryService = MockQueryService();
+    mockExcelDart = MockExcelDart();
   });
 
   tearDown(disposeAnyRunningTest);
 
-  test('populate button clicks invokes execQuery()', () async {
-    await queryComponentPO.clickExecQuery();
+  test('populate button clicks invokes QueryService.execQuery()', () async {
+    await queryComponentPO.clickPopulate();
     verify(mockQueryService.execQuery(any, any));
+  });
+
+  test('populate button clicks invokes ExcelDart.populate()', () async {
+    await queryComponentPO.clickPopulate();
+    verify(mockExcelDart.populate(any));
   });
 }
