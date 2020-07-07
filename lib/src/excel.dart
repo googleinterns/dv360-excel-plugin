@@ -152,7 +152,8 @@ class ExcelDart {
   static String _calculatePacingDailyMax(String dailyMaxMicros) =>
       dailyMaxMicros.isEmpty
           ? dailyMaxMicros
-          : Util.convertMicros(Int64.parseInt(dailyMaxMicros)).toString();
+          : Util.convertMicrosToStandardUnitString(
+              Int64.parseInt(dailyMaxMicros));
 
   /// Extracts the active budget segment based on start and end dates.
   ///
@@ -174,7 +175,8 @@ class ExcelDart {
   }
 
   static String _calculateActiveBudgetAmount(String budgetAmountMicros) =>
-      Util.convertMicros(Int64.parseInt(budgetAmountMicros)).toString();
+      Util.convertMicrosToStandardUnitString(
+          Int64.parseInt(budgetAmountMicros));
 
   static String _calculateDate(
           InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment_DateRange_Date
