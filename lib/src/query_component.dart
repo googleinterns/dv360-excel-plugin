@@ -33,6 +33,6 @@ class QueryComponent {
     final jsonResponse =
         await _queryService.execQuery(advertiserId, insertionOrderId);
     final parsedResponse = InsertionOrderParser.parse(stringify(jsonResponse));
-    ExcelDart.populate([parsedResponse]);
+    await ExcelDart.populate([parsedResponse]);
   }
 }

@@ -6,6 +6,7 @@ import 'package:js/js.dart';
 
 import 'office_js.dart';
 import 'proto/insertion_order.pb.dart';
+import 'util.dart';
 
 /// Service class that provides dart functions to interact with Excel.
 class ExcelDart {
@@ -81,7 +82,8 @@ class ExcelDart {
           ..format.horizontalAlignment = _horizontalAlignment;
 
         // Formats the Daily Max column as currency.
-        table.columns.getItem('Daily Max').getRange().numberFormat = _currencyFormat;
+        table.columns.getItem('Daily Max').getRange().numberFormat =
+            _currencyFormat;
 
         // Auto-fits all used cells.
         sheet.getUsedRange().getEntireColumn().format.autofitColumns();
@@ -122,10 +124,10 @@ class ExcelDart {
   /// Generates a row from [insertionOrder] by creating fields that matches
   /// those specified in [_tableHeader].
   static List<String> _generateTableRow(InsertionOrder insertionOrder) {
-    final activeBudgetSegments =
-        _extractActiveBudgetSegments(insertionOrder.budget.budgetSegments);
+    final activeBudgetSegment =
+        _extractActiveBudgetSegment(insertionOrder.budget.budgetSegments);
 
-    final row = [
+    return [
       insertionOrder.insertionOrderId,
       insertionOrder.advertiserId,
       insertionOrder.campaignId,
@@ -138,23 +140,25 @@ class ExcelDart {
       insertionOrder.pacing.dailyMaxImpressions,
       insertionOrder.budget.budgetUnit.toString(),
       insertionOrder.budget.automationType.toString(),
-      _calculateTotalBudgetAmount(activeBudgetSegments),
-      _calculateStartDate(activeBudgetSegments.first),
-      _calculateEndDate(activeBudgetSegments.last),
+      _calculateActiveBudgetAmount(activeBudgetSegment.budgetAmountMicros),
+      _calculateDate(activeBudgetSegment.dateRange.startDate),
+      _calculateDate(activeBudgetSegment.dateRange.endDate),
     ];
-
-    return row;
   }
 
   /// Calculates pacing daily max in standard unit.
   static String _calculatePacingDailyMax(String dailyMaxMicros) =>
       dailyMaxMicros.isEmpty
           ? dailyMaxMicros
-          : (Int64.parseInt(dailyMaxMicros) * 1e-6).toString();
+          : Util.convertMicros(Int64.parseInt(dailyMaxMicros)).toString();
 
-  /// Extracts active budget segments based on start and end dates.
-  static List<InsertionOrder_Budget_BudgetSegment> _extractActiveBudgetSegments(
-      List<InsertionOrder_Budget_BudgetSegment> budgetSegments) {
+  /// Extracts the active budget segment based on start and end dates.
+  ///
+  /// There can only be 1 active budget segment at a time.
+  static InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment
+      _extractActiveBudgetSegment(
+          List<InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment>
+              budgetSegments) {
     final now = DateTime.now();
     final activeSegments = budgetSegments.where((segment) {
       final startDate = segment.dateRange.startDate;
@@ -164,28 +168,16 @@ class ExcelDart {
           now.isBefore(DateTime.utc(endDate.year, endDate.month, endDate.day));
     });
 
-    return activeSegments.toList();
+    return activeSegments.first;
   }
 
-  static String _calculateTotalBudgetAmount(
-      List<InsertionOrder_Budget_BudgetSegment> activeSegments) {
-    final totalBudgetMicros = activeSegments
-        .map((segment) => Int64.parseInt(segment.budgetAmountMicros))
-        .reduce((sumAmount, segmentAmount) => sumAmount + segmentAmount);
+  static String _calculateActiveBudgetAmount(String budgetAmountMicros) =>
+      Util.convertMicros(Int64.parseInt(budgetAmountMicros)).toString();
 
-    return (totalBudgetMicros.toDouble() * 1e-6).toString();
-  }
-
-  static String _calculateStartDate(
-      InsertionOrder_Budget_BudgetSegment segment) {
-    final startDate = segment.dateRange.startDate;
-    return '${startDate.month}/${startDate.day}/${startDate.year}';
-  }
-
-  static String _calculateEndDate(InsertionOrder_Budget_BudgetSegment segment) {
-    final endDate = segment.dateRange.endDate;
-    return '${endDate.month}/${endDate.day}/${endDate.year}';
-  }
+  static String _calculateDate(
+          InsertionOrder_InsertionOrderBudget_InsertionOrderBudgetSegment_DateRange_Date
+              date) =>
+      '${date.month}/${date.day}/${date.year}';
 }
 
 /// Below are wrapper functions for Office Excel APIs.
