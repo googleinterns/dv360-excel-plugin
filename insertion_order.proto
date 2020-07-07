@@ -76,7 +76,7 @@ message InsertionOrder {
    */
   optional Pacing pacing = 7;
 
-  message InsertionOrderBudget {
+  message Budget {
     enum BudgetUnit {
       BUDGET_UNIT_UNSPECIFIED = 0;
       BUDGET_UNIT_CURRENCY = 1;
@@ -99,7 +99,7 @@ message InsertionOrder {
      * If this field is unspecified in creation, the value defaults to INSERTION_ORDER_AUTOMATION_TYPE_NONE. */
     optional InsertionOrderAutomationType automation_type = 2;
 
-    message InsertionOrderBudgetSegment {
+    message BudgetSegment {
       /* required
        * The budget amount the insertion order will spend for
        * the given [dateRange][InsertionOrderBudget.BudgetSegment.date_range].
@@ -138,11 +138,11 @@ message InsertionOrder {
 
     /* The list of budget segments.
      * Use a budget segment to specify a specific budget for a given period of time an insertion order is running. */
-    repeated InsertionOrderBudgetSegment budget_segments = 3;
+    repeated BudgetSegment budget_segments = 3;
   }
 
   /* required
    * The budget allocation settings of the insertion order.
    */
-  optional InsertionOrderBudget budget = 8;
+  optional Budget budget = 8;
 }
