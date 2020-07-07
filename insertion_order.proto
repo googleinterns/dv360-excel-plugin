@@ -145,4 +145,9 @@ message InsertionOrder {
    * The budget allocation settings of the insertion order.
    */
   optional Budget budget = 8;
+
+  /* required
+   * The amount that is already spent.
+   */
+  optional string spent = 9;
 }
