@@ -11,5 +11,5 @@ abstract class QueryComponentPageObject {
   @ByDebugId('populate-btn')
   PageLoaderElement get _button;
 
-  Future<void> clickExecQuery() async => _button.click();
+  Future<void> clickPopulate() async => _button.click();
 }

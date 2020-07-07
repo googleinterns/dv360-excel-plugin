@@ -1,6 +1,7 @@
 @JS()
 library excel;
 
+import 'package:angular/angular.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:js/js.dart';
 
@@ -9,6 +10,7 @@ import 'proto/insertion_order.pb.dart';
 import 'util.dart';
 
 /// Service class that provides dart functions to interact with Excel.
+@Injectable()
 class ExcelDart {
   static const _startAddress = 'A1';
   static final _startAddressInt = 'A'.codeUnitAt(0);
@@ -45,7 +47,7 @@ class ExcelDart {
   /// Waits for Office APIs to be ready and then creates
   /// a new spreadsheet with [sheetName] and populates the spreadsheet with
   /// entries in the [insertionOrderList].
-  static void populate(List<InsertionOrder> insertionOrderList) async {
+  void populate(List<InsertionOrder> insertionOrderList) async {
     await Office.onReady(allowInterop((info) async {
       final tableName = 'Performance_Data_Table';
 

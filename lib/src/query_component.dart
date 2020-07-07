@@ -17,22 +17,23 @@ import 'query_service.dart';
     {{buttonName}}
     </button>
   ''',
-  providers: [ClassProvider(QueryService)],
+  providers: [ClassProvider(QueryService), ClassProvider(ExcelDart)],
   directives: [formDirectives],
 )
 class QueryComponent {
   final buttonName = 'populate';
   final QueryService _queryService;
+  final ExcelDart _excel;
 
   String advertiserId;
   String insertionOrderId;
 
-  QueryComponent(this._queryService);
+  QueryComponent(this._queryService, this._excel);
 
   void onClick() async {
     final jsonResponse =
         await _queryService.execQuery(advertiserId, insertionOrderId);
     final parsedResponse = InsertionOrderParser.parse(stringify(jsonResponse));
-    await ExcelDart.populate([parsedResponse]);
+    await _excel.populate([parsedResponse]);
   }
 }
