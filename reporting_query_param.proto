@@ -1,0 +1,50 @@
+syntax = "proto2";
+package dv360_excel_plugin;
+
+// Reporting query parameter proto.
+message ReportingQueryParameter {
+
+  message Metadata {
+    // required
+    optional string title = 1;
+
+    /* required
+     * Range of report data.
+     */
+    optional string dataRange = 2;
+
+    /* required
+     * Format of the generated report.
+     */
+    optional string format = 3;
+  }
+
+  /* required
+   * Query metadata
+   */
+  optional Metadata metadata = 1;
+
+  message Params {
+    // Metrics to include as columns in the report.
+    repeated string metrics = 1;
+
+    // Data is grouped by the filters listed in this field.
+    repeated string groupBys = 2;
+
+    message Filters {
+      // required
+      optional string type = 1;
+
+      // required
+      optional string value = 2;
+    }
+
+    // Filters used to match traffic data in the report.
+    repeated Filters filters = 3;
+  }
+
+  /* required
+   * Query parameters
+   */
+  optional Params params = 2;
+}
