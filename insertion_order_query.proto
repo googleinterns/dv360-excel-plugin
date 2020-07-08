@@ -198,4 +198,10 @@ message ReportingQueryParameter {
    * Query parameters
    */
   optional Params params = 2;
+
+  // required if dataRange set to 'CUSTOM_DATES'.
+  optional int64 reportDataStartTimeMs = 3;
+
+  // required if dataRange set to 'CUSTOM_DATES'.
+  optional int64 reportDataEndTimeMs = 4;
 }
