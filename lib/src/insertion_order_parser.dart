@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'proto/insertion_order.pb.dart';
+import 'proto/insertion_order_query.pb.dart';
 
 class InsertionOrderParser {
   static const _emptyEntry = '';
