@@ -4,7 +4,9 @@ import 'package:angular_forms/angular_forms.dart';
 import 'excel.dart';
 import 'insertion_order_parser.dart';
 import 'json_js.dart';
+import 'proto/insertion_order_query.pb.dart';
 import 'query_service.dart';
+import 'reporting_query_parser.dart';
 
 @Component(
   selector: 'query',
@@ -31,9 +33,61 @@ class QueryComponent {
   QueryComponent(this._queryService, this._excel);
 
   void onClick() async {
-    final jsonResponse =
-        await _queryService.execQuery(advertiserId, insertionOrderId);
-    final parsedResponse = InsertionOrderParser.parse(stringify(jsonResponse));
-    await _excel.populate([parsedResponse]);
+    // Uses DV360 public APIs to fetch entity data.
+    final insertionOrder = await _queryAndParseInsertionOrderEntityData();
+
+    // Gets dateRange for the active budget segment.
+    final activeDateRange =
+        insertionOrder.budget.budgetSegments.first.dateRange;
+
+    // Uses DBM reporting APIs to get revenue data within [activeDateRange].
+    final revenueMap = await _queryAndParseRevenueSpentData(activeDateRange);
+
+    // Add revenue spent to the parsed Insertion Order.
+    insertionOrder.spent = revenueMap[insertionOrder.insertionOrderId] ?? '';
+
+    // Populate the spreadsheet.
+    await _excel.populate([insertionOrder]);
+  }
+
+  /// Fetches insertion order entity related data using DV360 public APIs,
+  /// then return a parsed [InsertionOrder] instance.
+  Future<InsertionOrder> _queryAndParseInsertionOrderEntityData() async {
+    final response =
+        await _queryService.execDV3Query(advertiserId, insertionOrderId);
+
+    return InsertionOrderParser.parse(stringify(response));
+  }
+
+  /// Fetches revenue spent data using DBM reporting APIs,
+  /// then return a map with <ioID, revenue> key-value pairs.
+  Future<Map<String, String>> _queryAndParseRevenueSpentData(
+      InsertionOrder_Budget_BudgetSegment_DateRange dateRange) async {
+    Map<String, String> revenueMap;
+
+    // Creates a reporting query, and parses the queryId from response.
+    final jsonCreateQueryResponse = await _queryService
+        .execReportingCreateQuery(advertiserId, insertionOrderId, dateRange);
+    final reportingQueryId = ReportingQueryParser.parseQueryIdFromJsonString(
+        stringify(jsonCreateQueryResponse));
+
+    // Uses the queryId to get the report download path.
+    if (reportingQueryId.isNotEmpty) {
+      final jsonGetQueryResponse =
+          await _queryService.execReportingGetQuery(reportingQueryId);
+      final reportingDownloadPath =
+          ReportingQueryParser.parseDownloadPathFromJsonString(
+              stringify(jsonGetQueryResponse));
+
+      // Downloads the report and parse the response into a revenue map.
+      if (reportingDownloadPath.isNotEmpty) {
+        final report =
+            await _queryService.execReportingDownload(reportingDownloadPath);
+
+        revenueMap = ReportingQueryParser.parseRevenueFromString(report);
+      }
+    }
+
+    return revenueMap;
   }
 }

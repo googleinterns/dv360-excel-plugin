@@ -82,8 +82,18 @@ class InsertionOrderParser {
       ..budgetUnit = _createBudgetUnit(map['budgetUnit'])
       ..automationType = _createAutomationType(map['automationType']);
 
+    final now = DateTime.now();
     for (Map segmentMap in map['budgetSegments'] ?? []) {
-      budget.budgetSegments.add(_createBudgetSegment(segmentMap));
+      final segment = _createBudgetSegment(segmentMap);
+      final startDate = segment.dateRange.startDate;
+      final endDate = segment.dateRange.endDate;
+
+      if (now.isAfter(
+              DateTime.utc(startDate.year, startDate.month, startDate.day)) &&
+          now.isBefore(
+              DateTime.utc(endDate.year, endDate.month, endDate.day))) {
+        budget.budgetSegments.add(_createBudgetSegment(segmentMap));
+      }
     }
     return budget;
   }

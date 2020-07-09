@@ -2,22 +2,118 @@ import 'dart:async';
 import 'dart:js';
 
 import 'package:angular/angular.dart';
+import 'package:fixnum/fixnum.dart';
 
 import 'gapi.dart';
+import 'proto/insertion_order_query.pb.dart';
 
 @Injectable()
 class QueryService {
-  /// Executes the query and returns the raw javascript object.
-  Future<dynamic> execQuery(
+  static final reportingHttpPath =
+      'https://www.googleapis.com/doubleclickbidmanager/v1.1/query';
+
+  /// Executes the DV3 query and returns the raw javascript object.
+  Future<dynamic> execDV3Query(
       String advertiserId, String insertionOrderId) async {
-    final requestArgs = RequestArgs(
+    final dv3RequestArgs = RequestArgs(
         path: _generateQuery(advertiserId, insertionOrderId), method: 'GET');
+
+    final responseCompleter = Completer<dynamic>();
+    GoogleAPI.client
+        .request(dv3RequestArgs)
+        .execute(allowInterop((jsonResp, rawResp) {
+      responseCompleter.complete(jsonResp);
+    }));
+
+    return responseCompleter.future;
+  }
+
+  /// Executes DBM reporting create query and returns the raw javascript object.
+  Future<dynamic> execReportingCreateQuery(
+      String advertiserId,
+      String insertionOrderId,
+      InsertionOrder_Budget_BudgetSegment_DateRange dateRange) async {
+    // Report metadata.
+    final reportingQueryMetadata = ReportingQueryParameter_Metadata()
+      ..title = '"DV360-excel-plugin-query"'
+      ..dataRange = '"CUSTOM_DATES"'
+      ..format = '"EXCEL_CSV"';
+
+    // Report advertiser filter.
+    final reportingQueryAdvertiserFilter =
+        ReportingQueryParameter_Params_Filters()
+          ..type = '"FILTER_ADVERTISER"'
+          ..value = advertiserId;
+
+    // Report insertion order filter.
+    final reportingQueryInsertionOrderFilter =
+        ReportingQueryParameter_Params_Filters()
+          ..type = '"FILTER_INSERTION_ORDER"'
+          ..value = insertionOrderId;
+
+    // Report metrics, group-bys, and filters
+    final reportingQueryParam = ReportingQueryParameter_Params()
+      ..metrics.add('"METRIC_REVENUE_USD"')
+      ..groupBys.add('"FILTER_INSERTION_ORDER"')
+      ..filters.addAll(
+          [reportingQueryAdvertiserFilter, reportingQueryInsertionOrderFilter]);
+
+    // Report start date time in milliseconds since epoch.
+    final startDateMS = DateTime.utc(dateRange.startDate.year,
+            dateRange.startDate.month, dateRange.startDate.day)
+        .millisecondsSinceEpoch;
+    final endDateMS = DateTime.utc(dateRange.endDate.year,
+            dateRange.endDate.month, dateRange.endDate.day)
+        .millisecondsSinceEpoch;
+
+    // Report end date time in milliseconds since epoch.
+    final reportingQuery = ReportingQueryParameter()
+      ..metadata = reportingQueryMetadata
+      ..params = reportingQueryParam
+      ..reportDataStartTimeMs = Int64(startDateMS)
+      ..reportDataEndTimeMs = Int64(endDateMS);
+
+    final reportingRequestArgs = RequestArgs(
+        path: reportingHttpPath,
+        method: 'POST',
+        body: reportingQuery.toProto3Json().toString());
+
+    final responseCompleter = Completer<dynamic>();
+    GoogleAPI.client
+        .request(reportingRequestArgs)
+        .execute(allowInterop((jsonResp, rawResp) {
+      responseCompleter.complete(jsonResp);
+    }));
+
+    return responseCompleter.future;
+  }
+
+  /// Executes DBM reporting getQuery and returns the raw javascript object.
+  Future<dynamic> execReportingGetQuery(String queryId) {
+    final requestArgs = RequestArgs(
+        path:
+            'https://www.googleapis.com/doubleclickbidmanager/v1.1/query/$queryId',
+        method: 'GET');
 
     final responseCompleter = Completer<dynamic>();
     GoogleAPI.client
         .request(requestArgs)
         .execute(allowInterop((jsonResp, rawResp) {
       responseCompleter.complete(jsonResp);
+    }));
+
+    return responseCompleter.future;
+  }
+
+  /// Read the report from google storage location specified by [downloadPath].
+  Future<dynamic> execReportingDownload(String downloadPath) {
+    final requestArgs = RequestArgs(path: downloadPath, method: 'GET');
+
+    final responseCompleter = Completer<dynamic>();
+    GoogleAPI.client
+        .request(requestArgs)
+        .execute(allowInterop((jsonResp, rawResp) {
+      responseCompleter.complete(rawResp);
     }));
 
     return responseCompleter.future;
