@@ -202,7 +202,8 @@ void main() {
         final budget = InsertionOrder_Budget()
           ..budgetUnit = InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY
           ..automationType = InsertionOrder_Budget_InsertionOrderAutomationType
-              .INSERTION_ORDER_AUTOMATION_TYPE_NONE;
+              .INSERTION_ORDER_AUTOMATION_TYPE_NONE
+          ..activeBudgetSegment = InsertionOrder_Budget_BudgetSegment();
         final expected = insertionOrderTemplate..budget = budget;
         expect(actual, expected);
       });
@@ -222,7 +223,8 @@ void main() {
         final budget = InsertionOrder_Budget()
           ..budgetUnit = InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY
           ..automationType = InsertionOrder_Budget_InsertionOrderAutomationType
-              .INSERTION_ORDER_AUTOMATION_TYPE_BUDGET;
+              .INSERTION_ORDER_AUTOMATION_TYPE_BUDGET
+          ..activeBudgetSegment = InsertionOrder_Budget_BudgetSegment();
         final expected = insertionOrderTemplate..budget = budget;
         expect(actual, expected);
       });
@@ -243,7 +245,8 @@ void main() {
         final budget = InsertionOrder_Budget()
           ..budgetUnit = InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY
           ..automationType = InsertionOrder_Budget_InsertionOrderAutomationType
-              .INSERTION_ORDER_AUTOMATION_TYPE_BUDGET;
+              .INSERTION_ORDER_AUTOMATION_TYPE_BUDGET
+          ..activeBudgetSegment = InsertionOrder_Budget_BudgetSegment();
         final expected = insertionOrderTemplate..budget = budget;
         expect(actual, expected);
       });

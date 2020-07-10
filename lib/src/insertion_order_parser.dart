@@ -82,7 +82,8 @@ class InsertionOrderParser {
       ..budgetUnit = _createBudgetUnit(map['budgetUnit'])
       ..automationType = _createAutomationType(map['automationType']);
 
-    final segmentMaps = (map['budgetSegments'] ?? <Map<String, dynamic>>[]).cast<Map<String, dynamic>>();
+    final segmentMaps =
+        List<Map<String, dynamic>>.from(map['budgetSegments'] ?? []);
 
     budget.activeBudgetSegment = segmentMaps
         .map(_createBudgetSegment)
@@ -161,6 +162,8 @@ class InsertionOrderParser {
             .INSERTION_ORDER_AUTOMATION_TYPE_UNSPECIFIED;
   }
 
+  /// Todo: query for advertiser time zone and convert to utc before comparing.
+  /// Issue: https://github.com/googleinterns/dv360-excel-plugin/issues/51
   static bool _isActiveSegment(
       InsertionOrder_Budget_BudgetSegment segment, DateTime now) {
     final startDate = segment.dateRange.startDate;
@@ -168,6 +171,7 @@ class InsertionOrderParser {
 
     return now.isAfter(
             DateTime(startDate.year, startDate.month, startDate.day, 0)) &&
-        now.isBefore(DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59, 999));
+        now.isBefore(DateTime(endDate.year, endDate.month, endDate.day, 0)
+            .add(Duration(days: 1)));
   }
 }

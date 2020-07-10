@@ -9,6 +9,7 @@ dependencies:
   angular: ^6.0.0-alpha+1
   angular_forms: ^2.1.4
   convert: ^2.1.1
+  csv: ^4.0.3
   fixnum: ^0.10.11
   js: ^0.6.1+1
   protobuf: ^1.0.0

@@ -10,16 +10,16 @@ class CredentialService {
   static GoogleAuth _googleAuth;
   static const _redirectURI = 'http://localhost:8080';
 
-  static final _dv3Scope = 'https://www.googleapis.com/auth/display-video';
-  static final _dbmScope =
+  static const _dv3Scope = 'https://www.googleapis.com/auth/display-video';
+  static const _dbmScope =
       'https://www.googleapis.com/auth/doubleclickbidmanager';
-  static final _googleStorageScope =
+  static const _googleStorageScope =
       'https://www.googleapis.com/auth/devstorage.read_only';
-  static final _scope = '$_dv3Scope $_dbmScope $_googleStorageScope';
+  static const _scope = '$_dv3Scope $_dbmScope $_googleStorageScope';
 
-  static final _dv3DiscoveryUrl =
+  static const _dv3DiscoveryUrl =
       'https://displayvideo.googleapis.com/\$discovery/rest?version=v1';
-  static final _dbmDiscoveryUrl =
+  static const _dbmDiscoveryUrl =
       'https://content.googleapis.com/discovery/v1/apis/doubleclickbidmanager/v1.1/rest';
 
   /// Loads gapi.client library and calls [_initClient]

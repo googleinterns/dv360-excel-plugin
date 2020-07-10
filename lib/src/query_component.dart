@@ -62,8 +62,6 @@ class QueryComponent {
   /// then return a map with <ioID, revenue> key-value pairs.
   Future<Map<String, String>> _queryAndParseRevenueSpentData(
       InsertionOrder_Budget_BudgetSegment_DateRange dateRange) async {
-    Map<String, String> revenueMap;
-
     // Creates a reporting query, and parses the queryId from response.
     final jsonCreateQueryResponse = await _queryService
         .execReportingCreateQuery(advertiserId, insertionOrderId, dateRange);
@@ -83,10 +81,10 @@ class QueryComponent {
         final report =
             await _queryService.execReportingDownload(reportingDownloadPath);
 
-        revenueMap = ReportingQueryParser.parseRevenueFromString(report);
+        return ReportingQueryParser.parseRevenueFromJsonString(report);
       }
     }
 
-    return revenueMap;
+    return <String, String>{};
   }
 }
