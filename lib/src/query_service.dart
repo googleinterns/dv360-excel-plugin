@@ -59,11 +59,11 @@ class QueryService {
           [reportingQueryAdvertiserFilter, reportingQueryInsertionOrderFilter]);
 
     // Report start date time in milliseconds since epoch.
-    final startDateMS = DateTime.utc(dateRange.startDate.year,
-            dateRange.startDate.month, dateRange.startDate.day)
+    final startDateMS = DateTime(dateRange.startDate.year,
+            dateRange.startDate.month, dateRange.startDate.day, 0)
         .millisecondsSinceEpoch;
-    final endDateMS = DateTime.utc(dateRange.endDate.year,
-            dateRange.endDate.month, dateRange.endDate.day)
+    final endDateMS = DateTime(dateRange.endDate.year,
+            dateRange.endDate.month, dateRange.endDate.day, 23, 59, 59, 999)
         .millisecondsSinceEpoch;
 
     // Report end date time in milliseconds since epoch.

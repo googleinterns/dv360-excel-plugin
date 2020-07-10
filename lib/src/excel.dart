@@ -129,8 +129,6 @@ class ExcelDart {
   /// Generates a row from [insertionOrder] by creating fields that matches
   /// those specified in [_tableHeader].
   static List<String> _generateTableRow(InsertionOrder insertionOrder) {
-    final activeBudgetSegment = insertionOrder.budget.budgetSegments.first;
-
     return [
       insertionOrder.insertionOrderId,
       insertionOrder.advertiserId,
@@ -144,10 +142,13 @@ class ExcelDart {
       insertionOrder.pacing.dailyMaxImpressions,
       insertionOrder.budget.budgetUnit.toString(),
       insertionOrder.budget.automationType.toString(),
-      _calculateActiveBudgetAmount(activeBudgetSegment.budgetAmountMicros),
+      _calculateActiveBudgetAmount(
+          insertionOrder.budget.activeBudgetSegment.budgetAmountMicros),
       insertionOrder.spent,
-      _calculateDate(activeBudgetSegment.dateRange.startDate),
-      _calculateDate(activeBudgetSegment.dateRange.endDate),
+      _calculateDate(
+          insertionOrder.budget.activeBudgetSegment.dateRange.startDate),
+      _calculateDate(
+          insertionOrder.budget.activeBudgetSegment.dateRange.endDate),
     ];
   }
 

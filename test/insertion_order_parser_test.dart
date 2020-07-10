@@ -118,7 +118,7 @@ void main() {
         ..budgetUnit = InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY
         ..automationType = InsertionOrder_Budget_InsertionOrderAutomationType
             .INSERTION_ORDER_AUTOMATION_TYPE_NONE
-        ..budgetSegments.addAll([segment]);
+        ..activeBudgetSegment = segment;
       final expected = InsertionOrder()
         ..advertiserId = '11111'
         ..campaignId = '2222222'
@@ -274,7 +274,7 @@ void main() {
               InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_UNSPECIFIED
           ..automationType = InsertionOrder_Budget_InsertionOrderAutomationType
               .INSERTION_ORDER_AUTOMATION_TYPE_NONE
-          ..budgetSegments.add(segment);
+          ..activeBudgetSegment = segment;
         final expected = insertionOrderTemplate..budget = budget;
         expect(actual, expected);
       });
@@ -317,7 +317,7 @@ void main() {
               InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_UNSPECIFIED
           ..automationType = InsertionOrder_Budget_InsertionOrderAutomationType
               .INSERTION_ORDER_AUTOMATION_TYPE_NONE
-          ..budgetSegments.addAll([segment]);
+          ..activeBudgetSegment = segment;
         final expected = insertionOrderTemplate..budget = budget;
         expect(actual, expected);
       });

@@ -82,19 +82,13 @@ class InsertionOrderParser {
       ..budgetUnit = _createBudgetUnit(map['budgetUnit'])
       ..automationType = _createAutomationType(map['automationType']);
 
-    final now = DateTime.now();
-    for (Map segmentMap in map['budgetSegments'] ?? []) {
-      final segment = _createBudgetSegment(segmentMap);
-      final startDate = segment.dateRange.startDate;
-      final endDate = segment.dateRange.endDate;
+    final segmentMaps = (map['budgetSegments'] ?? <Map<String, dynamic>>[]).cast<Map<String, dynamic>>();
 
-      if (now.isAfter(
-              DateTime.utc(startDate.year, startDate.month, startDate.day)) &&
-          now.isBefore(
-              DateTime.utc(endDate.year, endDate.month, endDate.day))) {
-        budget.budgetSegments.add(_createBudgetSegment(segmentMap));
-      }
-    }
+    budget.activeBudgetSegment = segmentMaps
+        .map(_createBudgetSegment)
+        .firstWhere((segment) => _isActiveSegment(segment, DateTime.now()),
+            orElse: () => InsertionOrder_Budget_BudgetSegment());
+
     return budget;
   }
 
@@ -165,5 +159,15 @@ class InsertionOrderParser {
     return _automationTypeMap[target] ??
         InsertionOrder_Budget_InsertionOrderAutomationType
             .INSERTION_ORDER_AUTOMATION_TYPE_UNSPECIFIED;
+  }
+
+  static bool _isActiveSegment(
+      InsertionOrder_Budget_BudgetSegment segment, DateTime now) {
+    final startDate = segment.dateRange.startDate;
+    final endDate = segment.dateRange.endDate;
+
+    return now.isAfter(
+            DateTime(startDate.year, startDate.month, startDate.day, 0)) &&
+        now.isBefore(DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59, 999));
   }
 }

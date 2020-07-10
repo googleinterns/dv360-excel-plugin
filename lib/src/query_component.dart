@@ -37,8 +37,7 @@ class QueryComponent {
     final insertionOrder = await _queryAndParseInsertionOrderEntityData();
 
     // Gets dateRange for the active budget segment.
-    final activeDateRange =
-        insertionOrder.budget.budgetSegments.first.dateRange;
+    final activeDateRange = insertionOrder.budget.activeBudgetSegment.dateRange;
 
     // Uses DBM reporting APIs to get revenue data within [activeDateRange].
     final revenueMap = await _queryAndParseRevenueSpentData(activeDateRange);
