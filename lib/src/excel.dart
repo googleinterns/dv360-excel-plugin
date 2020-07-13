@@ -19,6 +19,13 @@ class ExcelDart {
   static const _horizontalAlignment = 'Center';
   static const _borderStyle = 'Continuous';
   static const _currencyFormat = '\$#,##0.00';
+  static const _badFont = '#9C0006';
+  static const _badFill = '#FFC7CE';
+
+  static const _spentColumn = '\$N2';
+  static const _budgetColumn = '\$M2';
+  static const _startDateColumn = '\$O2';
+  static const _endDateColumn = '\$P2';
 
   /// Header for the master table.
   ///
@@ -48,7 +55,8 @@ class ExcelDart {
   /// Waits for Office APIs to be ready and then creates
   /// a new spreadsheet with [sheetName] and populates the spreadsheet with
   /// entries in the [insertionOrderList].
-  void populate(List<InsertionOrder> insertionOrderList) async {
+  void populate(List<InsertionOrder> insertionOrderList,
+      bool highlightUnderpacing, String threshold) async {
     await Office.onReady(allowInterop((info) async {
       final tableName = 'Performance_Data_Table';
 
@@ -101,6 +109,9 @@ class ExcelDart {
 
       // Conditionally format the budget column once the table is set.
       _formatBudgetColumn(tableName);
+
+      // Highlight underpacing insertion orders if highlightUnderpacing is true.
+      if (highlightUnderpacing) _highlightUnderpacingRows(tableName, threshold);
     }));
   }
 
@@ -121,6 +132,32 @@ class ExcelDart {
           '="${InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY}",'
           'TRUE)';
       format.custom.format.numberFormat = _currencyFormat;
+
+      return context.sync();
+    }));
+  }
+
+  /// Highlight rows that are underpacing.
+  ///
+  /// Structured reference (i.e. Table[@Column]) is not allowed in Excel
+  /// conditional formatting. Regular reference (i.e. $A5) has to be used
+  /// instead. As table expands, Excel would automatically extends the
+  /// conditional formatting rule to cover the entire range.
+  static void _highlightUnderpacingRows(
+      String tableName, String threshold) async {
+    await ExcelJS.run(allowInterop((context) async {
+      final table = context.workbook.tables.getItem(tableName);
+      final range = table.getDataBodyRange();
+      final format = range.conditionalFormats.add('Custom');
+
+      format.custom.rule.formula = '''
+      ($_spentColumn/$_budgetColumn) *
+      (DATEDIF($_startDateColumn, $_endDateColumn, "D") / 
+      DATEDIF($_startDateColumn, NOW(), "D")) < $threshold
+      ''';
+
+      format.custom.format.fill.color = _badFill;
+      format.custom.format.font.color = _badFont;
 
       return context.sync();
     }));
@@ -429,8 +466,34 @@ class CustomConditionalFormat {
 /// ```
 @JS()
 class ConditionalRangeFormat {
+  /// Conditional format font.
+  external ConditionalRangeFont get font;
+
+  /// Conditional format Fill.
+  external ConditionalRangeFill get fill;
+
   /// Represents Excel's number format code for the given range.
   external set numberFormat(String format);
+}
+
+/// Wrapper for Excel.ConditionalRangeFont class.
+///
+/// ``` js
+///   Excel.ConditionalRangeFont.color
+/// ``` js
+class ConditionalRangeFont {
+  /// Font color.
+  external set color(String color);
+}
+
+/// Wrapper for Excel.ConditionalRangeFill class.
+///
+/// ``` js
+///   Excel.ConditionalRangeFill.color
+/// ``` js
+class ConditionalRangeFill {
+  /// Fill color.
+  external set color(String color);
 }
 
 /// Wrapper for Excel.ConditionalFormatRule class.
