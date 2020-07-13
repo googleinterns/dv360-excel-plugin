@@ -19,8 +19,6 @@ import 'reporting_query_parser.dart';
     <input type="checkbox" [(ngModel)]="highlightUnderpacing"
            debugId="underpacing" name="underpacing">
     <label for="underpacing">Highlight underpacing insertion orders</label><br>
-    <input *ngIf="highlightUnderpacing" [(ngModel)]="underpacingThreshold"
-           placeholder="Threshold" debugId="underpacing-threshold"><br>
     <button (click)="onClick()" debugId="populate-btn">
     {{buttonName}}
     </button>
@@ -33,13 +31,10 @@ class QueryComponent {
   final QueryService _queryService;
   final ExcelDart _excel;
 
-  String advertiserId = '164337';
-  String insertionOrderId = '8127549';
+  String advertiserId;
+  String insertionOrderId;
 
-  bool highlightUnderpacing;
-
-  /// Default threshold is set to 0.9.
-  String underpacingThreshold = '0.9';
+  bool highlightUnderpacing = false;
 
   QueryComponent(this._queryService, this._excel);
 
@@ -57,8 +52,7 @@ class QueryComponent {
     insertionOrder.spent = revenueMap[insertionOrder.insertionOrderId] ?? '';
 
     // Populate the spreadsheet.
-    await _excel
-        .populate([insertionOrder], highlightUnderpacing, underpacingThreshold);
+    await _excel.populate([insertionOrder], highlightUnderpacing);
   }
 
   /// Fetches insertion order entity related data using DV360 public APIs,

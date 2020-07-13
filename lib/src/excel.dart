@@ -12,20 +12,36 @@ import 'util.dart';
 /// Service class that provides dart functions to interact with Excel.
 @Injectable()
 class ExcelDart {
-  static const _startAddress = 'A1';
-  static final _startAddressInt = 'A'.codeUnitAt(0);
+  static const _tableColumnStartAddress = 'A';
+  static const _tableRowStartAddress = 4;
+  static const _thresholdAddress = '\$B2';
+
   static const _fontName = 'Roboto';
   static const _fontSize = 12;
-  static const _horizontalAlignment = 'Center';
-  static const _borderStyle = 'Continuous';
-  static const _currencyFormat = '\$#,##0.00';
-  static const _badFont = '#9C0006';
-  static const _badFill = '#FFC7CE';
 
-  static const _spentColumn = '\$N2';
-  static const _budgetColumn = '\$M2';
-  static const _startDateColumn = '\$O2';
-  static const _endDateColumn = '\$P2';
+  static const _centerAlignment = 'Center';
+  static const _rightAlignment = 'Right';
+  static const _leftAlignment = 'Left';
+
+  static const _borderStyle = 'Continuous';
+
+  static const _currencyFormat = '\$#,##0.00';
+  static const _underpacingFormatFont = '#9C0006';
+  static const _underpacingFormatFill = '#FFC7CE';
+
+  /// Column addresses calculated based on [_tableHeader].
+  static final _spentColumn =
+      '\$${_getExcelColumnReference(_tableHeader.indexOf('Spent'))}'
+      '${_tableRowStartAddress + 1}';
+  static final _budgetColumn =
+      '\$${_getExcelColumnReference(_tableHeader.indexOf('Budget'))}'
+      '${_tableRowStartAddress + 1}';
+  static final _startDateColumn =
+      '\$${_getExcelColumnReference(_tableHeader.indexOf('Start Date'))}'
+      '${_tableRowStartAddress + 1}';
+  static final _endDateColumn =
+      '\$${_getExcelColumnReference(_tableHeader.indexOf('End Date'))}'
+      '${_tableRowStartAddress + 1}';
 
   /// Header for the master table.
   ///
@@ -55,8 +71,11 @@ class ExcelDart {
   /// Waits for Office APIs to be ready and then creates
   /// a new spreadsheet with [sheetName] and populates the spreadsheet with
   /// entries in the [insertionOrderList].
+  ///
+  /// If user checks 'highlight underpacing insertion orders' on the UI, then
+  /// [highlightUnderpacing] resolves as true, and false otherwise.
   void populate(List<InsertionOrder> insertionOrderList,
-      bool highlightUnderpacing, String threshold) async {
+      bool highlightUnderpacing) async {
     await Office.onReady(allowInterop((info) async {
       final tableName = 'Performance_Data_Table';
 
@@ -64,14 +83,30 @@ class ExcelDart {
         // Adds a new worksheet.
         final sheet = context.workbook.worksheets.add('Query');
 
+        // Adds and formats underpacing info.
+        sheet.getRange('Query!A1:B2')
+          ..format.font.name = _fontName
+          ..format.font.size = _fontSize
+          ..format.font.bold = true
+          ..format.horizontalAlignment = _centerAlignment
+          ..values = [
+            ['highlight underpacing:', '$highlightUnderpacing'],
+            ['threshold: ', 0.9]
+          ];
+        sheet.getRange('Query!A1:A2').format.horizontalAlignment =
+            _leftAlignment;
+        sheet.getRange('Query!B1:B2').format.horizontalAlignment =
+            _rightAlignment;
+
         // Turns [insertionOrderList] into table rows.
         final tableBody = insertionOrderList.map(_generateTableRow).toList();
 
         // Calculates table size and adds a master table.
-        final endAddressInt = _startAddressInt + _tableHeader.length - 1;
         final endAddress =
-            '${String.fromCharCode(endAddressInt)}${tableBody.length + 1}';
-        final tableAddress = 'Query!$_startAddress:$endAddress';
+            '${_getExcelColumnReference(_tableHeader.length - 1)}'
+            '${tableBody.length + _tableRowStartAddress}';
+        final tableAddress =
+            'Query!$_tableColumnStartAddress$_tableRowStartAddress:$endAddress';
         final table = context.workbook.tables.add(tableAddress, true);
         table.name = tableName;
 
@@ -81,7 +116,7 @@ class ExcelDart {
           ..format.font.name = _fontName
           ..format.font.size = _fontSize
           ..format.font.bold = true
-          ..format.horizontalAlignment = _horizontalAlignment
+          ..format.horizontalAlignment = _centerAlignment
           ..format.borders.getItem('EdgeTop').style = _borderStyle
           ..format.borders.getItem('EdgeBottom').style = _borderStyle;
 
@@ -90,7 +125,7 @@ class ExcelDart {
           ..formulas = tableBody
           ..format.font.name = _fontName
           ..format.font.size = _fontSize
-          ..format.horizontalAlignment = _horizontalAlignment;
+          ..format.horizontalAlignment = _centerAlignment;
 
         // Formats the Daily Max and Spent column as currency.
         table.columns.getItem('Daily Max').getRange().numberFormat =
@@ -111,9 +146,12 @@ class ExcelDart {
       _formatBudgetColumn(tableName);
 
       // Highlight underpacing insertion orders if highlightUnderpacing is true.
-      if (highlightUnderpacing) _highlightUnderpacingRows(tableName, threshold);
+      if (highlightUnderpacing) _highlightUnderpacingRows(tableName);
     }));
   }
+
+  static String _getExcelColumnReference(int offset) =>
+      String.fromCharCode(_tableColumnStartAddress.codeUnitAt(0) + offset);
 
   /// Conditionally formats the Budget column based on Budget Unit.
   ///
@@ -143,21 +181,33 @@ class ExcelDart {
   /// conditional formatting. Regular reference (i.e. $A5) has to be used
   /// instead. As table expands, Excel would automatically extends the
   /// conditional formatting rule to cover the entire range.
-  static void _highlightUnderpacingRows(
-      String tableName, String threshold) async {
+  static void _highlightUnderpacingRows(String tableName) async {
     await ExcelJS.run(allowInterop((context) async {
       final table = context.workbook.tables.getItem(tableName);
       final range = table.getDataBodyRange();
       final format = range.conditionalFormats.add('Custom');
 
-      format.custom.rule.formula = '''
-      ($_spentColumn/$_budgetColumn) *
-      (DATEDIF($_startDateColumn, $_endDateColumn, "D") / 
-      DATEDIF($_startDateColumn, NOW(), "D")) < $threshold
+      // Excel formula DATEDIF(dateA, dateB, "D") calculates the difference
+      // between two dates in days. This formula calculates:
+      // (spent / budget) * (flight duration/ current duration)
+      // if current duration or flight duration is zero days, then the formula
+      // simply calculates (spent / budget).
+      final formula = '''
+      IF(OR(DATEDIF($_startDateColumn, $_endDateColumn, "D") = 0, 
+            DATEDIF($_startDateColumn, NOW(), "D") = 0),
+         ($_spentColumn/$_budgetColumn),   
+         ($_spentColumn/$_budgetColumn) * 
+         (
+           DATEDIF($_startDateColumn, $_endDateColumn, "D") /
+           DATEDIF($_startDateColumn, NOW(), "D")
+         )) < $_thresholdAddress
       ''';
 
-      format.custom.format.fill.color = _badFill;
-      format.custom.format.font.color = _badFont;
+      // remove all tabs, newlines, and whitespace from the formula.
+      format.custom.rule.formula = formula.replaceAll(RegExp(r'\s+'), '');
+
+      format.custom.format.fill.color = _underpacingFormatFill;
+      format.custom.format.font.color = _underpacingFormatFont;
 
       return context.sync();
     }));
