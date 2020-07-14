@@ -1,5 +1,8 @@
 /// Manual testing instructions for Excel spreadsheet population functionalities
 ///
+/// TODO: Use mock class to test ExcelDart to Excel js api connection.
+/// Issue: https://github.com/googleinterns/dv360-excel-plugin/issues/56
+///
 /// Steps:
 /// * Serve the web app on localhost: 8080.
 /// * Verify that web app is running on http://localhost:8080/.

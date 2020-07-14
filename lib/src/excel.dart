@@ -201,7 +201,7 @@ class ExcelDart {
   ///
   /// Structured reference (i.e. Table[@Column]) is not allowed in Excel
   /// conditional formatting. Regular reference (i.e. $A5) has to be used
-  /// instead. As table expands, Excel would automatically extends the
+  /// instead. As table expands, Excel will automatically extends the
   /// conditional formatting rule to cover the entire range.
   static void _highlightUnderpacingRows(String tableName) async {
     await ExcelJS.run(allowInterop((context) async {
@@ -219,6 +219,8 @@ class ExcelDart {
       // Flight duration is calculated by (end date - start date + 1), and
       // current duration is calculated by (now - start date + 1), so it is
       // guaranteed that divide by zero will not happen.
+      /// TODO: calculate difference at hours level if it is shorter than a day.
+      /// Issue: https://github.com/googleinterns/dv360-excel-plugin/issues/57
       final formula = ''' 
        ($_spentColumn/$_budgetColumn) / 
        (
