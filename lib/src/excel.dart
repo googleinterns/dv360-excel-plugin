@@ -12,9 +12,26 @@ import 'util.dart';
 /// Service class that provides dart functions to interact with Excel.
 @Injectable()
 class ExcelDart {
-  static const _tableColumnStartAddress = 'A';
-  static const _tableRowStartAddress = 4;
+  /// Underpacing table addresses.
+  static const _underpacingTableAddress = 'A1:B2';
+  static const _underpacingHeaderAddress = 'A1:A2';
+  static const _underpacingValueAddress = 'B1:B2';
   static const _thresholdAddress = '\$B2';
+
+  /// `false` will be replaced in [ExcelDart.populate] with the correct value.
+  /// Default threshold is set to 0.9.
+  static final _underpacingTable = [
+    ['highlight underpacing:', false],
+    ['threshold:', 0.9]
+  ];
+
+  /// Excel 'bad' preset formats.
+  static const _underpacingFormatFont = '#9C0006';
+  static const _underpacingFormatFill = '#FFC7CE';
+
+  /// Result table starts at address 'A4'
+  static const _resultTableColumnStartAddress = 'A';
+  static const _resultTableRowStartAddress = 4;
 
   static const _fontName = 'Roboto';
   static const _fontSize = 12;
@@ -24,24 +41,21 @@ class ExcelDart {
   static const _leftAlignment = 'Left';
 
   static const _borderStyle = 'Continuous';
-
   static const _currencyFormat = '\$#,##0.00';
-  static const _underpacingFormatFont = '#9C0006';
-  static const _underpacingFormatFill = '#FFC7CE';
 
   /// Column addresses calculated based on [_tableHeader].
   static final _spentColumn =
       '\$${_getExcelColumnReference(_tableHeader.indexOf('Spent'))}'
-      '${_tableRowStartAddress + 1}';
+      '${_resultTableRowStartAddress + 1}';
   static final _budgetColumn =
       '\$${_getExcelColumnReference(_tableHeader.indexOf('Budget'))}'
-      '${_tableRowStartAddress + 1}';
+      '${_resultTableRowStartAddress + 1}';
   static final _startDateColumn =
       '\$${_getExcelColumnReference(_tableHeader.indexOf('Start Date'))}'
-      '${_tableRowStartAddress + 1}';
+      '${_resultTableRowStartAddress + 1}';
   static final _endDateColumn =
       '\$${_getExcelColumnReference(_tableHeader.indexOf('End Date'))}'
-      '${_tableRowStartAddress + 1}';
+      '${_resultTableRowStartAddress + 1}';
 
   /// Header for the master table.
   ///
@@ -77,26 +91,31 @@ class ExcelDart {
   void populate(List<InsertionOrder> insertionOrderList,
       bool highlightUnderpacing) async {
     await Office.onReady(allowInterop((info) async {
+      final sheetName = 'Query';
       final tableName = 'Performance_Data_Table';
 
+      /// TODO: the await here doesn't work, should use completer instead.
+      /// Issue: https://github.com/googleinterns/dv360-excel-plugin/issues/55
       await ExcelJS.run(allowInterop((context) async {
         // Adds a new worksheet.
-        final sheet = context.workbook.worksheets.add('Query');
+        final sheet = context.workbook.worksheets.add(sheetName);
 
-        // Adds and formats underpacing info.
-        sheet.getRange('Query!A1:B2')
+        // Adds and formats the underpacing table.
+        _underpacingTable[0][1] = highlightUnderpacing;
+        sheet.getRange('$sheetName!$_underpacingTableAddress')
           ..format.font.name = _fontName
           ..format.font.size = _fontSize
           ..format.font.bold = true
           ..format.horizontalAlignment = _centerAlignment
-          ..values = [
-            ['highlight underpacing:', '$highlightUnderpacing'],
-            ['threshold: ', 0.9]
-          ];
-        sheet.getRange('Query!A1:A2').format.horizontalAlignment =
-            _leftAlignment;
-        sheet.getRange('Query!B1:B2').format.horizontalAlignment =
-            _rightAlignment;
+          ..values = _underpacingTable;
+        sheet
+            .getRange('$sheetName!$_underpacingHeaderAddress')
+            .format
+            .horizontalAlignment = _leftAlignment;
+        sheet
+            .getRange('$sheetName!$_underpacingValueAddress')
+            .format
+            .horizontalAlignment = _rightAlignment;
 
         // Turns [insertionOrderList] into table rows.
         final tableBody = insertionOrderList.map(_generateTableRow).toList();
@@ -104,9 +123,10 @@ class ExcelDart {
         // Calculates table size and adds a master table.
         final endAddress =
             '${_getExcelColumnReference(_tableHeader.length - 1)}'
-            '${tableBody.length + _tableRowStartAddress}';
-        final tableAddress =
-            'Query!$_tableColumnStartAddress$_tableRowStartAddress:$endAddress';
+            '${tableBody.length + _resultTableRowStartAddress}';
+        final tableAddress = '$sheetName!'
+            '$_resultTableColumnStartAddress$_resultTableRowStartAddress:'
+            '$endAddress';
         final table = context.workbook.tables.add(tableAddress, true);
         table.name = tableName;
 
@@ -150,8 +170,8 @@ class ExcelDart {
     }));
   }
 
-  static String _getExcelColumnReference(int offset) =>
-      String.fromCharCode(_tableColumnStartAddress.codeUnitAt(0) + offset);
+  static String _getExcelColumnReference(int offset) => String.fromCharCode(
+      _resultTableColumnStartAddress.codeUnitAt(0) + offset);
 
   /// Conditionally formats the Budget column based on Budget Unit.
   ///
@@ -160,6 +180,8 @@ class ExcelDart {
   /// Here the offset between the Budget column and Budget Type Column is -2.
   /// If [_tableHeader] has been changed, the offset here needs to
   /// be changed to match too.
+  /// TODO: change this relative reference to absolute reference.
+  /// Issue: https://github.com/googleinterns/dv360-excel-plugin/issues/54
   static void _formatBudgetColumn(String tableName) async {
     await ExcelJS.run(allowInterop((context) async {
       final table = context.workbook.tables.getItem(tableName);
@@ -188,19 +210,21 @@ class ExcelDart {
       final format = range.conditionalFormats.add('Custom');
 
       // Excel formula DATEDIF(dateA, dateB, "D") calculates the difference
-      // between two dates in days. This formula calculates:
-      // (spent / budget) * (flight duration/ current duration)
-      // if current duration or flight duration is zero days, then the formula
-      // simply calculates (spent / budget).
-      final formula = '''
-      IF(OR(DATEDIF($_startDateColumn, $_endDateColumn, "D") = 0, 
-            DATEDIF($_startDateColumn, NOW(), "D") = 0),
-         ($_spentColumn/$_budgetColumn),   
-         ($_spentColumn/$_budgetColumn) * 
-         (
-           DATEDIF($_startDateColumn, $_endDateColumn, "D") /
-           DATEDIF($_startDateColumn, NOW(), "D")
-         )) < $_thresholdAddress
+      // between two dates in days, where dateB must be after or equal to dateA.
+      // i.e. DATEDIF("7/1/2020", "7/31/2020", "D") = 30
+      //
+      // This formula calculates:
+      // (spent / budget) / (current duration / flight duration)
+      //
+      // Flight duration is calculated by (end date - start date + 1), and
+      // current duration is calculated by (now - start date + 1), so it is
+      // guaranteed that divide by zero will not happen.
+      final formula = ''' 
+       ($_spentColumn/$_budgetColumn) / 
+       (
+         (DATEDIF($_startDateColumn, NOW(), "D") + 1) /
+         (DATEDIF($_startDateColumn, $_endDateColumn, "D") + 1)
+       ) < $_thresholdAddress
       ''';
 
       // remove all tabs, newlines, and whitespace from the formula.
