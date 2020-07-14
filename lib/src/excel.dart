@@ -42,6 +42,7 @@ class ExcelDart {
 
   static const _borderStyle = 'Continuous';
   static const _currencyFormat = '\$#,##0.00';
+  static const _timeFormat = '12:00:00 AM';
 
   /// Column addresses calculated based on [_tableHeader].
   static final _spentColumn =
@@ -81,6 +82,7 @@ class ExcelDart {
     'Start Date',
     'End Date'
   ];
+
 
   /// Waits for Office APIs to be ready and then creates
   /// a new spreadsheet with [sheetName] and populates the spreadsheet with
@@ -216,17 +218,24 @@ class ExcelDart {
       // This formula calculates:
       // (spent / budget) / (current duration / flight duration)
       //
-      // Flight duration is calculated by (end date - start date + 1), and
-      // current duration is calculated by (now - start date + 1), so it is
-      // guaranteed that divide by zero will not happen.
-      /// TODO: calculate difference at hours level if it is shorter than a day.
-      /// Issue: https://github.com/googleinterns/dv360-excel-plugin/issues/57
+      // If current duration or flight duration is less than 1 day, then
+      // the formula calculates:
+      // (spent / budget) / (time elapsed since flight start / 24)
+      // Time elapsed has the granularity of hours and minutes.
+      // i.e. TEXT("1/1/2020 10:20:00 AM" - "1/1/2020 12:00:00 AM", "h.mm")
+      //      = 10.2
       final formula = ''' 
-       ($_spentColumn/$_budgetColumn) / 
-       (
-         (DATEDIF($_startDateColumn, NOW(), "D") + 1) /
-         (DATEDIF($_startDateColumn, $_endDateColumn, "D") + 1)
-       ) < $_thresholdAddress
+      IF(OR(DATEDIF($_startDateColumn, $_endDateColumn, "D") = 0, 
+            DATEDIF($_startDateColumn, NOW(), "D") = 0),
+         ($_spentColumn/$_budgetColumn) / 
+         (
+           TEXT(NOW()-$_startDateColumn, "h.mm") / 24
+         ), 
+         ($_spentColumn/$_budgetColumn) /
+         (
+           DATEDIF($_startDateColumn, NOW(), "D") /
+           DATEDIF($_startDateColumn, $_endDateColumn, "D")
+         )) < $_thresholdAddress
       ''';
 
       // remove all tabs, newlines, and whitespace from the formula.
@@ -276,9 +285,10 @@ class ExcelDart {
       Util.convertMicrosToStandardUnitString(
           Int64.parseInt(budgetAmountMicros));
 
+  /// Converts proto [Date] into Excel date time format.
   static String _calculateDate(
           InsertionOrder_Budget_BudgetSegment_DateRange_Date date) =>
-      '${date.month}/${date.day}/${date.year}';
+      '${date.month}/${date.day}/${date.year} $_timeFormat';
 }
 
 /// Below are wrapper functions for Office Excel APIs.
