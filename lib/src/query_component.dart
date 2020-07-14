@@ -15,12 +15,16 @@ import 'reporting_query_parser.dart';
            placeholder="Advertiser ID: 164337" debugId="advertiser-id-input">
     <input [(ngModel)]="insertionOrderId" 
            placeholder="Insertion Order ID: 8127549" debugId="io-id-input">
+    <br>
+    <input type="checkbox" [(ngModel)]="highlightUnderpacing"
+           debugId="underpacing" name="underpacing">
+    <label for="underpacing">Highlight underpacing insertion orders</label><br>
     <button (click)="onClick()" debugId="populate-btn">
     {{buttonName}}
     </button>
   ''',
   providers: [ClassProvider(QueryService), ClassProvider(ExcelDart)],
-  directives: [formDirectives],
+  directives: [coreDirectives, formDirectives],
 )
 class QueryComponent {
   final buttonName = 'populate';
@@ -29,6 +33,8 @@ class QueryComponent {
 
   String advertiserId;
   String insertionOrderId;
+
+  bool highlightUnderpacing = false;
 
   QueryComponent(this._queryService, this._excel);
 
@@ -46,7 +52,7 @@ class QueryComponent {
     insertionOrder.spent = revenueMap[insertionOrder.insertionOrderId] ?? '';
 
     // Populate the spreadsheet.
-    await _excel.populate([insertionOrder]);
+    await _excel.populate([insertionOrder], highlightUnderpacing);
   }
 
   /// Fetches insertion order entity related data using DV360 public APIs,

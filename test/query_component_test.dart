@@ -83,6 +83,6 @@ void main() {
 
   test('populate button clicks invokes ExcelDart.populate()', () async {
     await queryComponentPO.clickPopulate();
-    verify(mockExcelDart.populate(any));
+    verify(mockExcelDart.populate(any, any));
   });
 }
