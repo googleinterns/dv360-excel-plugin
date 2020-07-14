@@ -136,9 +136,9 @@ message InsertionOrder {
       optional string campaign_budget_id = 4;
     }
 
-    /* The list of budget segments.
+    /* The active budget segment.
      * Use a budget segment to specify a specific budget for a given period of time an insertion order is running. */
-    repeated BudgetSegment budget_segments = 3;
+    optional BudgetSegment active_budget_segment = 3;
   }
 
   /* required

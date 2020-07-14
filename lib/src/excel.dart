@@ -40,6 +40,7 @@ class ExcelDart {
     'Budget Unit',
     'Automation Type',
     'Budget',
+    'Spent',
     'Start Date',
     'End Date'
   ];
@@ -83,8 +84,10 @@ class ExcelDart {
           ..format.font.size = _fontSize
           ..format.horizontalAlignment = _horizontalAlignment;
 
-        // Formats the Daily Max column as currency.
+        // Formats the Daily Max and Spent column as currency.
         table.columns.getItem('Daily Max').getRange().numberFormat =
+            _currencyFormat;
+        table.columns.getItem('Spent').getRange().numberFormat =
             _currencyFormat;
 
         // Auto-fits all used cells.
@@ -126,9 +129,6 @@ class ExcelDart {
   /// Generates a row from [insertionOrder] by creating fields that matches
   /// those specified in [_tableHeader].
   static List<String> _generateTableRow(InsertionOrder insertionOrder) {
-    final activeBudgetSegment =
-        _extractActiveBudgetSegment(insertionOrder.budget.budgetSegments);
-
     return [
       insertionOrder.insertionOrderId,
       insertionOrder.advertiserId,
@@ -142,9 +142,13 @@ class ExcelDart {
       insertionOrder.pacing.dailyMaxImpressions,
       insertionOrder.budget.budgetUnit.toString(),
       insertionOrder.budget.automationType.toString(),
-      _calculateActiveBudgetAmount(activeBudgetSegment.budgetAmountMicros),
-      _calculateDate(activeBudgetSegment.dateRange.startDate),
-      _calculateDate(activeBudgetSegment.dateRange.endDate),
+      _calculateActiveBudgetAmount(
+          insertionOrder.budget.activeBudgetSegment.budgetAmountMicros),
+      insertionOrder.spent,
+      _calculateDate(
+          insertionOrder.budget.activeBudgetSegment.dateRange.startDate),
+      _calculateDate(
+          insertionOrder.budget.activeBudgetSegment.dateRange.endDate),
     ];
   }
 
@@ -154,23 +158,6 @@ class ExcelDart {
           ? dailyMaxMicros
           : Util.convertMicrosToStandardUnitString(
               Int64.parseInt(dailyMaxMicros));
-
-  /// Extracts the active budget segment based on start and end dates.
-  ///
-  /// There can only be 1 active budget segment at a time.
-  static InsertionOrder_Budget_BudgetSegment _extractActiveBudgetSegment(
-      List<InsertionOrder_Budget_BudgetSegment> budgetSegments) {
-    final now = DateTime.now();
-    final activeSegments = budgetSegments.where((segment) {
-      final startDate = segment.dateRange.startDate;
-      final endDate = segment.dateRange.endDate;
-      return now.isAfter(
-              DateTime.utc(startDate.year, startDate.month, startDate.day)) &&
-          now.isBefore(DateTime.utc(endDate.year, endDate.month, endDate.day));
-    });
-
-    return activeSegments.first;
-  }
 
   static String _calculateActiveBudgetAmount(String budgetAmountMicros) =>
       Util.convertMicrosToStandardUnitString(

@@ -8,8 +8,19 @@ import 'private_keys.dart' as key_store;
 @Injectable()
 class CredentialService {
   static GoogleAuth _googleAuth;
-  static const _scope = 'https://www.googleapis.com/auth/display-video';
   static const _redirectURI = 'http://localhost:8080';
+
+  static const _dv3Scope = 'https://www.googleapis.com/auth/display-video';
+  static const _dbmScope =
+      'https://www.googleapis.com/auth/doubleclickbidmanager';
+  static const _googleStorageScope =
+      'https://www.googleapis.com/auth/devstorage.read_only';
+  static const _scope = '$_dv3Scope $_dbmScope $_googleStorageScope';
+
+  static const _dv3DiscoveryUrl =
+      'https://displayvideo.googleapis.com/\$discovery/rest?version=v1';
+  static const _dbmDiscoveryUrl =
+      'https://content.googleapis.com/discovery/v1/apis/doubleclickbidmanager/v1.1/rest';
 
   /// Loads gapi.client library and calls [_initClient]
   /// when library finishes loading.
@@ -29,17 +40,13 @@ class CredentialService {
   }
 
   static void _initClient() async {
-    // Retrieve the discovery document for version 1 of DV360 public API.
-    final discoveryUrl =
-        'https://displayvideo.googleapis.com/\$discovery/rest?version=v1';
-
     // Initializes the gapi.client object, which app uses to make API requests.
     // [apikey] and [clientId] are obtained from google api console.
     // [scope] specifies space-delimited list of access scopes.
     final initArgs = InitArgs(
         apiKey: key_store.apiKey,
         clientId: key_store.clientID,
-        discoveryDocs: [discoveryUrl],
+        discoveryDocs: [_dv3DiscoveryUrl, _dbmDiscoveryUrl],
         scope: _scope);
 
     await GoogleAPI.client.init(initArgs).then(allowInterop((value) {

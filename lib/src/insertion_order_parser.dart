@@ -82,9 +82,14 @@ class InsertionOrderParser {
       ..budgetUnit = _createBudgetUnit(map['budgetUnit'])
       ..automationType = _createAutomationType(map['automationType']);
 
-    for (Map segmentMap in map['budgetSegments'] ?? []) {
-      budget.budgetSegments.add(_createBudgetSegment(segmentMap));
-    }
+    final segmentMaps =
+        List<Map<String, dynamic>>.from(map['budgetSegments'] ?? []);
+
+    budget.activeBudgetSegment = segmentMaps
+        .map(_createBudgetSegment)
+        .firstWhere((segment) => _isActiveSegment(segment, DateTime.now()),
+            orElse: () => InsertionOrder_Budget_BudgetSegment());
+
     return budget;
   }
 
@@ -155,5 +160,18 @@ class InsertionOrderParser {
     return _automationTypeMap[target] ??
         InsertionOrder_Budget_InsertionOrderAutomationType
             .INSERTION_ORDER_AUTOMATION_TYPE_UNSPECIFIED;
+  }
+
+  /// Todo: query for advertiser time zone and convert to utc before comparing.
+  /// Issue: https://github.com/googleinterns/dv360-excel-plugin/issues/51
+  static bool _isActiveSegment(
+      InsertionOrder_Budget_BudgetSegment segment, DateTime now) {
+    final startDate = segment.dateRange.startDate;
+    final endDate = segment.dateRange.endDate;
+
+    return now.isAfter(
+            DateTime(startDate.year, startDate.month, startDate.day, 0)) &&
+        now.isBefore(DateTime(endDate.year, endDate.month, endDate.day, 0)
+            .add(Duration(days: 1)));
   }
 }

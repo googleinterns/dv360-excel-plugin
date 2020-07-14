@@ -25,12 +25,12 @@ void main() {
         ..budget = InsertionOrder_Budget();
 
       oneStartDate = InsertionOrder_Budget_BudgetSegment_DateRange_Date()
-        ..year = 2019
+        ..year = 2020
         ..month = 1
         ..day = 1;
 
       oneEndDate = InsertionOrder_Budget_BudgetSegment_DateRange_Date()
-        ..year = 2019
+        ..year = 2020
         ..month = 12
         ..day = 31;
 
@@ -87,8 +87,8 @@ void main() {
             },
             {"budgetAmountMicros":"2000000",
              "dateRange":{
-                "startDate":{"year":2019,"month":1,"day":1},
-                "endDate":{"year":2019,"month":12,"day":31}
+                "startDate":{"year":2020,"month":1,"day":1},
+                "endDate":{"year":2020,"month":12,"day":31}
              }
             }
           ]
@@ -109,12 +109,7 @@ void main() {
         ..pacingPeriod = InsertionOrder_Pacing_PacingPeriod.PACING_PERIOD_FLIGHT
         ..pacingType = InsertionOrder_Pacing_PacingType.PACING_TYPE_AHEAD
         ..dailyMaxImpressions = emptyEntry;
-      final firstSegment = InsertionOrder_Budget_BudgetSegment()
-        ..budgetAmountMicros = '4000000'
-        ..description = 'year-2019'
-        ..campaignBudgetId = emptyEntry
-        ..dateRange = oneDateRange;
-      final secondSegment = InsertionOrder_Budget_BudgetSegment()
+      final segment = InsertionOrder_Budget_BudgetSegment()
         ..budgetAmountMicros = '2000000'
         ..description = emptyEntry
         ..campaignBudgetId = emptyEntry
@@ -123,7 +118,7 @@ void main() {
         ..budgetUnit = InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY
         ..automationType = InsertionOrder_Budget_InsertionOrderAutomationType
             .INSERTION_ORDER_AUTOMATION_TYPE_NONE
-        ..budgetSegments.addAll([firstSegment, secondSegment]);
+        ..activeBudgetSegment = segment;
       final expected = InsertionOrder()
         ..advertiserId = '11111'
         ..campaignId = '2222222'
@@ -207,7 +202,8 @@ void main() {
         final budget = InsertionOrder_Budget()
           ..budgetUnit = InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY
           ..automationType = InsertionOrder_Budget_InsertionOrderAutomationType
-              .INSERTION_ORDER_AUTOMATION_TYPE_NONE;
+              .INSERTION_ORDER_AUTOMATION_TYPE_NONE
+          ..activeBudgetSegment = InsertionOrder_Budget_BudgetSegment();
         final expected = insertionOrderTemplate..budget = budget;
         expect(actual, expected);
       });
@@ -227,7 +223,8 @@ void main() {
         final budget = InsertionOrder_Budget()
           ..budgetUnit = InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY
           ..automationType = InsertionOrder_Budget_InsertionOrderAutomationType
-              .INSERTION_ORDER_AUTOMATION_TYPE_BUDGET;
+              .INSERTION_ORDER_AUTOMATION_TYPE_BUDGET
+          ..activeBudgetSegment = InsertionOrder_Budget_BudgetSegment();
         final expected = insertionOrderTemplate..budget = budget;
         expect(actual, expected);
       });
@@ -249,19 +246,19 @@ void main() {
           ..budgetUnit = InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY
           ..automationType = InsertionOrder_Budget_InsertionOrderAutomationType
               .INSERTION_ORDER_AUTOMATION_TYPE_BUDGET
-          ..budgetSegments.add(InsertionOrder_Budget_BudgetSegment());
+          ..activeBudgetSegment = InsertionOrder_Budget_BudgetSegment();
         final expected = insertionOrderTemplate..budget = budget;
         expect(actual, expected);
       });
 
-      test('one budgetSegment', () {
+      test('one budgetSegment that is active', () {
         final budgetSegment = '''
           "budgetSegments":[
             {
               "budgetAmountMicros":"5000000",
               "dateRange":{
-                "startDate":{"year":2019,"month":1,"day":1},
-                "endDate":{"year":2019,"month":12,"day":31}
+                "startDate":{"year":2020,"month":1,"day":1},
+                "endDate":{"year":2020,"month":12,"day":31}
               }
             }
           ]
@@ -280,12 +277,12 @@ void main() {
               InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_UNSPECIFIED
           ..automationType = InsertionOrder_Budget_InsertionOrderAutomationType
               .INSERTION_ORDER_AUTOMATION_TYPE_NONE
-          ..budgetSegments.add(segment);
+          ..activeBudgetSegment = segment;
         final expected = insertionOrderTemplate..budget = budget;
         expect(actual, expected);
       });
 
-      test('multiple budgetSegments', () {
+      test('multiple budgetSegments that contains one active', () {
         final budgetSegment = '''
           "budgetSegments":[
             {
@@ -299,8 +296,8 @@ void main() {
               "budgetAmountMicros":"4000000", 
               "campaignBudgetId": "111111",
               "dateRange":{
-                "startDate":{"year":2019,"month":1,"day":1},
-                "endDate":{"year":2019,"month":12,"day":31}
+                "startDate":{"year":2020,"month":1,"day":1},
+                "endDate":{"year":2020,"month":12,"day":31}
               }
             },
             {
@@ -313,27 +310,17 @@ void main() {
 
         final actual = InsertionOrderParser.parse(input);
 
-        final firstSegment = InsertionOrder_Budget_BudgetSegment()
-          ..budgetAmountMicros = '5000000'
-          ..description = emptyEntry
-          ..campaignBudgetId = emptyEntry
-          ..dateRange = oneDateRange;
-        final secondSegment = InsertionOrder_Budget_BudgetSegment()
+        final segment = InsertionOrder_Budget_BudgetSegment()
           ..budgetAmountMicros = '4000000'
           ..description = emptyEntry
           ..campaignBudgetId = '111111'
           ..dateRange = oneDateRange;
-        final thirdSegment = InsertionOrder_Budget_BudgetSegment()
-          ..budgetAmountMicros = '3000000'
-          ..description = 'no date range'
-          ..campaignBudgetId = emptyEntry
-          ..dateRange = InsertionOrder_Budget_BudgetSegment_DateRange();
         final budget = InsertionOrder_Budget()
           ..budgetUnit =
               InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_UNSPECIFIED
           ..automationType = InsertionOrder_Budget_InsertionOrderAutomationType
               .INSERTION_ORDER_AUTOMATION_TYPE_NONE
-          ..budgetSegments.addAll([firstSegment, secondSegment, thirdSegment]);
+          ..activeBudgetSegment = segment;
         final expected = insertionOrderTemplate..budget = budget;
         expect(actual, expected);
       });

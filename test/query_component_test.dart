@@ -72,9 +72,13 @@ void main() {
 
   tearDown(disposeAnyRunningTest);
 
-  test('populate button clicks invokes QueryService.execQuery()', () async {
-    await queryComponentPO.clickPopulate();
-    verify(mockQueryService.execQuery(any, any));
+  group('populate button clicks invokes QueryService function:', () {
+    setUp(() async => await queryComponentPO.clickPopulate());
+
+    test('execDV3Query', () => verify(mockQueryService.execDV3Query(any, any)));
+
+    test('execReportingCreateQuery',
+        () => verify(mockQueryService.execReportingCreateQuery(any, any, any)));
   });
 
   test('populate button clicks invokes ExcelDart.populate()', () async {
