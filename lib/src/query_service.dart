@@ -14,6 +14,9 @@ class QueryService {
 
   /// Executes the DV3 query and returns a future that will complete with
   /// a raw javascript object.
+  ///
+  /// Completer is used here to convert the callback method of [execute] into
+  /// a future, so that we only proceed when the request finishes executing.
   Future<dynamic> execDV3Query(
       String advertiserId, String insertionOrderId) async {
     final dv3RequestArgs = RequestArgs(
@@ -31,13 +34,15 @@ class QueryService {
 
   /// Executes DBM reporting create query and returns a future that will
   /// complete with a raw javascript object.
+  ///
+  /// Completer used to convert the callback method of [execute] into a future.
   Future<dynamic> execReportingCreateQuery(
       String advertiserId,
       String insertionOrderId,
       InsertionOrder_Budget_BudgetSegment_DateRange dateRange) async {
     final reportingQuery = ReportingQueryParameter()
       ..metadata = (ReportingQueryParameter_Metadata()
-          ..title = '"DV360-excel-plugin-query"'
+        ..title = '"DV360-excel-plugin-query"'
         ..dataRange = '"CUSTOM_DATES"'
         ..format = '"EXCEL_CSV"')
       ..params = (ReportingQueryParameter_Params()
@@ -74,6 +79,8 @@ class QueryService {
 
   /// Executes DBM reporting getQuery and returns a future that will
   /// complete with a raw javascript object.
+  ///
+  /// Completer used to convert the callback method of [execute] into a future.
   Future<dynamic> execReportingGetQuery(String queryId) {
     final requestArgs = RequestArgs(
         path:
@@ -91,6 +98,8 @@ class QueryService {
   }
 
   /// Read the report from google storage location specified by [downloadPath].
+  ///
+  /// Completer used to convert the callback method of [execute] into a future.
   Future<dynamic> execReportingDownload(String downloadPath) {
     final requestArgs = RequestArgs(path: downloadPath, method: 'GET');
 

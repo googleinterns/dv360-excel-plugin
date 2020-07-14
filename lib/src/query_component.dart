@@ -3,7 +3,7 @@ import 'package:angular_forms/angular_forms.dart';
 
 import 'excel.dart';
 import 'insertion_order_parser.dart';
-import 'json_js.dart';
+import 'json_js.dart' as json;
 import 'proto/insertion_order_query.pb.dart';
 import 'query_service.dart';
 import 'reporting_query_parser.dart';
@@ -55,7 +55,7 @@ class QueryComponent {
     final response =
         await _queryService.execDV3Query(advertiserId, insertionOrderId);
 
-    return InsertionOrderParser.parse(stringify(response));
+    return InsertionOrderParser.parse(json.stringify(response));
   }
 
   /// Fetches revenue spent data using DBM reporting APIs,
@@ -66,25 +66,25 @@ class QueryComponent {
     final jsonCreateQueryResponse = await _queryService
         .execReportingCreateQuery(advertiserId, insertionOrderId, dateRange);
     final reportingQueryId = ReportingQueryParser.parseQueryIdFromJsonString(
-        stringify(jsonCreateQueryResponse));
+        json.stringify(jsonCreateQueryResponse));
 
-    // Uses the queryId to get the report download path.
-    if (reportingQueryId.isNotEmpty) {
+    try {
+      // Uses the queryId to get the report download path.
       final jsonGetQueryResponse =
-          await _queryService.execReportingGetQuery(reportingQueryId);
+      await _queryService.execReportingGetQuery(reportingQueryId);
       final reportingDownloadPath =
-          ReportingQueryParser.parseDownloadPathFromJsonString(
-              stringify(jsonGetQueryResponse));
+      ReportingQueryParser.parseDownloadPathFromJsonString(
+          json.stringify(jsonGetQueryResponse));
 
       // Downloads the report and parse the response into a revenue map.
-      if (reportingDownloadPath.isNotEmpty) {
-        final report =
-            await _queryService.execReportingDownload(reportingDownloadPath);
+      final report =
+      await _queryService.execReportingDownload(reportingDownloadPath);
 
-        return ReportingQueryParser.parseRevenueFromJsonString(report);
-      }
+      return ReportingQueryParser.parseRevenueFromJsonString(report);
+    } catch(e) {
+      /// TODO: proper error handling.
+      /// Issue: https://github.com/googleinterns/dv360-excel-plugin/issues/52.
+      return <String, String>{};
     }
-
-    return <String, String>{};
   }
 }
