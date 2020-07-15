@@ -160,12 +160,13 @@ class ExcelDart {
       sheet.getUsedRange().getEntireColumn().format.autofitColumns();
       sheet.getUsedRange().getEntireRow().format.autofitRows();
 
-      // Sets the sheet as active and syncs context.
+      // Sets the sheet as active.
       sheet.activate();
-      context.sync();
 
       // All operations are complete.
       populateCompleter.complete();
+
+      return context.sync();
     }));
 
     // Waits for population to be complete.
@@ -199,10 +200,10 @@ class ExcelDart {
 
       format.custom.format.numberFormat = _currencyFormat;
 
-      context.sync();
-
       // All operations are complete.
       formatCompleter.complete();
+
+      return context.sync();
     }));
 
     return formatCompleter.future;
@@ -228,10 +229,10 @@ class ExcelDart {
       format.custom.format.fill.color = _underpacingFormatFill;
       format.custom.format.font.color = _underpacingFormatFont;
 
-      context.sync();
-
       // All operations are complete.
       formatCompleter.complete();
+
+      return context.sync();
     }));
 
     return formatCompleter.future;
@@ -329,7 +330,7 @@ class ExcelDart {
 class ExcelJS {
   /// Executes a batch script that performs actions
   /// on the Excel object model using a new RequestContext.
-  external static void run(void Function(RequestContext) callback);
+  external static void run(dynamic Function(RequestContext) callback);
 }
 
 /// Wrapper for Excel.RequestContext class.
