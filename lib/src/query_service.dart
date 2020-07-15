@@ -126,7 +126,6 @@ class QueryService {
                   '$advertiserId/insertionOrders?$filter&$pageToken',
               method: 'GET');
         }
-        break;
 
       case QueryType.byInsertionOrder:
         {
@@ -135,13 +134,11 @@ class QueryService {
                   '$advertiserId/insertionOrders/$insertionOrderId',
               method: 'GET');
         }
-        break;
 
       default:
         {
           return RequestArgs();
         }
-        break;
     }
   }
 }

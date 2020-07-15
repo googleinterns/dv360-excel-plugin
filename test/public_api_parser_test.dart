@@ -1,10 +1,10 @@
 import 'package:angular_test/angular_test.dart';
-import 'package:dv360_excel_plugin/src/dv360_service_response_parser.dart';
+import 'package:dv360_excel_plugin/src/public_api_parser.dart';
 import 'package:dv360_excel_plugin/src/proto/insertion_order_query.pb.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group(Dv360ServiceResponseParser, () {
+  group(PublicApiParser, () {
     String input;
     const emptyEntry = '';
 
@@ -42,30 +42,22 @@ void main() {
     tearDown(disposeAnyRunningTest);
 
     group('parses insertion orders from:', () {
-//      test('null', () {
-//        final actual = Dv360ServiceResponseParser.parseInsertionOrders(null);
-//
-//        final expected = [];
-//        expect(actual, expected);
-//      });
-//
-//      test('empty string', () {
-//        final actual = Dv360ServiceResponseParser.parseInsertionOrders('');
-//
-//        final expected = [];
-//        expect(actual, expected);
-//      });
-//
-//      test('non-json string', () {
-//        final actual =
-//            Dv360ServiceResponseParser.parseInsertionOrders('not-json-format');
-//
-//        final expected = [];
-//        expect(actual, expected);
-//      });
+      test('null', () {
+        final actual = PublicApiParser.parseInsertionOrders(null);
+
+        final expected = [];
+        expect(actual, expected);
+      });
+
+      test('empty string', () {
+        final actual = PublicApiParser.parseInsertionOrders('');
+
+        final expected = [];
+        expect(actual, expected);
+      });
 
       test('empty json string', () {
-        final actual = Dv360ServiceResponseParser.parseInsertionOrders('{}');
+        final actual = PublicApiParser.parseInsertionOrders('{}');
 
         final expected = [InsertionOrder()];
         expect(actual, expected);
@@ -74,7 +66,7 @@ void main() {
       test('json that contains only advertiserId', () {
         input = '{"advertiserId":"111111"}';
 
-        final actual = Dv360ServiceResponseParser.parseInsertionOrders(input);
+        final actual = PublicApiParser.parseInsertionOrders(input);
 
         final expected = insertionOrderTemplate..advertiserId = '111111';
         expect(actual, [expected]);
@@ -120,7 +112,7 @@ void main() {
         input = '{$advertiserId, $campaignId, $insertionOrderId, $displayName,'
             '$entityStatus, $updateTime, $pacing, $budget}';
 
-        final actual = Dv360ServiceResponseParser.parseInsertionOrders(input);
+        final actual = PublicApiParser.parseInsertionOrders(input);
 
         final expectedPacing = InsertionOrder_Pacing()
           ..pacingPeriod =
@@ -152,29 +144,21 @@ void main() {
 
     group('parses next page token from:', () {
       test('null', () {
-        final actual = Dv360ServiceResponseParser.parseNextPageToken(null);
+        final actual = PublicApiParser.parseNextPageToken(null);
 
         final expected = emptyEntry;
         expect(actual, expected);
       });
 
       test('empty string', () {
-        final actual = Dv360ServiceResponseParser.parseNextPageToken('');
-
-        final expected = emptyEntry;
-        expect(actual, expected);
-      });
-
-      test('non-json string', () {
-        final actual =
-            Dv360ServiceResponseParser.parseNextPageToken('not-json-format');
+        final actual = PublicApiParser.parseNextPageToken('');
 
         final expected = emptyEntry;
         expect(actual, expected);
       });
 
       test('empty json string', () {
-        final actual = Dv360ServiceResponseParser.parseNextPageToken('{}');
+        final actual = PublicApiParser.parseNextPageToken('{}');
 
         final expected = emptyEntry;
         expect(actual, expected);
@@ -182,7 +166,7 @@ void main() {
 
       test('json that does not contain next page token', () {
         input = '{"some-field": "some-value", "not-token" : "not_token_value"}';
-        final actual = Dv360ServiceResponseParser.parseNextPageToken(input);
+        final actual = PublicApiParser.parseNextPageToken(input);
 
         final expected = emptyEntry;
         expect(actual, expected);
@@ -190,7 +174,7 @@ void main() {
 
       test('json that contains next page token', () {
         input = '{"some-field": "some-value", "nextPageToken" : "token_value"}';
-        final actual = Dv360ServiceResponseParser.parseNextPageToken(input);
+        final actual = PublicApiParser.parseNextPageToken(input);
 
         final expected = 'token_value';
         expect(actual, expected);
@@ -201,7 +185,7 @@ void main() {
       test('nothing', () {
         input = '{"pacing":{}}';
 
-        final actual = Dv360ServiceResponseParser.parseInsertionOrders(input);
+        final actual = PublicApiParser.parseInsertionOrders(input);
 
         expect(actual, [insertionOrderTemplate]);
       });
@@ -216,7 +200,7 @@ void main() {
           }
           ''';
 
-        final actual = Dv360ServiceResponseParser.parseInsertionOrders(input);
+        final actual = PublicApiParser.parseInsertionOrders(input);
 
         final pacing = InsertionOrder_Pacing()
           ..pacingPeriod =
@@ -238,7 +222,7 @@ void main() {
           }
           ''';
 
-        final actual = Dv360ServiceResponseParser.parseInsertionOrders(input);
+        final actual = PublicApiParser.parseInsertionOrders(input);
 
         final pacing = InsertionOrder_Pacing()
           ..pacingPeriod =
@@ -255,7 +239,7 @@ void main() {
       test('nothing', () {
         input = '{"budget":{}}';
 
-        final actual = Dv360ServiceResponseParser.parseInsertionOrders(input);
+        final actual = PublicApiParser.parseInsertionOrders(input);
 
         expect(actual, [insertionOrderTemplate]);
       });
@@ -263,7 +247,7 @@ void main() {
       test('budgetUnit', () {
         input = '{"budget":{"budgetUnit":"BUDGET_UNIT_CURRENCY"}}';
 
-        final actual = Dv360ServiceResponseParser.parseInsertionOrders(input);
+        final actual = PublicApiParser.parseInsertionOrders(input);
 
         final budget = InsertionOrder_Budget()
           ..budgetUnit = InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY
@@ -284,7 +268,7 @@ void main() {
           }
           ''';
 
-        final actual = Dv360ServiceResponseParser.parseInsertionOrders(input);
+        final actual = PublicApiParser.parseInsertionOrders(input);
 
         final budget = InsertionOrder_Budget()
           ..budgetUnit = InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY
@@ -306,7 +290,7 @@ void main() {
           }
           ''';
 
-        final actual = Dv360ServiceResponseParser.parseInsertionOrders(input);
+        final actual = PublicApiParser.parseInsertionOrders(input);
 
         final budget = InsertionOrder_Budget()
           ..budgetUnit = InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY
@@ -331,7 +315,7 @@ void main() {
           ''';
         input = '{"budget":{$budgetSegment}}';
 
-        final actual = Dv360ServiceResponseParser.parseInsertionOrders(input);
+        final actual = PublicApiParser.parseInsertionOrders(input);
 
         final segment = InsertionOrder_Budget_BudgetSegment()
           ..budgetAmountMicros = '5000000'
@@ -374,7 +358,7 @@ void main() {
           ''';
         input = '{"budget":{$budgetSegment}}';
 
-        final actual = Dv360ServiceResponseParser.parseInsertionOrders(input);
+        final actual = PublicApiParser.parseInsertionOrders(input);
 
         final segment = InsertionOrder_Budget_BudgetSegment()
           ..budgetAmountMicros = '4000000'

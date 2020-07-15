@@ -2,7 +2,7 @@ import 'package:angular/angular.dart';
 import 'package:angular_forms/angular_forms.dart';
 
 import 'excel.dart';
-import 'dv360_service_response_parser.dart';
+import 'public_api_parser.dart';
 import 'json_js.dart';
 import 'proto/insertion_order_query.pb.dart';
 import 'query_service.dart';
@@ -67,7 +67,7 @@ class QueryComponent {
 
     // TODO: update reporting query to deal with multiple IOs.
     // Issue: https://github.com/googleinterns/dv360-excel-plugin/issues/61
-    final insertionOrder = insertionOrders[0];
+    final insertionOrder = insertionOrders.first;
 
     // Gets dateRange for the active budget segment.
     final activeDateRange = insertionOrder.budget.activeBudgetSegment.dateRange;
@@ -91,19 +91,17 @@ class QueryComponent {
     do {
       // Gets the nextPageToken, and having an empty token
       // doesn't affect the query.
-      final nextPageToken =
-          Dv360ServiceResponseParser.parseNextPageToken(jsonResponse);
+      final nextPageToken = PublicApiParser.parseNextPageToken(jsonResponse);
 
       // Executes dv360 query, parses the response and adds results to the list.
-      var response = await _queryService.execDV3Query(
+      final response = await _queryService.execDV3Query(
           _queryType, nextPageToken, advertiserId, insertionOrderId);
       jsonResponse = JsonJS.stringify(response);
 
       // Adds all insertion orders in this iteration to the list.
-      insertionOrderList.addAll(
-          Dv360ServiceResponseParser.parseInsertionOrders(jsonResponse));
-    } while (
-        Dv360ServiceResponseParser.parseNextPageToken(jsonResponse).isNotEmpty);
+      insertionOrderList
+          .addAll(PublicApiParser.parseInsertionOrders(jsonResponse));
+    } while (PublicApiParser.parseNextPageToken(jsonResponse).isNotEmpty);
 
     return insertionOrderList;
   }
