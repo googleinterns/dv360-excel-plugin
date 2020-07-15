@@ -1,6 +1,8 @@
 @JS()
 library excel;
 
+import 'dart:async';
+
 import 'package:angular/angular.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:js/js.dart';
@@ -48,6 +50,9 @@ class ExcelDart {
   static final _currentPacingColumnAddress =
       '\$${_getExcelColumnReference(_tableHeader.indexOf('Current Pacing %'))}'
       '${_resultTableRowStartAddress + 1}';
+  static final _budgetUnitColumnHeaderAddress =
+      '\$${_getExcelColumnReference(_tableHeader.indexOf('Budget Unit'))}'
+      '${_resultTableRowStartAddress}';
 
   /// Header for the master table.
   ///
@@ -75,6 +80,15 @@ class ExcelDart {
     'End_Date',
   ];
 
+  /// Loads the Office JS library.
+  ///
+  /// Uses completer to convert call back function to future.
+  Future<void> loadOffice() {
+    final completer = Completer<void>();
+    Office.onReady(allowInterop((info) => completer.complete()));
+    return completer.future;
+  }
+
   /// Waits for Office APIs to be ready and then creates
   /// a new spreadsheet with [sheetName] and populates the spreadsheet with
   /// entries in the [insertionOrderList].
@@ -83,111 +97,115 @@ class ExcelDart {
   /// [highlightUnderpacing] resolves as true, and false otherwise.
   void populate(List<InsertionOrder> insertionOrderList,
       bool highlightUnderpacing) async {
-    await Office.onReady(allowInterop((info) async {
-      final sheetName = 'Query';
-      final tableName = 'Performance_Data_Table';
+    final sheetName = 'Query';
+    final tableName = 'Performance_Data_Table';
 
-      /// TODO: the await here doesn't work, should use completer instead.
-      /// Issue: https://github.com/googleinterns/dv360-excel-plugin/issues/55
-      await ExcelJS.run(allowInterop((context) async {
-        // Adds a new worksheet.
-        final sheet = context.workbook.worksheets.add(sheetName);
+    final populateCompleter = Completer<void>();
+    ExcelJS.run(allowInterop((context) {
+      // Adds a new worksheet.
+      final sheet = context.workbook.worksheets.add(sheetName);
 
-        // Adds and formats the underpacing table.
-        _underpacingTable[0][1] = highlightUnderpacing;
-        sheet.getRange('$sheetName!$_underpacingTableAddress')
-          ..format.font.name = _fontName
-          ..format.font.size = _fontSize
-          ..format.font.bold = true
-          ..format.horizontalAlignment = _centerAlignment
-          ..values = _underpacingTable;
-        sheet
-            .getRange('$sheetName!$_underpacingHeaderAddress')
-            .format
-            .horizontalAlignment = _leftAlignment;
-        sheet
-            .getRange('$sheetName!$_underpacingValueAddress')
-            .format
-            .horizontalAlignment = _rightAlignment;
+      // Adds and formats the underpacing table.
+      _underpacingTable[0][1] = highlightUnderpacing;
+      sheet.getRange('$sheetName!$_underpacingTableAddress')
+        ..format.font.name = _fontName
+        ..format.font.size = _fontSize
+        ..format.font.bold = true
+        ..format.horizontalAlignment = _centerAlignment
+        ..values = _underpacingTable;
+      sheet
+          .getRange('$sheetName!$_underpacingHeaderAddress')
+          .format
+          .horizontalAlignment = _leftAlignment;
+      sheet
+          .getRange('$sheetName!$_underpacingValueAddress')
+          .format
+          .horizontalAlignment = _rightAlignment;
 
-        // Turns [insertionOrderList] into table rows.
-        final tableBody = insertionOrderList.map(_generateTableRow).toList();
+      // Turns [insertionOrderList] into table rows.
+      final tableBody = insertionOrderList.map(_generateTableRow).toList();
 
-        // Calculates table size and adds a master table.
-        final endAddress =
-            '${_getExcelColumnReference(_tableHeader.length - 1)}'
-            '${tableBody.length + _resultTableRowStartAddress}';
-        final tableAddress = '$sheetName!'
-            '$_resultTableColumnStartAddress$_resultTableRowStartAddress:'
-            '$endAddress';
-        final table = context.workbook.tables.add(tableAddress, true);
-        table.name = tableName;
+      // Calculates table size and adds a master table.
+      final endAddress = '${_getExcelColumnReference(_tableHeader.length - 1)}'
+          '${tableBody.length + _resultTableRowStartAddress}';
+      final tableAddress = '$sheetName!'
+          '$_resultTableColumnStartAddress$_resultTableRowStartAddress:'
+          '$endAddress';
+      final table = context.workbook.tables.add(tableAddress, true);
+      table.name = tableName;
 
-        // Adds and formats table header.
-        table.getHeaderRowRange()
-          ..values = [_tableHeader]
-          ..format.font.name = _fontName
-          ..format.font.size = _fontSize
-          ..format.font.bold = true
-          ..format.horizontalAlignment = _centerAlignment
-          ..format.borders.getItem('EdgeTop').style = _borderStyle
-          ..format.borders.getItem('EdgeBottom').style = _borderStyle;
+      // Adds and formats table header.
+      table.getHeaderRowRange()
+        ..values = [_tableHeader]
+        ..format.font.name = _fontName
+        ..format.font.size = _fontSize
+        ..format.font.bold = true
+        ..format.horizontalAlignment = _centerAlignment
+        ..format.borders.getItem('EdgeTop').style = _borderStyle
+        ..format.borders.getItem('EdgeBottom').style = _borderStyle;
 
-        // Adds and formats table body.
-        table.getDataBodyRange()
-          ..formulas = tableBody
-          ..format.font.name = _fontName
-          ..format.font.size = _fontSize
-          ..format.horizontalAlignment = _centerAlignment;
+      // Adds and formats table body.
+      table.getDataBodyRange()
+        ..formulas = tableBody
+        ..format.font.name = _fontName
+        ..format.font.size = _fontSize
+        ..format.horizontalAlignment = _centerAlignment;
 
-        // Formats the Daily Max and Spent column as currency.
-        table.columns.getItem('Daily Max').getRange().numberFormat =
-            _currencyFormat;
-        table.columns.getItem('Spent').getRange().numberFormat =
-            _currencyFormat;
+      // Formats the Daily Max and Spent column as currency.
+      table.columns.getItem('Daily Max').getRange().numberFormat =
+          _currencyFormat;
+      table.columns.getItem('Spent').getRange().numberFormat = _currencyFormat;
 
-        // Auto-fits all used cells.
-        sheet.getUsedRange().getEntireColumn().format.autofitColumns();
-        sheet.getUsedRange().getEntireRow().format.autofitRows();
+      // Auto-fits all used cells.
+      sheet.getUsedRange().getEntireColumn().format.autofitColumns();
+      sheet.getUsedRange().getEntireRow().format.autofitRows();
 
-        // Sets the sheet as active.
-        sheet.activate();
-        return context.sync();
-      }));
+      // Sets the sheet as active and syncs context.
+      sheet.activate();
+      context.sync();
 
-      // Conditionally format the budget column once the table is set.
-      _formatBudgetColumn(tableName);
-
-      // Highlight underpacing insertion orders if highlightUnderpacing is true.
-      if (highlightUnderpacing) _highlightUnderpacingRows(tableName);
+      // All operations are complete.
+      populateCompleter.complete();
     }));
+
+    // Waits for population to be complete.
+    await populateCompleter.future;
+
+    // Conditionally format the budget column once the table is set.
+    await _formatBudgetColumn(tableName);
+
+    // Highlight underpacing insertion orders if highlightUnderpacing is true.
+    if (highlightUnderpacing) await _highlightUnderpacingRows(tableName);
   }
 
   static String _getExcelColumnReference(int offset) => String.fromCharCode(
       _resultTableColumnStartAddress.codeUnitAt(0) + offset);
 
   /// Conditionally formats the Budget column based on Budget Unit.
-  ///
-  /// 'RC[-2]' in the formula follows Excel's Relative Notation and references
-  /// the cell that is in the same row but its column number shifted left by 2.
-  /// Here the offset between the Budget column and Budget Type Column is -2.
-  /// If [_tableHeader] has been changed, the offset here needs to
-  /// be changed to match too.
-  /// TODO: change this relative reference to absolute reference.
-  /// Issue: https://github.com/googleinterns/dv360-excel-plugin/issues/54
-  static void _formatBudgetColumn(String tableName) async {
-    await ExcelJS.run(allowInterop((context) async {
+  static Future<void> _formatBudgetColumn(String tableName) async {
+    final formatCompleter = Completer<void>();
+    ExcelJS.run(allowInterop((context) {
       final table = context.workbook.tables.getItem(tableName);
       final budgetRange = table.columns.getItem('Budget').getRange();
       final format = budgetRange.conditionalFormats.add('Custom');
 
-      format.custom.rule.formula = '=IF(INDIRECT("RC[-2]",0) '
-          '="${InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY}",'
-          'TRUE)';
+      final formula = '''
+      $_budgetUnitColumnHeaderAddress =
+      "${InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY}"
+      ''';
+
+      // remove all tabs, newlines, and whitespace from the formula.
+      format.custom.rule.formula = formula.replaceAll(RegExp(r'\s+'), '');
+
       format.custom.format.numberFormat = _currencyFormat;
 
-      return context.sync();
+      context.sync();
+
+      // All operations are complete.
+      formatCompleter.complete();
     }));
+
+    return formatCompleter.future;
   }
 
   /// Highlight rows that are underpacing.
@@ -197,8 +215,9 @@ class ExcelDart {
   /// [_currentPacingColumnAddress] evaluates to) has to be used
   /// instead. As table expands, Excel will automatically extends the
   /// conditional formatting rule to cover the entire range.
-  static void _highlightUnderpacingRows(String tableName) async {
-    await ExcelJS.run(allowInterop((context) async {
+  static Future<void> _highlightUnderpacingRows(String tableName) async {
+    final formatCompleter = Completer<void>();
+    ExcelJS.run(allowInterop((context) {
       final table = context.workbook.tables.getItem(tableName);
       final range = table.getDataBodyRange();
       final format = range.conditionalFormats.add('Custom');
@@ -209,8 +228,13 @@ class ExcelDart {
       format.custom.format.fill.color = _underpacingFormatFill;
       format.custom.format.font.color = _underpacingFormatFont;
 
-      return context.sync();
+      context.sync();
+
+      // All operations are complete.
+      formatCompleter.complete();
     }));
+
+    return formatCompleter.future;
   }
 
   /// Generates a row from [insertionOrder] by creating fields that matches
@@ -305,8 +329,7 @@ class ExcelDart {
 class ExcelJS {
   /// Executes a batch script that performs actions
   /// on the Excel object model using a new RequestContext.
-  external static Future<dynamic> run(
-      Future<dynamic> Function(RequestContext) callback);
+  external static void run(void Function(RequestContext) callback);
 }
 
 /// Wrapper for Excel.RequestContext class.

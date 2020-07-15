@@ -26,7 +26,7 @@ import 'reporting_query_parser.dart';
   providers: [ClassProvider(QueryService), ClassProvider(ExcelDart)],
   directives: [coreDirectives, formDirectives],
 )
-class QueryComponent {
+class QueryComponent implements OnInit {
   final buttonName = 'populate';
   final QueryService _queryService;
   final ExcelDart _excel;
@@ -37,6 +37,9 @@ class QueryComponent {
   bool highlightUnderpacing = false;
 
   QueryComponent(this._queryService, this._excel);
+
+  @override
+  void ngOnInit() async => await _excel.loadOffice();
 
   void onClick() async {
     // Uses DV360 public APIs to fetch entity data.
@@ -77,17 +80,17 @@ class QueryComponent {
     try {
       // Uses the queryId to get the report download path.
       final jsonGetQueryResponse =
-      await _queryService.execReportingGetQuery(reportingQueryId);
+          await _queryService.execReportingGetQuery(reportingQueryId);
       final reportingDownloadPath =
-      ReportingQueryParser.parseDownloadPathFromJsonString(
-          json.stringify(jsonGetQueryResponse));
+          ReportingQueryParser.parseDownloadPathFromJsonString(
+              json.stringify(jsonGetQueryResponse));
 
       // Downloads the report and parse the response into a revenue map.
       final report =
-      await _queryService.execReportingDownload(reportingDownloadPath);
+          await _queryService.execReportingDownload(reportingDownloadPath);
 
       return ReportingQueryParser.parseRevenueFromJsonString(report);
-    } catch(e) {
+    } catch (e) {
       /// TODO: proper error handling.
       /// Issue: https://github.com/googleinterns/dv360-excel-plugin/issues/52.
       return <String, String>{};
