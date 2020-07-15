@@ -42,19 +42,11 @@ class ExcelDart {
 
   static const _borderStyle = 'Continuous';
   static const _currencyFormat = '\$#,##0.00';
+  static const _timeFormat = '12:00:00 AM';
 
   /// Column addresses calculated based on [_tableHeader].
-  static final _spentColumn =
-      '\$${_getExcelColumnReference(_tableHeader.indexOf('Spent'))}'
-      '${_resultTableRowStartAddress + 1}';
-  static final _budgetColumn =
-      '\$${_getExcelColumnReference(_tableHeader.indexOf('Budget'))}'
-      '${_resultTableRowStartAddress + 1}';
-  static final _startDateColumn =
-      '\$${_getExcelColumnReference(_tableHeader.indexOf('Start Date'))}'
-      '${_resultTableRowStartAddress + 1}';
-  static final _endDateColumn =
-      '\$${_getExcelColumnReference(_tableHeader.indexOf('End Date'))}'
+  static final _currentPacingColumnAddress =
+      '\$${_getExcelColumnReference(_tableHeader.indexOf('Current Pacing %'))}'
       '${_resultTableRowStartAddress + 1}';
 
   /// Header for the master table.
@@ -78,8 +70,9 @@ class ExcelDart {
     'Automation Type',
     'Budget',
     'Spent',
-    'Start Date',
-    'End Date'
+    'Current Pacing %',
+    'Start_Date',
+    'End_Date',
   ];
 
   /// Waits for Office APIs to be ready and then creates
@@ -200,7 +193,8 @@ class ExcelDart {
   /// Highlight rows that are underpacing.
   ///
   /// Structured reference (i.e. Table[@Column]) is not allowed in Excel
-  /// conditional formatting. Regular reference (i.e. $A5) has to be used
+  /// conditional formatting. Regular reference (i.e. $O5 or what
+  /// [_currentPacingColumnAddress] evaluates to) has to be used
   /// instead. As table expands, Excel will automatically extends the
   /// conditional formatting rule to cover the entire range.
   static void _highlightUnderpacingRows(String tableName) async {
@@ -209,28 +203,8 @@ class ExcelDart {
       final range = table.getDataBodyRange();
       final format = range.conditionalFormats.add('Custom');
 
-      // Excel formula DATEDIF(dateA, dateB, "D") calculates the difference
-      // between two dates in days, where dateB must be after or equal to dateA.
-      // i.e. DATEDIF("7/1/2020", "7/31/2020", "D") = 30
-      //
-      // This formula calculates:
-      // (spent / budget) / (current duration / flight duration)
-      //
-      // Flight duration is calculated by (end date - start date + 1), and
-      // current duration is calculated by (now - start date + 1), so it is
-      // guaranteed that divide by zero will not happen.
-      /// TODO: calculate difference at hours level if it is shorter than a day.
-      /// Issue: https://github.com/googleinterns/dv360-excel-plugin/issues/57
-      final formula = ''' 
-       ($_spentColumn/$_budgetColumn) / 
-       (
-         (DATEDIF($_startDateColumn, NOW(), "D") + 1) /
-         (DATEDIF($_startDateColumn, $_endDateColumn, "D") + 1)
-       ) < $_thresholdAddress
-      ''';
-
-      // remove all tabs, newlines, and whitespace from the formula.
-      format.custom.rule.formula = formula.replaceAll(RegExp(r'\s+'), '');
+      format.custom.rule.formula =
+          '$_currentPacingColumnAddress < $_thresholdAddress';
 
       format.custom.format.fill.color = _underpacingFormatFill;
       format.custom.format.font.color = _underpacingFormatFont;
@@ -258,6 +232,7 @@ class ExcelDart {
       _calculateActiveBudgetAmount(
           insertionOrder.budget.activeBudgetSegment.budgetAmountMicros),
       insertionOrder.spent,
+      _calculateCurrentPacingPercentage(),
       _calculateDate(
           insertionOrder.budget.activeBudgetSegment.dateRange.startDate),
       _calculateDate(
@@ -276,9 +251,45 @@ class ExcelDart {
       Util.convertMicrosToStandardUnitString(
           Int64.parseInt(budgetAmountMicros));
 
+  /// Uses Excel built-in formula to calculate current pacing percentage.
+  ///
+  /// The formula calculates:
+  /// (spent / budget) / (current duration / flight duration)
+  /// where duration has granularity of hours. And if current duration is less
+  /// than 1 day or 10% of the total flight duration, it will show
+  /// 'not_enough_information".
+  static String _calculateCurrentPacingPercentage() {
+    // (dateA - dateB) returns the difference between two dates in days,
+    // and with fractions showing the difference between times in seconds.
+    //
+    // MROUND(dateA - dateB, 1/24) rounds the difference to hours.
+    //
+    // Only inflight IOs are displayed in the table, so current duration will
+    // not have negative values.
+    // And the final pacing percentage is rounded to two decimal places.
+    final formula = '''
+    =IF(AND(
+        NOW() - [Start_Date] > 1,
+        MROUND(NOW() - [Start_Date], 1/24) > 0.1 * ([End_Date] - [Start_Date])
+        ),
+
+        ROUND(
+        ([Spent] / [Budget]) /
+        (
+          MROUND(NOW() - [Start_Date], 1/24) / ([End_Date] - [Start_Date])
+        ), 2),
+
+        "not_enough_information"
+        )
+    ''';
+
+    return formula.replaceAll(RegExp(r'\s+'), '');
+  }
+
+  /// Converts proto [Date] into Excel date time format.
   static String _calculateDate(
           InsertionOrder_Budget_BudgetSegment_DateRange_Date date) =>
-      '${date.month}/${date.day}/${date.year}';
+      '${date.month}/${date.day}/${date.year} $_timeFormat';
 }
 
 /// Below are wrapper functions for Office Excel APIs.
