@@ -6,6 +6,7 @@ import 'package:fixnum/fixnum.dart';
 
 import 'gapi.dart';
 import 'proto/insertion_order_query.pb.dart';
+import 'util.dart';
 
 @Injectable()
 class QueryService {
@@ -17,14 +18,13 @@ class QueryService {
   ///
   /// Completer is used here to convert the callback method of [execute] into
   /// a future, so that we only proceed when the request finishes executing.
-  Future<dynamic> execDV3Query(
+  /// Having an empty [nextPageToken] will not affect the query.
+  Future<dynamic> execDV3Query(QueryType queryType, String nextPageToken,
       String advertiserId, String insertionOrderId) async {
-    final dv3RequestArgs = RequestArgs(
-        path: _generateQuery(advertiserId, insertionOrderId), method: 'GET');
-
     final responseCompleter = Completer<dynamic>();
     GoogleAPI.client
-        .request(dv3RequestArgs)
+        .request(_generateDV3Query(
+            queryType, nextPageToken, advertiserId, insertionOrderId))
         .execute(allowInterop((jsonResp, rawResp) {
       responseCompleter.complete(jsonResp);
     }));
@@ -114,8 +114,34 @@ class QueryService {
   }
 
   /// Generates query based on user inputs.
-  static String _generateQuery(String advertiserId, String insertionOrderId) {
-    return 'https://displayvideo.googleapis.com/v1/advertisers/$advertiserId/'
-        'insertionOrders/$insertionOrderId';
+  static RequestArgs _generateDV3Query(QueryType queryType,
+      String nextPageToken, String advertiserId, String insertionOrderId) {
+    switch (queryType) {
+      case QueryType.byAdvertiser:
+        {
+          final filter = 'filter=entityStatus="ENTITY_STATUS_ACTIVE"';
+          final pageToken = 'pageToken=$nextPageToken';
+          return RequestArgs(
+              path: 'https://displayvideo.googleapis.com/v1/advertisers/'
+                  '$advertiserId/insertionOrders?$filter&$pageToken',
+              method: 'GET');
+        }
+        break;
+
+      case QueryType.byInsertionOrder:
+        {
+          return RequestArgs(
+              path: 'https://displayvideo.googleapis.com/v1/advertisers/'
+                  '$advertiserId/insertionOrders/$insertionOrderId',
+              method: 'GET');
+        }
+        break;
+
+      default:
+        {
+          return RequestArgs();
+        }
+        break;
+    }
   }
 }

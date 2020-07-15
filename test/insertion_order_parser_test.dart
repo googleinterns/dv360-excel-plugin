@@ -1,10 +1,10 @@
 import 'package:angular_test/angular_test.dart';
-import 'package:dv360_excel_plugin/src/insertion_order_parser.dart';
+import 'package:dv360_excel_plugin/src/dv360_service_response_parser.dart';
 import 'package:dv360_excel_plugin/src/proto/insertion_order_query.pb.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group(InsertionOrderParser, () {
+  group(Dv360ServiceResponseParser, () {
     String input;
     const emptyEntry = '';
 
@@ -41,42 +41,59 @@ void main() {
 
     tearDown(disposeAnyRunningTest);
 
-    test(
-        'parse insertionOrder from empty json should return '
-        'an empty insertionOrder instance', () {
-      input = '{}';
+    group('parses insertion orders from:', () {
+//      test('null', () {
+//        final actual = Dv360ServiceResponseParser.parseInsertionOrders(null);
+//
+//        final expected = [];
+//        expect(actual, expected);
+//      });
+//
+//      test('empty string', () {
+//        final actual = Dv360ServiceResponseParser.parseInsertionOrders('');
+//
+//        final expected = [];
+//        expect(actual, expected);
+//      });
+//
+//      test('non-json string', () {
+//        final actual =
+//            Dv360ServiceResponseParser.parseInsertionOrders('not-json-format');
+//
+//        final expected = [];
+//        expect(actual, expected);
+//      });
 
-      final actual = InsertionOrderParser.parse(input);
+      test('empty json string', () {
+        final actual = Dv360ServiceResponseParser.parseInsertionOrders('{}');
 
-      final expected = InsertionOrder();
-      expect(actual, expected);
-    });
+        final expected = [InsertionOrder()];
+        expect(actual, expected);
+      });
 
-    test(
-        'parse insertionOrder from json that contains only advertiserId '
-        'should return an instance with only advertiserId set', () {
-      input = '{"advertiserId":"111111"}';
+      test('json that contains only advertiserId', () {
+        input = '{"advertiserId":"111111"}';
 
-      final actual = InsertionOrderParser.parse(input);
+        final actual = Dv360ServiceResponseParser.parseInsertionOrders(input);
 
-      final expected = insertionOrderTemplate..advertiserId = '111111';
-      expect(actual, expected);
-    });
+        final expected = insertionOrderTemplate..advertiserId = '111111';
+        expect(actual, [expected]);
+      });
 
-    test('parse insertionOrder from json that contains everything', () {
-      final advertiserId = '"advertiserId":"11111"';
-      final campaignId = '"campaignId":"2222222"';
-      final insertionOrderId = '"insertionOrderId":"3333333"';
-      final displayName = '"displayName":"display name"';
-      final entityStatus = '"entityStatus":"ENTITY_STATUS_ACTIVE"';
-      final updateTime = '"updateTime":"2020-06-23T17:14:58.685Z"';
-      final pacing = '''
+      test('json that contains everything', () {
+        final advertiserId = '"advertiserId":"11111"';
+        final campaignId = '"campaignId":"2222222"';
+        final insertionOrderId = '"insertionOrderId":"3333333"';
+        final displayName = '"displayName":"display name"';
+        final entityStatus = '"entityStatus":"ENTITY_STATUS_ACTIVE"';
+        final updateTime = '"updateTime":"2020-06-23T17:14:58.685Z"';
+        final pacing = '''
           "pacing":{
             "pacingPeriod":"PACING_PERIOD_FLIGHT",
             "pacingType":"PACING_TYPE_AHEAD"
           }
           ''';
-      final budgetSegment = '''
+        final budgetSegment = '''
           "budgetSegments":[
             {"budgetAmountMicros":"4000000",
              "description":"year-2019",
@@ -93,51 +110,100 @@ void main() {
             }
           ]
           ''';
-      final budget = '''
+        final budget = '''
           "budget":{
             "budgetUnit":"BUDGET_UNIT_CURRENCY",
             "automationType":"INSERTION_ORDER_AUTOMATION_TYPE_NONE",
             $budgetSegment
            }
           ''';
-      input = '{$advertiserId, $campaignId, $insertionOrderId, $displayName,'
-          '$entityStatus, $updateTime, $pacing, $budget}';
+        input = '{$advertiserId, $campaignId, $insertionOrderId, $displayName,'
+            '$entityStatus, $updateTime, $pacing, $budget}';
 
-      final actual = InsertionOrderParser.parse(input);
+        final actual = Dv360ServiceResponseParser.parseInsertionOrders(input);
 
-      final expectedPacing = InsertionOrder_Pacing()
-        ..pacingPeriod = InsertionOrder_Pacing_PacingPeriod.PACING_PERIOD_FLIGHT
-        ..pacingType = InsertionOrder_Pacing_PacingType.PACING_TYPE_AHEAD
-        ..dailyMaxImpressions = emptyEntry;
-      final segment = InsertionOrder_Budget_BudgetSegment()
-        ..budgetAmountMicros = '2000000'
-        ..description = emptyEntry
-        ..campaignBudgetId = emptyEntry
-        ..dateRange = oneDateRange;
-      final expectedBudget = InsertionOrder_Budget()
-        ..budgetUnit = InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY
-        ..automationType = InsertionOrder_Budget_InsertionOrderAutomationType
-            .INSERTION_ORDER_AUTOMATION_TYPE_NONE
-        ..activeBudgetSegment = segment;
-      final expected = InsertionOrder()
-        ..advertiserId = '11111'
-        ..campaignId = '2222222'
-        ..insertionOrderId = '3333333'
-        ..displayName = 'display name'
-        ..updateTime = '2020-06-23T17:14:58.685Z'
-        ..entityStatus = InsertionOrder_EntityStatus.ENTITY_STATUS_ACTIVE
-        ..pacing = expectedPacing
-        ..budget = expectedBudget;
-      expect(actual, expected);
+        final expectedPacing = InsertionOrder_Pacing()
+          ..pacingPeriod =
+              InsertionOrder_Pacing_PacingPeriod.PACING_PERIOD_FLIGHT
+          ..pacingType = InsertionOrder_Pacing_PacingType.PACING_TYPE_AHEAD
+          ..dailyMaxImpressions = emptyEntry;
+        final segment = InsertionOrder_Budget_BudgetSegment()
+          ..budgetAmountMicros = '2000000'
+          ..description = emptyEntry
+          ..campaignBudgetId = emptyEntry
+          ..dateRange = oneDateRange;
+        final expectedBudget = InsertionOrder_Budget()
+          ..budgetUnit = InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY
+          ..automationType = InsertionOrder_Budget_InsertionOrderAutomationType
+              .INSERTION_ORDER_AUTOMATION_TYPE_NONE
+          ..activeBudgetSegment = segment;
+        final expected = InsertionOrder()
+          ..advertiserId = '11111'
+          ..campaignId = '2222222'
+          ..insertionOrderId = '3333333'
+          ..displayName = 'display name'
+          ..updateTime = '2020-06-23T17:14:58.685Z'
+          ..entityStatus = InsertionOrder_EntityStatus.ENTITY_STATUS_ACTIVE
+          ..pacing = expectedPacing
+          ..budget = expectedBudget;
+        expect(actual, [expected]);
+      });
     });
 
-    group('parse Pacing from json that contains:', () {
+    group('parses next page token from:', () {
+      test('null', () {
+        final actual = Dv360ServiceResponseParser.parseNextPageToken(null);
+
+        final expected = emptyEntry;
+        expect(actual, expected);
+      });
+
+      test('empty string', () {
+        final actual = Dv360ServiceResponseParser.parseNextPageToken('');
+
+        final expected = emptyEntry;
+        expect(actual, expected);
+      });
+
+      test('non-json string', () {
+        final actual =
+            Dv360ServiceResponseParser.parseNextPageToken('not-json-format');
+
+        final expected = emptyEntry;
+        expect(actual, expected);
+      });
+
+      test('empty json string', () {
+        final actual = Dv360ServiceResponseParser.parseNextPageToken('{}');
+
+        final expected = emptyEntry;
+        expect(actual, expected);
+      });
+
+      test('json that does not contain next page token', () {
+        input = '{"some-field": "some-value", "not-token" : "not_token_value"}';
+        final actual = Dv360ServiceResponseParser.parseNextPageToken(input);
+
+        final expected = emptyEntry;
+        expect(actual, expected);
+      });
+
+      test('json that contains next page token', () {
+        input = '{"some-field": "some-value", "nextPageToken" : "token_value"}';
+        final actual = Dv360ServiceResponseParser.parseNextPageToken(input);
+
+        final expected = 'token_value';
+        expect(actual, expected);
+      });
+    });
+
+    group('parses Pacing from json that contains:', () {
       test('nothing', () {
         input = '{"pacing":{}}';
 
-        final actual = InsertionOrderParser.parse(input);
+        final actual = Dv360ServiceResponseParser.parseInsertionOrders(input);
 
-        expect(actual, insertionOrderTemplate);
+        expect(actual, [insertionOrderTemplate]);
       });
 
       test('pacingPeriod and pacingType', () {
@@ -150,7 +216,7 @@ void main() {
           }
           ''';
 
-        final actual = InsertionOrderParser.parse(input);
+        final actual = Dv360ServiceResponseParser.parseInsertionOrders(input);
 
         final pacing = InsertionOrder_Pacing()
           ..pacingPeriod =
@@ -158,7 +224,7 @@ void main() {
           ..pacingType = InsertionOrder_Pacing_PacingType.PACING_TYPE_AHEAD
           ..dailyMaxImpressions = emptyEntry;
         final expected = insertionOrderTemplate..pacing = pacing;
-        expect(actual, expected);
+        expect(actual, [expected]);
       });
 
       test('pacingPeriod, pacingType and dailyMaxMicros', () {
@@ -172,7 +238,7 @@ void main() {
           }
           ''';
 
-        final actual = InsertionOrderParser.parse(input);
+        final actual = Dv360ServiceResponseParser.parseInsertionOrders(input);
 
         final pacing = InsertionOrder_Pacing()
           ..pacingPeriod =
@@ -181,23 +247,23 @@ void main() {
           ..dailyMaxMicros = '1500000'
           ..dailyMaxImpressions = emptyEntry;
         final expected = insertionOrderTemplate..pacing = pacing;
-        expect(actual, expected);
+        expect(actual, [expected]);
       });
     });
 
-    group('parse InsertionOrderBudget from json that contains:', () {
+    group('parses InsertionOrderBudget from json that contains:', () {
       test('nothing', () {
         input = '{"budget":{}}';
 
-        final actual = InsertionOrderParser.parse(input);
+        final actual = Dv360ServiceResponseParser.parseInsertionOrders(input);
 
-        expect(actual, insertionOrderTemplate);
+        expect(actual, [insertionOrderTemplate]);
       });
 
       test('budgetUnit', () {
         input = '{"budget":{"budgetUnit":"BUDGET_UNIT_CURRENCY"}}';
 
-        final actual = InsertionOrderParser.parse(input);
+        final actual = Dv360ServiceResponseParser.parseInsertionOrders(input);
 
         final budget = InsertionOrder_Budget()
           ..budgetUnit = InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY
@@ -205,7 +271,7 @@ void main() {
               .INSERTION_ORDER_AUTOMATION_TYPE_NONE
           ..activeBudgetSegment = InsertionOrder_Budget_BudgetSegment();
         final expected = insertionOrderTemplate..budget = budget;
-        expect(actual, expected);
+        expect(actual, [expected]);
       });
 
       test('budgetUnit and automationType', () {
@@ -218,7 +284,7 @@ void main() {
           }
           ''';
 
-        final actual = InsertionOrderParser.parse(input);
+        final actual = Dv360ServiceResponseParser.parseInsertionOrders(input);
 
         final budget = InsertionOrder_Budget()
           ..budgetUnit = InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY
@@ -226,7 +292,7 @@ void main() {
               .INSERTION_ORDER_AUTOMATION_TYPE_BUDGET
           ..activeBudgetSegment = InsertionOrder_Budget_BudgetSegment();
         final expected = insertionOrderTemplate..budget = budget;
-        expect(actual, expected);
+        expect(actual, [expected]);
       });
 
       test('empty budgetSegment', () {
@@ -240,7 +306,7 @@ void main() {
           }
           ''';
 
-        final actual = InsertionOrderParser.parse(input);
+        final actual = Dv360ServiceResponseParser.parseInsertionOrders(input);
 
         final budget = InsertionOrder_Budget()
           ..budgetUnit = InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY
@@ -248,7 +314,7 @@ void main() {
               .INSERTION_ORDER_AUTOMATION_TYPE_BUDGET
           ..activeBudgetSegment = InsertionOrder_Budget_BudgetSegment();
         final expected = insertionOrderTemplate..budget = budget;
-        expect(actual, expected);
+        expect(actual, [expected]);
       });
 
       test('one budgetSegment that is active', () {
@@ -265,7 +331,7 @@ void main() {
           ''';
         input = '{"budget":{$budgetSegment}}';
 
-        final actual = InsertionOrderParser.parse(input);
+        final actual = Dv360ServiceResponseParser.parseInsertionOrders(input);
 
         final segment = InsertionOrder_Budget_BudgetSegment()
           ..budgetAmountMicros = '5000000'
@@ -279,7 +345,7 @@ void main() {
               .INSERTION_ORDER_AUTOMATION_TYPE_NONE
           ..activeBudgetSegment = segment;
         final expected = insertionOrderTemplate..budget = budget;
-        expect(actual, expected);
+        expect(actual, [expected]);
       });
 
       test('multiple budgetSegments that contains one active', () {
@@ -308,7 +374,7 @@ void main() {
           ''';
         input = '{"budget":{$budgetSegment}}';
 
-        final actual = InsertionOrderParser.parse(input);
+        final actual = Dv360ServiceResponseParser.parseInsertionOrders(input);
 
         final segment = InsertionOrder_Budget_BudgetSegment()
           ..budgetAmountMicros = '4000000'
@@ -322,7 +388,7 @@ void main() {
               .INSERTION_ORDER_AUTOMATION_TYPE_NONE
           ..activeBudgetSegment = segment;
         final expected = insertionOrderTemplate..budget = budget;
-        expect(actual, expected);
+        expect(actual, [expected]);
       });
     });
   });

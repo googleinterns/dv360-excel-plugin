@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'proto/insertion_order_query.pb.dart';
 
-class InsertionOrderParser {
+class Dv360ServiceResponseParser {
   static const _emptyEntry = '';
 
   // Disregarding linter rule to ensure that enum maps are typed.
@@ -36,10 +36,37 @@ class InsertionOrderParser {
       key: (v) => v.name,
       value: (v) => v);
 
-  /// Parses a json string to [InsertionOrder].
-  static InsertionOrder parse(String jsonString) {
-    Map<String, dynamic> map = json.decode(jsonString);
-    return _createInsertionOrder(map);
+  /// Parses a list of [InsertionOrder] from a [jsonString] .
+  static List<InsertionOrder> parseInsertionOrders(String jsonString) {
+    Map<String, dynamic> map;
+    try {
+      map = json.decode(jsonString);
+    } catch (e) {
+      // [jsonString] is not in valid json format, returns empty list.
+      print('invalid json format');
+      return [];
+    }
+
+    return map.containsKey('insertionOrders')
+        ? List.from(map['insertionOrders'])
+            .map((ioMap) => _createInsertionOrder(ioMap))
+            .toList()
+        : [_createInsertionOrder(map)];
+  }
+
+  /// Parses the nextPageToken from a [jsonString].
+  ///
+  /// Returns empty string is input [jsonString] is null or empty.
+  static String parseNextPageToken(String jsonString) {
+    Map<String, dynamic> map;
+    try {
+      map = json.decode(jsonString);
+    } catch (e) {
+      // [jsonString] is not in valid json format, returns empty string.
+      return _emptyEntry;
+    }
+
+    return map['nextPageToken'] ?? _emptyEntry;
   }
 
   /// Creates an [InsertionOrder] instance from [map].

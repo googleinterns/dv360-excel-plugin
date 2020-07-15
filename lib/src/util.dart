@@ -1,5 +1,7 @@
 import 'package:fixnum/fixnum.dart';
 
+enum QueryType { byAdvertiser, byInsertionOrder }
+
 class Util {
   /// Convert micros to string in standard unit.
   static String convertMicrosToStandardUnitString(Int64 micros) {

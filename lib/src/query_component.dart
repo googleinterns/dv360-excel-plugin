@@ -2,11 +2,12 @@ import 'package:angular/angular.dart';
 import 'package:angular_forms/angular_forms.dart';
 
 import 'excel.dart';
-import 'insertion_order_parser.dart';
-import 'json_js.dart' as json;
+import 'dv360_service_response_parser.dart';
+import 'json_js.dart';
 import 'proto/insertion_order_query.pb.dart';
 import 'query_service.dart';
 import 'reporting_query_parser.dart';
+import 'util.dart';
 
 @Component(
   selector: 'query',
@@ -16,9 +17,16 @@ import 'reporting_query_parser.dart';
     <input [(ngModel)]="insertionOrderId" 
            placeholder="Insertion Order ID: 8127549" debugId="io-id-input">
     <br>
+
+    <input type="checkbox" [(ngModel)]="isAdvertiserQuery" name="advertiser-query">
+    <label for="advertiser-query">By advertiser</label><br>
+    <input type="checkbox" [(ngModel)]="isInsertionOrderQuery" name="advertiser-query">
+    <label for="advertiser-query">By insertion order</label><br>
+    
     <input type="checkbox" [(ngModel)]="highlightUnderpacing"
            debugId="underpacing" name="underpacing">
     <label for="underpacing">Highlight underpacing insertion orders</label><br>
+    
     <button (click)="onClick()" debugId="populate-btn">
     {{buttonName}}
     </button>
@@ -31,16 +39,35 @@ class QueryComponent {
   final QueryService _queryService;
   final ExcelDart _excel;
 
+  QueryType _queryType;
+
   String advertiserId;
   String insertionOrderId;
-
   bool highlightUnderpacing = false;
 
   QueryComponent(this._queryService, this._excel);
 
+  bool get isAdvertiserQuery => _queryType == QueryType.byAdvertiser;
+  set isAdvertiserQuery(bool checked) =>
+      checked ? _queryType = QueryType.byAdvertiser : null;
+
+  bool get isInsertionOrderQuery => _queryType == QueryType.byInsertionOrder;
+  set isInsertionOrderQuery(bool checked) =>
+      checked ? _queryType = QueryType.byInsertionOrder : null;
+
   void onClick() async {
     // Uses DV360 public APIs to fetch entity data.
-    final insertionOrder = await _queryAndParseInsertionOrderEntityData();
+    var insertionOrders = await _queryAndParseInsertionOrderEntityData();
+
+    // If [_queryType.byAdvertiser], filters out insertion orders
+    // that are not in-flight.
+    insertionOrders = _queryType == QueryType.byAdvertiser
+        ? _filterInFlightInsertionOrders(insertionOrders)
+        : insertionOrders;
+
+    // TODO: update reporting query to deal with multiple IOs.
+    // Issue: https://github.com/googleinterns/dv360-excel-plugin/issues/61
+    final insertionOrder = insertionOrders[0];
 
     // Gets dateRange for the active budget segment.
     final activeDateRange = insertionOrder.budget.activeBudgetSegment.dateRange;
@@ -52,16 +79,33 @@ class QueryComponent {
     insertionOrder.spent = revenueMap[insertionOrder.insertionOrderId] ?? '';
 
     // Populate the spreadsheet.
-    await _excel.populate([insertionOrder], highlightUnderpacing);
+    await _excel.populate(insertionOrders, highlightUnderpacing);
   }
 
   /// Fetches insertion order entity related data using DV360 public APIs,
-  /// then return a parsed [InsertionOrder] instance.
-  Future<InsertionOrder> _queryAndParseInsertionOrderEntityData() async {
-    final response =
-        await _queryService.execDV3Query(advertiserId, insertionOrderId);
+  /// then return a list of parsed [InsertionOrder] instance.
+  Future<List<InsertionOrder>> _queryAndParseInsertionOrderEntityData() async {
+    final insertionOrderList = <InsertionOrder>[];
+    var jsonResponse = '';
 
-    return InsertionOrderParser.parse(json.stringify(response));
+    do {
+      // Gets the nextPageToken, and having an empty token
+      // doesn't affect the query.
+      final nextPageToken =
+          Dv360ServiceResponseParser.parseNextPageToken(jsonResponse);
+
+      // Executes dv360 query, parses the response and adds results to the list.
+      var response = await _queryService.execDV3Query(
+          _queryType, nextPageToken, advertiserId, insertionOrderId);
+      jsonResponse = JsonJS.stringify(response);
+
+      // Adds all insertion orders in this iteration to the list.
+      insertionOrderList.addAll(
+          Dv360ServiceResponseParser.parseInsertionOrders(jsonResponse));
+    } while (
+        Dv360ServiceResponseParser.parseNextPageToken(jsonResponse).isNotEmpty);
+
+    return insertionOrderList;
   }
 
   /// Fetches revenue spent data using DBM reporting APIs,
@@ -72,25 +116,34 @@ class QueryComponent {
     final jsonCreateQueryResponse = await _queryService
         .execReportingCreateQuery(advertiserId, insertionOrderId, dateRange);
     final reportingQueryId = ReportingQueryParser.parseQueryIdFromJsonString(
-        json.stringify(jsonCreateQueryResponse));
+        JsonJS.stringify(jsonCreateQueryResponse));
 
     try {
       // Uses the queryId to get the report download path.
       final jsonGetQueryResponse =
-      await _queryService.execReportingGetQuery(reportingQueryId);
+          await _queryService.execReportingGetQuery(reportingQueryId);
       final reportingDownloadPath =
-      ReportingQueryParser.parseDownloadPathFromJsonString(
-          json.stringify(jsonGetQueryResponse));
+          ReportingQueryParser.parseDownloadPathFromJsonString(
+              JsonJS.stringify(jsonGetQueryResponse));
 
       // Downloads the report and parse the response into a revenue map.
       final report =
-      await _queryService.execReportingDownload(reportingDownloadPath);
+          await _queryService.execReportingDownload(reportingDownloadPath);
 
       return ReportingQueryParser.parseRevenueFromJsonString(report);
-    } catch(e) {
+    } catch (e) {
       /// TODO: proper error handling.
       /// Issue: https://github.com/googleinterns/dv360-excel-plugin/issues/52.
       return <String, String>{};
     }
+  }
+
+  List<InsertionOrder> _filterInFlightInsertionOrders(
+      List<InsertionOrder> insertionOrders) {
+    return insertionOrders
+        .where((io) =>
+            io.budget.activeBudgetSegment !=
+            InsertionOrder_Budget_BudgetSegment())
+        .toList();
   }
 }
