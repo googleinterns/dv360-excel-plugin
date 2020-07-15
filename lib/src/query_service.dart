@@ -128,17 +128,13 @@ class QueryService {
         }
 
       case QueryType.byInsertionOrder:
-        {
-          return RequestArgs(
-              path: 'https://displayvideo.googleapis.com/v1/advertisers/'
-                  '$advertiserId/insertionOrders/$insertionOrderId',
-              method: 'GET');
-        }
+        return RequestArgs(
+            path: 'https://displayvideo.googleapis.com/v1/advertisers/'
+                '$advertiserId/insertionOrders/$insertionOrderId',
+            method: 'GET');
 
       default:
-        {
-          return RequestArgs();
-        }
+        return RequestArgs();
     }
   }
 }

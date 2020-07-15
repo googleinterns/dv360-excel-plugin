@@ -18,9 +18,9 @@ import 'util.dart';
            placeholder="Insertion Order ID: 8127549" debugId="io-id-input">
     <br>
 
-    <input type="checkbox" [(ngModel)]="isAdvertiserQuery" name="advertiser-query">
+    <input type="radio" [(ngModel)]="advertiserQuery" name="advertiser-query">
     <label for="advertiser-query">By advertiser</label><br>
-    <input type="checkbox" [(ngModel)]="isInsertionOrderQuery" name="advertiser-query">
+    <input type="radio" [(ngModel)]="insertionOrderQuery" name="advertiser-query">
     <label for="advertiser-query">By insertion order</label><br>
     
     <input type="checkbox" [(ngModel)]="highlightUnderpacing"
@@ -31,7 +31,11 @@ import 'util.dart';
     {{buttonName}}
     </button>
   ''',
-  providers: [ClassProvider(QueryService), ClassProvider(ExcelDart)],
+  providers: [
+    ClassProvider(QueryService),
+    ClassProvider(ExcelDart),
+    FORM_PROVIDERS,
+  ],
   directives: [coreDirectives, formDirectives],
 )
 class QueryComponent {
@@ -45,17 +49,18 @@ class QueryComponent {
   String insertionOrderId;
   bool highlightUnderpacing = false;
 
+  // Radio button states with byAdvertiser selected as default.
+  RadioButtonState advertiserQuery = RadioButtonState(true, 'byAdvertiser');
+  RadioButtonState insertionOrderQuery = RadioButtonState(false, 'byIO');
+
   QueryComponent(this._queryService, this._excel);
 
-  bool get isAdvertiserQuery => _queryType == QueryType.byAdvertiser;
-  set isAdvertiserQuery(bool checked) =>
-      checked ? _queryType = QueryType.byAdvertiser : null;
-
-  bool get isInsertionOrderQuery => _queryType == QueryType.byInsertionOrder;
-  set isInsertionOrderQuery(bool checked) =>
-      checked ? _queryType = QueryType.byInsertionOrder : null;
-
   void onClick() async {
+    // Determines the query type from radio buttons.
+    _queryType = advertiserQuery.checked
+        ? QueryType.byAdvertiser
+        : QueryType.byInsertionOrder;
+
     // Uses DV360 public APIs to fetch entity data.
     var insertionOrders = await _queryAndParseInsertionOrderEntityData();
 
