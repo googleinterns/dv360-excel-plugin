@@ -2,9 +2,11 @@ import 'dart:convert';
 
 import 'package:csv/csv.dart';
 
+import 'util.dart';
+
 class ReportingQueryParser {
   static const _emptyEntry = '';
-  static const _emptyMap = <String, String>{};
+  static const _emptyMap = <String, List<InsertionOrderDailySpend>>{};
 
   /// Parse queryId from a json string.
   static String parseQueryIdFromJsonString(String jsonString) {
@@ -30,8 +32,12 @@ class ReportingQueryParser {
     return responseMap['metadata']['googleCloudStoragePathForLatestReport'];
   }
 
-  /// Parse revenue from a json string.
-  static Map<String, String> parseRevenueFromJsonString(String jsonString) {
+  /// Parses spending information from a json string.
+  ///
+  /// Returns a spendingMap that has insertion order as key and
+  /// [InsertionOrderDailySpend] as value.
+  static Map<String, List<InsertionOrderDailySpend>> parseRevenueFromJsonString(
+      String jsonString) {
     if (jsonString == null || jsonString.isEmpty || jsonString == 'null') {
       return _emptyMap;
     }
@@ -48,9 +54,10 @@ class ReportingQueryParser {
     // Based on the query constructed by [QueryService._execReportingCreateQuery],
     // the report has the following format:
     //
-    // Header: Insertion Order ID(groupBy column), Revenue(metric column)
-    //         insertion order id, revenue
+    // Header: Insertion Order ID,    Date,       Revenue,      Impression
+    // Body:   io id,                 date,       revenue,      impression
     //         ....
+    //         empty,                 empty,      revenue sum,  impression sum
     //         row with empty string
     //         Report parameters
     List<List<dynamic>> reportTable = const CsvToListConverter()
@@ -59,16 +66,36 @@ class ReportingQueryParser {
     // Extracts the rows after header and before the empty row,
     // and then put insertion order and revenue entries into a map
     // by making ioID the key and revenue the value.
-    final revenueMap = <String, String>{};
+    final revenueMap = <String, List<InsertionOrderDailySpend>>{};
     for (final row in reportTable) {
       // skip header
       if (row[0] == 'Insertion Order ID') continue;
       // stop if reach the empty string row
       if (row[0].isEmpty) return revenueMap;
 
-      revenueMap[row[0]] = row[1];
+      final insertionOrderId = row[0];
+      final date = Util.convertStringDateToDateTime(row[1]);
+      final revenue = row[2];
+      final impression = row[3];
+
+      final dailySpendList = revenueMap.putIfAbsent(
+          insertionOrderId, () => <InsertionOrderDailySpend>[]);
+      dailySpendList.add(InsertionOrderDailySpend(date, revenue, impression));
+      revenueMap[insertionOrderId] = dailySpendList;
     }
 
     return revenueMap;
   }
+}
+
+class InsertionOrderDailySpend {
+  final DateTime _date;
+  final String _revenue;
+  final String _impression;
+
+  DateTime get date => _date;
+  String get revenue => _revenue;
+  String get impression => _impression;
+
+  InsertionOrderDailySpend(this._date, this._revenue, this._impression);
 }

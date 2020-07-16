@@ -42,20 +42,6 @@ void main() {
     tearDown(disposeAnyRunningTest);
 
     group('parses insertion orders from:', () {
-      test('null', () {
-        final actual = PublicApiParser.parseInsertionOrders(null);
-
-        final expected = [];
-        expect(actual, expected);
-      });
-
-      test('empty string', () {
-        final actual = PublicApiParser.parseInsertionOrders('');
-
-        final expected = [];
-        expect(actual, expected);
-      });
-
       test('empty json string', () {
         final actual = PublicApiParser.parseInsertionOrders('{}');
 
@@ -143,20 +129,6 @@ void main() {
     });
 
     group('parses next page token from:', () {
-      test('null', () {
-        final actual = PublicApiParser.parseNextPageToken(null);
-
-        final expected = emptyEntry;
-        expect(actual, expected);
-      });
-
-      test('empty string', () {
-        final actual = PublicApiParser.parseNextPageToken('');
-
-        final expected = emptyEntry;
-        expect(actual, expected);
-      });
-
       test('empty json string', () {
         final actual = PublicApiParser.parseNextPageToken('{}');
 
@@ -343,7 +315,7 @@ void main() {
               }
             },
             {
-              "budgetAmountMicros":"4000000", 
+              "budgetAmountMicros":"4000000",
               "campaignBudgetId": "111111",
               "dateRange":{
                 "startDate":{"year":2020,"month":1,"day":1},
@@ -351,7 +323,7 @@ void main() {
               }
             },
             {
-              "budgetAmountMicros":"3000000", 
+              "budgetAmountMicros":"3000000",
               "description":"no date range"
             }
           ]
