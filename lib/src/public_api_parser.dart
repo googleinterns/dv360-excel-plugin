@@ -2,7 +2,9 @@ import 'dart:convert';
 
 import 'proto/insertion_order_query.pb.dart';
 
-class InsertionOrderParser {
+/// TODO: parse and handle dv360 public api error.
+/// Issue:https://github.com/googleinterns/dv360-excel-plugin/issues/52
+class PublicApiParser {
   static const _emptyEntry = '';
 
   // Disregarding linter rule to ensure that enum maps are typed.
@@ -36,10 +38,29 @@ class InsertionOrderParser {
       key: (v) => v.name,
       value: (v) => v);
 
-  /// Parses a json string to [InsertionOrder].
-  static InsertionOrder parse(String jsonString) {
+  /// Parses a list of [InsertionOrder] from a [jsonString].
+  ///
+  /// Returns an empty list if [jsonString] is null or empty.
+  static List<InsertionOrder> parseInsertionOrders(String jsonString) {
     Map<String, dynamic> map = json.decode(jsonString);
-    return _createInsertionOrder(map);
+
+    // If map contains key 'insertionOrders', multiple IOs are returned.
+    // And if it doesn't, the map itself represents one insertion order.
+    if (map.containsKey('insertionOrders')) {
+      return List.from(map['insertionOrders'])
+          .map((ioMap) => _createInsertionOrder(ioMap))
+          .toList();
+    } else {
+      return [_createInsertionOrder(map)];
+    }
+  }
+
+  /// Parses the nextPageToken from a [jsonString].
+  ///
+  /// Returns a empty string if [jsonString] is null or empty.
+  static String parseNextPageToken(String jsonString) {
+    Map<String, dynamic> map = json.decode(jsonString);
+    return map['nextPageToken'] ?? _emptyEntry;
   }
 
   /// Creates an [InsertionOrder] instance from [map].

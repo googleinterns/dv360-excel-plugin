@@ -1,4 +1,4 @@
-@JS('JSON')
+@JS()
 library stringify;
 
 import 'package:js/js.dart';
@@ -11,5 +11,7 @@ import 'package:js/js.dart';
 /// ``` js
 ///   JSON.stringify()
 /// ```
-@JS('stringify')
-external String stringify(Object obj);
+@JS('JSON')
+class JsonJS {
+  external static String stringify(Object obj);
+}
