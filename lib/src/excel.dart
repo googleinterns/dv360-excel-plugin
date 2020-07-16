@@ -1,6 +1,8 @@
 @JS()
 library excel;
 
+import 'dart:async';
+
 import 'package:angular/angular.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:js/js.dart';
@@ -42,20 +44,15 @@ class ExcelDart {
 
   static const _borderStyle = 'Continuous';
   static const _currencyFormat = '\$#,##0.00';
+  static const _timeFormat = '12:00:00 AM';
 
   /// Column addresses calculated based on [_tableHeader].
-  static final _spentColumn =
-      '\$${_getExcelColumnReference(_tableHeader.indexOf('Spent'))}'
+  static final _currentPacingColumnAddress =
+      '\$${_getExcelColumnReference(_tableHeader.indexOf('Current Pacing %'))}'
       '${_resultTableRowStartAddress + 1}';
-  static final _budgetColumn =
-      '\$${_getExcelColumnReference(_tableHeader.indexOf('Budget'))}'
-      '${_resultTableRowStartAddress + 1}';
-  static final _startDateColumn =
-      '\$${_getExcelColumnReference(_tableHeader.indexOf('Start Date'))}'
-      '${_resultTableRowStartAddress + 1}';
-  static final _endDateColumn =
-      '\$${_getExcelColumnReference(_tableHeader.indexOf('End Date'))}'
-      '${_resultTableRowStartAddress + 1}';
+  static final _budgetUnitColumnHeaderAddress =
+      '\$${_getExcelColumnReference(_tableHeader.indexOf('Budget Unit'))}'
+      '${_resultTableRowStartAddress}';
 
   /// Header for the master table.
   ///
@@ -78,9 +75,19 @@ class ExcelDart {
     'Automation Type',
     'Budget',
     'Spent',
-    'Start Date',
-    'End Date'
+    'Current Pacing %',
+    'Start_Date',
+    'End_Date',
   ];
+
+  /// Loads the Office JS library.
+  ///
+  /// Uses completer to convert call back function to future.
+  Future<void> loadOffice() {
+    final completer = Completer<void>();
+    Office.onReady(allowInterop((info) => completer.complete()));
+    return completer.future;
+  }
 
   /// Waits for Office APIs to be ready and then creates
   /// a new spreadsheet with [sheetName] and populates the spreadsheet with
@@ -90,153 +97,145 @@ class ExcelDart {
   /// [highlightUnderpacing] resolves as true, and false otherwise.
   void populate(List<InsertionOrder> insertionOrderList,
       bool highlightUnderpacing) async {
-    await Office.onReady(allowInterop((info) async {
-      final sheetName = 'Query';
-      final tableName = 'Performance_Data_Table';
+    final sheetName = 'Query';
+    final tableName = 'Performance_Data_Table';
 
-      /// TODO: the await here doesn't work, should use completer instead.
-      /// Issue: https://github.com/googleinterns/dv360-excel-plugin/issues/55
-      await ExcelJS.run(allowInterop((context) async {
-        // Adds a new worksheet.
-        final sheet = context.workbook.worksheets.add(sheetName);
+    final populateCompleter = Completer<void>();
+    ExcelJS.run(allowInterop((context) {
+      // Adds a new worksheet.
+      final sheet = context.workbook.worksheets.add(sheetName);
 
-        // Adds and formats the underpacing table.
-        _underpacingTable[0][1] = highlightUnderpacing;
-        sheet.getRange('$sheetName!$_underpacingTableAddress')
-          ..format.font.name = _fontName
-          ..format.font.size = _fontSize
-          ..format.font.bold = true
-          ..format.horizontalAlignment = _centerAlignment
-          ..values = _underpacingTable;
-        sheet
-            .getRange('$sheetName!$_underpacingHeaderAddress')
-            .format
-            .horizontalAlignment = _leftAlignment;
-        sheet
-            .getRange('$sheetName!$_underpacingValueAddress')
-            .format
-            .horizontalAlignment = _rightAlignment;
+      // Adds and formats the underpacing table.
+      _underpacingTable[0][1] = highlightUnderpacing;
+      sheet.getRange('$sheetName!$_underpacingTableAddress')
+        ..format.font.name = _fontName
+        ..format.font.size = _fontSize
+        ..format.font.bold = true
+        ..format.horizontalAlignment = _centerAlignment
+        ..values = _underpacingTable;
+      sheet
+          .getRange('$sheetName!$_underpacingHeaderAddress')
+          .format
+          .horizontalAlignment = _leftAlignment;
+      sheet
+          .getRange('$sheetName!$_underpacingValueAddress')
+          .format
+          .horizontalAlignment = _rightAlignment;
 
-        // Turns [insertionOrderList] into table rows.
-        final tableBody = insertionOrderList.map(_generateTableRow).toList();
+      // Turns [insertionOrderList] into table rows.
+      final tableBody = insertionOrderList.map(_generateTableRow).toList();
 
-        // Calculates table size and adds a master table.
-        final endAddress =
-            '${_getExcelColumnReference(_tableHeader.length - 1)}'
-            '${tableBody.length + _resultTableRowStartAddress}';
-        final tableAddress = '$sheetName!'
-            '$_resultTableColumnStartAddress$_resultTableRowStartAddress:'
-            '$endAddress';
-        final table = context.workbook.tables.add(tableAddress, true);
-        table.name = tableName;
+      // Calculates table size and adds a master table.
+      final endAddress = '${_getExcelColumnReference(_tableHeader.length - 1)}'
+          '${tableBody.length + _resultTableRowStartAddress}';
+      final tableAddress = '$sheetName!'
+          '$_resultTableColumnStartAddress$_resultTableRowStartAddress:'
+          '$endAddress';
+      final table = context.workbook.tables.add(tableAddress, true);
+      table.name = tableName;
 
-        // Adds and formats table header.
-        table.getHeaderRowRange()
-          ..values = [_tableHeader]
-          ..format.font.name = _fontName
-          ..format.font.size = _fontSize
-          ..format.font.bold = true
-          ..format.horizontalAlignment = _centerAlignment
-          ..format.borders.getItem('EdgeTop').style = _borderStyle
-          ..format.borders.getItem('EdgeBottom').style = _borderStyle;
+      // Adds and formats table header.
+      table.getHeaderRowRange()
+        ..values = [_tableHeader]
+        ..format.font.name = _fontName
+        ..format.font.size = _fontSize
+        ..format.font.bold = true
+        ..format.horizontalAlignment = _centerAlignment
+        ..format.borders.getItem('EdgeTop').style = _borderStyle
+        ..format.borders.getItem('EdgeBottom').style = _borderStyle;
 
-        // Adds and formats table body.
-        table.getDataBodyRange()
-          ..formulas = tableBody
-          ..format.font.name = _fontName
-          ..format.font.size = _fontSize
-          ..format.horizontalAlignment = _centerAlignment;
+      // Adds and formats table body.
+      table.getDataBodyRange()
+        ..formulas = tableBody
+        ..format.font.name = _fontName
+        ..format.font.size = _fontSize
+        ..format.horizontalAlignment = _centerAlignment;
 
-        // Formats the Daily Max and Spent column as currency.
-        table.columns.getItem('Daily Max').getRange().numberFormat =
-            _currencyFormat;
-        table.columns.getItem('Spent').getRange().numberFormat =
-            _currencyFormat;
+      // Formats the Daily Max and Spent column as currency.
+      table.columns.getItem('Daily Max').getRange().numberFormat =
+          _currencyFormat;
+      table.columns.getItem('Spent').getRange().numberFormat = _currencyFormat;
 
-        // Auto-fits all used cells.
-        sheet.getUsedRange().getEntireColumn().format.autofitColumns();
-        sheet.getUsedRange().getEntireRow().format.autofitRows();
+      // Auto-fits all used cells.
+      sheet.getUsedRange().getEntireColumn().format.autofitColumns();
+      sheet.getUsedRange().getEntireRow().format.autofitRows();
 
-        // Sets the sheet as active.
-        sheet.activate();
-        return context.sync();
-      }));
+      // Sets the sheet as active.
+      sheet.activate();
 
-      // Conditionally format the budget column once the table is set.
-      _formatBudgetColumn(tableName);
+      // All operations are complete.
+      populateCompleter.complete();
 
-      // Highlight underpacing insertion orders if highlightUnderpacing is true.
-      if (highlightUnderpacing) _highlightUnderpacingRows(tableName);
+      return context.sync();
     }));
+
+    // Waits for population to be complete.
+    await populateCompleter.future;
+
+    // Conditionally format the budget column once the table is set.
+    await _formatBudgetColumn(tableName);
+
+    // Highlight underpacing insertion orders if highlightUnderpacing is true.
+    if (highlightUnderpacing) await _highlightUnderpacingRows(tableName);
   }
 
   static String _getExcelColumnReference(int offset) => String.fromCharCode(
       _resultTableColumnStartAddress.codeUnitAt(0) + offset);
 
   /// Conditionally formats the Budget column based on Budget Unit.
-  ///
-  /// 'RC[-2]' in the formula follows Excel's Relative Notation and references
-  /// the cell that is in the same row but its column number shifted left by 2.
-  /// Here the offset between the Budget column and Budget Type Column is -2.
-  /// If [_tableHeader] has been changed, the offset here needs to
-  /// be changed to match too.
-  /// TODO: change this relative reference to absolute reference.
-  /// Issue: https://github.com/googleinterns/dv360-excel-plugin/issues/54
-  static void _formatBudgetColumn(String tableName) async {
-    await ExcelJS.run(allowInterop((context) async {
+  static Future<void> _formatBudgetColumn(String tableName) async {
+    final formatCompleter = Completer<void>();
+    ExcelJS.run(allowInterop((context) {
       final table = context.workbook.tables.getItem(tableName);
       final budgetRange = table.columns.getItem('Budget').getRange();
       final format = budgetRange.conditionalFormats.add('Custom');
 
-      format.custom.rule.formula = '=IF(INDIRECT("RC[-2]",0) '
-          '="${InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY}",'
-          'TRUE)';
-      format.custom.format.numberFormat = _currencyFormat;
-
-      return context.sync();
-    }));
-  }
-
-  /// Highlight rows that are underpacing.
-  ///
-  /// Structured reference (i.e. Table[@Column]) is not allowed in Excel
-  /// conditional formatting. Regular reference (i.e. $A5) has to be used
-  /// instead. As table expands, Excel will automatically extends the
-  /// conditional formatting rule to cover the entire range.
-  static void _highlightUnderpacingRows(String tableName) async {
-    await ExcelJS.run(allowInterop((context) async {
-      final table = context.workbook.tables.getItem(tableName);
-      final range = table.getDataBodyRange();
-      final format = range.conditionalFormats.add('Custom');
-
-      // Excel formula DATEDIF(dateA, dateB, "D") calculates the difference
-      // between two dates in days, where dateB must be after or equal to dateA.
-      // i.e. DATEDIF("7/1/2020", "7/31/2020", "D") = 30
-      //
-      // This formula calculates:
-      // (spent / budget) / (current duration / flight duration)
-      //
-      // Flight duration is calculated by (end date - start date + 1), and
-      // current duration is calculated by (now - start date + 1), so it is
-      // guaranteed that divide by zero will not happen.
-      /// TODO: calculate difference at hours level if it is shorter than a day.
-      /// Issue: https://github.com/googleinterns/dv360-excel-plugin/issues/57
-      final formula = ''' 
-       ($_spentColumn/$_budgetColumn) / 
-       (
-         (DATEDIF($_startDateColumn, NOW(), "D") + 1) /
-         (DATEDIF($_startDateColumn, $_endDateColumn, "D") + 1)
-       ) < $_thresholdAddress
+      final formula = '''
+      $_budgetUnitColumnHeaderAddress =
+      "${InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY}"
       ''';
 
       // remove all tabs, newlines, and whitespace from the formula.
       format.custom.rule.formula = formula.replaceAll(RegExp(r'\s+'), '');
 
-      format.custom.format.fill.color = _underpacingFormatFill;
-      format.custom.format.font.color = _underpacingFormatFont;
+      format.custom.format.numberFormat = _currencyFormat;
+
+      // All operations are complete.
+      formatCompleter.complete();
 
       return context.sync();
     }));
+
+    return formatCompleter.future;
+  }
+
+  /// Highlight rows that are underpacing.
+  ///
+  /// Structured reference (i.e. Table[@Column]) is not allowed in Excel
+  /// conditional formatting. Regular reference (i.e. $O5 or what
+  /// [_currentPacingColumnAddress] evaluates to) has to be used
+  /// instead. As table expands, Excel will automatically extends the
+  /// conditional formatting rule to cover the entire range.
+  static Future<void> _highlightUnderpacingRows(String tableName) async {
+    final formatCompleter = Completer<void>();
+    ExcelJS.run(allowInterop((context) {
+      final table = context.workbook.tables.getItem(tableName);
+      final range = table.getDataBodyRange();
+      final format = range.conditionalFormats.add('Custom');
+
+      format.custom.rule.formula =
+          '$_currentPacingColumnAddress < $_thresholdAddress';
+
+      format.custom.format.fill.color = _underpacingFormatFill;
+      format.custom.format.font.color = _underpacingFormatFont;
+
+      // All operations are complete.
+      formatCompleter.complete();
+
+      return context.sync();
+    }));
+
+    return formatCompleter.future;
   }
 
   /// Generates a row from [insertionOrder] by creating fields that matches
@@ -258,6 +257,7 @@ class ExcelDart {
       _calculateActiveBudgetAmount(
           insertionOrder.budget.activeBudgetSegment.budgetAmountMicros),
       insertionOrder.spent,
+      _calculateCurrentPacingPercentage(),
       _calculateDate(
           insertionOrder.budget.activeBudgetSegment.dateRange.startDate),
       _calculateDate(
@@ -276,9 +276,45 @@ class ExcelDart {
       Util.convertMicrosToStandardUnitString(
           Int64.parseInt(budgetAmountMicros));
 
+  /// Uses Excel built-in formula to calculate current pacing percentage.
+  ///
+  /// The formula calculates:
+  /// (spent / budget) / (current duration / flight duration)
+  /// where duration has granularity of hours. And if current duration is less
+  /// than 1 day or 10% of the total flight duration, it will show
+  /// 'not_enough_information".
+  static String _calculateCurrentPacingPercentage() {
+    // (dateA - dateB) returns the difference between two dates in days,
+    // and with fractions showing the difference between times in seconds.
+    //
+    // MROUND(dateA - dateB, 1/24) rounds the difference to hours.
+    //
+    // Only inflight IOs are displayed in the table, so current duration will
+    // not have negative values.
+    // And the final pacing percentage is rounded to two decimal places.
+    final formula = '''
+    =IF(AND(
+        NOW() - [Start_Date] > 1,
+        MROUND(NOW() - [Start_Date], 1/24) > 0.1 * ([End_Date] - [Start_Date])
+        ),
+
+        ROUND(
+        ([Spent] / [Budget]) /
+        (
+          MROUND(NOW() - [Start_Date], 1/24) / ([End_Date] - [Start_Date])
+        ), 2),
+
+        "not_enough_information"
+        )
+    ''';
+
+    return formula.replaceAll(RegExp(r'\s+'), '');
+  }
+
+  /// Converts proto [Date] into Excel date time format.
   static String _calculateDate(
           InsertionOrder_Budget_BudgetSegment_DateRange_Date date) =>
-      '${date.month}/${date.day}/${date.year}';
+      '${date.month}/${date.day}/${date.year} $_timeFormat';
 }
 
 /// Below are wrapper functions for Office Excel APIs.
@@ -294,8 +330,7 @@ class ExcelDart {
 class ExcelJS {
   /// Executes a batch script that performs actions
   /// on the Excel object model using a new RequestContext.
-  external static Future<dynamic> run(
-      Future<dynamic> Function(RequestContext) callback);
+  external static void run(dynamic Function(RequestContext) callback);
 }
 
 /// Wrapper for Excel.RequestContext class.

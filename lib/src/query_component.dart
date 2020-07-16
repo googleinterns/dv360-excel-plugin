@@ -38,7 +38,7 @@ import 'util.dart';
   ],
   directives: [coreDirectives, formDirectives],
 )
-class QueryComponent {
+class QueryComponent implements OnInit {
   final buttonName = 'populate';
   final QueryService _queryService;
   final ExcelDart _excel;
@@ -54,6 +54,9 @@ class QueryComponent {
   RadioButtonState insertionOrderQuery = RadioButtonState(false, 'byIO');
 
   QueryComponent(this._queryService, this._excel);
+
+  @override
+  void ngOnInit() async => await _excel.loadOffice();
 
   void onClick() async {
     // Determines the query type from radio buttons.
