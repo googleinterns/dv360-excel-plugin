@@ -91,7 +91,7 @@ class QueryComponent {
   /// then return a list of parsed [InsertionOrder] instance.
   Future<List<InsertionOrder>> _queryAndParseInsertionOrderEntityData() async {
     final insertionOrderList = <InsertionOrder>[];
-    var jsonResponse = '';
+    var jsonResponse = '{}';
 
     do {
       // Gets the nextPageToken, and having an empty token

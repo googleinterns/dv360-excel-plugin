@@ -118,14 +118,12 @@ class QueryService {
       String nextPageToken, String advertiserId, String insertionOrderId) {
     switch (queryType) {
       case QueryType.byAdvertiser:
-        {
-          final filter = 'filter=entityStatus="ENTITY_STATUS_ACTIVE"';
-          final pageToken = 'pageToken=$nextPageToken';
-          return RequestArgs(
-              path: 'https://displayvideo.googleapis.com/v1/advertisers/'
-                  '$advertiserId/insertionOrders?$filter&$pageToken',
-              method: 'GET');
-        }
+        final filter = 'filter=entityStatus="ENTITY_STATUS_ACTIVE"';
+        final pageToken = 'pageToken=$nextPageToken';
+        return RequestArgs(
+            path: 'https://displayvideo.googleapis.com/v1/advertisers/'
+                '$advertiserId/insertionOrders?$filter&$pageToken',
+            method: 'GET');
 
       case QueryType.byInsertionOrder:
         return RequestArgs(

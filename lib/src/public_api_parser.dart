@@ -42,7 +42,6 @@ class PublicApiParser {
   ///
   /// Returns an empty list if [jsonString] is null or empty.
   static List<InsertionOrder> parseInsertionOrders(String jsonString) {
-    if (jsonString == null || jsonString.isEmpty) return [];
     Map<String, dynamic> map = json.decode(jsonString);
 
     // If map contains key 'insertionOrders', multiple IOs are returned.
@@ -60,7 +59,6 @@ class PublicApiParser {
   ///
   /// Returns a empty string if [jsonString] is null or empty.
   static String parseNextPageToken(String jsonString) {
-    if (jsonString == null || jsonString.isEmpty) return _emptyEntry;
     Map<String, dynamic> map = json.decode(jsonString);
     return map['nextPageToken'] ?? _emptyEntry;
   }
