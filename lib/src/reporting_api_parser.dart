@@ -1,55 +1,28 @@
 import 'dart:convert';
 
 import 'package:csv/csv.dart';
+import 'package:quiver/collection.dart';
 
 import 'util.dart';
+import 'insertion_order_daily_spend.dart';
 
 class ReportingQueryParser {
-  static const _emptyEntry = '';
-  static const _emptyMap = <String, List<InsertionOrderDailySpend>>{};
-
   /// Parse queryId from a json string.
-  static String parseQueryIdFromJsonString(String jsonString) {
-    if (jsonString == null || jsonString.isEmpty || jsonString == 'null') {
-      return _emptyEntry;
-    }
-    return json.decode(jsonString)['queryId'] ?? _emptyEntry;
-  }
+  static String parseQueryIdFromJsonString(String jsonString) =>
+      json.decode(jsonString)['queryId'];
 
   /// Parse google storage download from a json string.
-  static String parseDownloadPathFromJsonString(String jsonString) {
-    if (jsonString == null || jsonString.isEmpty || jsonString == 'null') {
-      return _emptyEntry;
-    }
-
-    Map<String, dynamic> responseMap = json.decode(jsonString);
-    if (!responseMap.containsKey('metadata') ||
-        !responseMap['metadata']
-            .containsKey('googleCloudStoragePathForLatestReport')) {
-      return _emptyEntry;
-    }
-
-    return responseMap['metadata']['googleCloudStoragePathForLatestReport'];
-  }
+  static String parseDownloadPathFromJsonString(String jsonString) =>
+      json.decode(jsonString)['metadata']
+          ['googleCloudStoragePathForLatestReport'];
 
   /// Parses spending information from a json string.
   ///
   /// Returns a spendingMap that has insertion order as key and
   /// [InsertionOrderDailySpend] as value.
-  static Map<String, List<InsertionOrderDailySpend>> parseRevenueFromJsonString(
+  static Multimap<String, InsertionOrderDailySpend> parseRevenueFromJsonString(
       String jsonString) {
-    if (jsonString == null || jsonString.isEmpty || jsonString == 'null') {
-      return _emptyMap;
-    }
-
-    Map<String, dynamic> responseMap = json.decode(jsonString);
-    if (!responseMap.containsKey('gapiRequest') ||
-        !responseMap['gapiRequest'].containsKey('data') ||
-        !responseMap['gapiRequest']['data'].containsKey('body')) {
-      return _emptyMap;
-    }
-
-    String report = responseMap['gapiRequest']['data']['body'];
+    String report = json.decode(jsonString)['gapiRequest']['data']['body'];
 
     // Based on the query constructed by [QueryService._execReportingCreateQuery],
     // the report has the following format:
@@ -64,9 +37,9 @@ class ReportingQueryParser {
         .convert(report, eol: '\n', shouldParseNumbers: false);
 
     // Extracts the rows after header and before the empty row,
-    // and then put insertion order and revenue entries into a map
-    // by making ioID the key and revenue the value.
-    final revenueMap = <String, List<InsertionOrderDailySpend>>{};
+    // and then put insertion order and the other entries into a map
+    // by making ioID the key and InsertionOrderDailySpend the value.
+    final revenueMap = Multimap<String, InsertionOrderDailySpend>();
     for (final row in reportTable) {
       // skip header
       if (row[0] == 'Insertion Order ID') continue;
@@ -78,24 +51,14 @@ class ReportingQueryParser {
       final revenue = row[2];
       final impression = row[3];
 
-      final dailySpendList = revenueMap.putIfAbsent(
-          insertionOrderId, () => <InsertionOrderDailySpend>[]);
-      dailySpendList.add(InsertionOrderDailySpend(date, revenue, impression));
-      revenueMap[insertionOrderId] = dailySpendList;
+      revenueMap.add(
+          insertionOrderId,
+          InsertionOrderDailySpend((b) => b
+            ..date = date
+            ..revenue = revenue
+            ..impression = impression));
     }
 
     return revenueMap;
   }
-}
-
-class InsertionOrderDailySpend {
-  final DateTime _date;
-  final String _revenue;
-  final String _impression;
-
-  DateTime get date => _date;
-  String get revenue => _revenue;
-  String get impression => _impression;
-
-  InsertionOrderDailySpend(this._date, this._revenue, this._impression);
 }

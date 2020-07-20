@@ -1,10 +1,12 @@
 import 'package:angular/angular.dart';
 import 'package:angular_forms/angular_forms.dart';
+import 'package:quiver/collection.dart';
 
 import 'excel.dart';
-import 'public_api_parser.dart';
+import 'insertion_order_daily_spend.dart';
 import 'json_js.dart';
 import 'proto/insertion_order_query.pb.dart';
+import 'public_api_parser.dart';
 import 'query_service.dart';
 import 'reporting_api_parser.dart';
 import 'util.dart';
@@ -115,16 +117,16 @@ class QueryComponent implements OnInit {
 
   /// Fetches revenue spent data using DBM reporting APIs,
   /// then return a map with <ioID, revenue> key-value pairs.
-  Future<Map<String, List<InsertionOrderDailySpend>>> _queryAndParseSpentData(
+  Future<Multimap<String, InsertionOrderDailySpend>> _queryAndParseSpentData(
       DateTime startDate, DateTime endDate) async {
-    // Creates a reporting query, and parses the queryId from response.
-    final jsonCreateQueryResponse =
-        await _queryService.execReportingCreateQuery(
-            _queryType, advertiserId, insertionOrderId, startDate, endDate);
-    final reportingQueryId = ReportingQueryParser.parseQueryIdFromJsonString(
-        JsonJS.stringify(jsonCreateQueryResponse));
-
     try {
+      // Creates a reporting query, and parses the queryId from response.
+      final jsonCreateQueryResponse =
+          await _queryService.execReportingCreateQuery(
+              _queryType, advertiserId, insertionOrderId, startDate, endDate);
+      final reportingQueryId = ReportingQueryParser.parseQueryIdFromJsonString(
+          JsonJS.stringify(jsonCreateQueryResponse));
+
       // Uses the queryId to get the report download path.
       final jsonGetQueryResponse =
           await _queryService.execReportingGetQuery(reportingQueryId);
@@ -140,7 +142,7 @@ class QueryComponent implements OnInit {
     } catch (e) {
       /// TODO: proper error handling.
       /// Issue: https://github.com/googleinterns/dv360-excel-plugin/issues/52.
-      return <String, List<InsertionOrderDailySpend>>{};
+      return Multimap<String, InsertionOrderDailySpend>();
     }
   }
 
@@ -161,11 +163,8 @@ class QueryComponent implements OnInit {
           .reduce((date, minDate) => date.isBefore(minDate) ? date : minDate);
 
   void _addSpentToInsertionOrders(List<InsertionOrder> insertionOrders,
-      Map<String, List<InsertionOrderDailySpend>> spendingMap) {
+      Multimap<String, InsertionOrderDailySpend> spendingMap) {
     for (final io in insertionOrders) {
-      // Continue if the spending map doesn't have spend data for this io.
-      if (!spendingMap.containsKey(io.insertionOrderId)) continue;
-
       final budgetUnit = io.budget.budgetUnit;
       final flightStart = Util.convertProtoDateToDateTime(
           io.budget.activeBudgetSegment.dateRange.startDate);

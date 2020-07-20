@@ -1,34 +1,17 @@
 import 'package:angular_test/angular_test.dart';
+import 'package:dv360_excel_plugin/src/insertion_order_daily_spend.dart';
 import 'package:dv360_excel_plugin/src/reporting_api_parser.dart';
-import 'package:js/js_util.dart';
+import 'package:quiver/collection.dart';
 import 'package:test/test.dart';
 
 void main() {
   group(ReportingQueryParser, () {
     String input;
-    const emptyEntry = '';
 
     tearDown(disposeAnyRunningTest);
 
-    group('parses query id from:', () {
-      test('null', () {
-        final actual = ReportingQueryParser.parseQueryIdFromJsonString(null);
-
-        final expected = emptyEntry;
-        expect(actual, expected);
-      });
-
-      test('an empty json string', () {
-        input = '{}';
-
-        final actual = ReportingQueryParser.parseQueryIdFromJsonString(input);
-
-        final expected = emptyEntry;
-        expect(actual, expected);
-      });
-
-      test('a json string that include field queryId', () {
-        input = '''
+    test('parses query id from a json string', () {
+      input = '''
         {
            "kind": "doubleclickbidmanager#query",
            "queryId": "1234567",
@@ -61,36 +44,14 @@ void main() {
         }
         ''';
 
-        final actual = ReportingQueryParser.parseQueryIdFromJsonString(input);
+      final actual = ReportingQueryParser.parseQueryIdFromJsonString(input);
 
-        final expected = '1234567';
-        expect(actual, expected);
-      });
+      final expected = '1234567';
+      expect(actual, expected);
     });
 
-    group('parses download path from:', () {
-      test('null', () {
-        final actual =
-            ReportingQueryParser.parseDownloadPathFromJsonString(null);
-
-        final expected = emptyEntry;
-        expect(actual, expected);
-      });
-
-      test('an empty json string', () {
-        input = '{}';
-
-        final actual =
-            ReportingQueryParser.parseDownloadPathFromJsonString(input);
-
-        final expected = emptyEntry;
-        expect(actual, expected);
-      });
-
-      test(
-          'a json string that include field googleCloudStoragePathForLatestReport',
-          () {
-        input = '''
+    test('parses download path from a json string', () {
+      input = '''
         {
            "kind": "doubleclickbidmanager#query",
            "queryId": "1234567",
@@ -125,24 +86,14 @@ void main() {
         }
         ''';
 
-        final expected =
-            ReportingQueryParser.parseDownloadPathFromJsonString(input);
+      final expected =
+          ReportingQueryParser.parseDownloadPathFromJsonString(input);
 
-        final actual = 'I-am-a-download-link';
-        expect(actual, expected);
-      });
+      final actual = 'I-am-a-download-link';
+      expect(actual, expected);
     });
 
     group('parses revenue from:', () {
-      const emptyMap = <String, String>{};
-
-      test('null', () {
-        final actual = ReportingQueryParser.parseRevenueFromJsonString(null);
-
-        final expected = emptyMap;
-        expect(actual, expected);
-      });
-
       String generateInput(String reportBody) {
         return '''
         {
@@ -164,22 +115,13 @@ void main() {
         ''';
       }
 
-      test('an empty report json string', () {
-        input = '{}';
-
-        final actual = ReportingQueryParser.parseRevenueFromJsonString(input);
-
-        final expected = emptyMap;
-        expect(actual, expected);
-      });
-
       test('a report json string that contains no revenue values', () {
         input = generateInput('Insertion Order ID, Revenue');
 
         final actual = ReportingQueryParser.parseRevenueFromJsonString(input);
 
-        final expected = emptyMap;
-        expect(actual, expected);
+        expect(actual is Multimap<String, InsertionOrderDailySpend>, true);
+        expect(actual.isEmpty, true);
       });
 
       test('a report json string that contains a single row of revenue value',
@@ -190,13 +132,15 @@ void main() {
 
         final actual = ReportingQueryParser.parseRevenueFromJsonString(input);
 
-        expect(actual is Map<String, List<InsertionOrderDailySpend>>, true);
+        final expectedSpending = InsertionOrderDailySpend((b) => b
+          ..date = DateTime(2020, 1, 1)
+          ..revenue = '88.88'
+          ..impression = '1000');
 
-        expect(actual['123456'] is List<InsertionOrderDailySpend>, true);
+        expect(actual is Multimap<String, InsertionOrderDailySpend>, true);
+        expect(actual.length, 1);
         expect(actual['123456'].length, 1);
-        expect(actual['123456'].first.date, DateTime(2020, 1, 1));
-        expect(actual['123456'].first.revenue, '88.88');
-        expect(actual['123456'].first.impression, '1000');
+        expect(actual['123456'], [expectedSpending]);
       });
 
       test('a report json string that contains multiple rows of revenue values',
@@ -214,38 +158,48 @@ void main() {
             '$reportHeader${reportBody.replaceAll(RegExp(r'\s+'), '')}');
 
         final actual = ReportingQueryParser.parseRevenueFromJsonString(input);
-        final firstSpending = actual['111111'];
-        final secondSpending = actual['222222'];
-        final thirdSpending = actual['333333'];
 
-        expect(actual is Map<String, List<InsertionOrderDailySpend>>, true);
+        expect(actual is Multimap<String, InsertionOrderDailySpend>, true);
+        expect(actual.length, 3);
 
-        expect(firstSpending is List<InsertionOrderDailySpend>, true);
-        expect(firstSpending.length, 3);
-        expect(firstSpending.first.date, DateTime(2020, 1, 1));
-        expect(firstSpending.first.revenue, '100.00');
-        expect(firstSpending.first.impression, '1000');
-        expect(firstSpending[1].date, DateTime(2020, 2, 1));
-        expect(firstSpending[1].revenue, '100.00');
-        expect(firstSpending[1].impression, '1000');
-        expect(firstSpending.last.date, DateTime(2020, 3, 1));
-        expect(firstSpending.last.revenue, '100.00');
-        expect(firstSpending.last.impression, '1000');
+        var expectedSpending = [
+          InsertionOrderDailySpend((b) => b
+            ..date = DateTime(2020, 1, 1)
+            ..revenue = '100.00'
+            ..impression = '1000'),
+          InsertionOrderDailySpend((b) => b
+            ..date = DateTime(2020, 2, 1)
+            ..revenue = '100.00'
+            ..impression = '1000'),
+          InsertionOrderDailySpend((b) => b
+            ..date = DateTime(2020, 3, 1)
+            ..revenue = '100.00'
+            ..impression = '1000'),
+        ];
+        expect(actual['111111'].length, 3);
+        expect(actual['111111'], expectedSpending);
 
-        expect(secondSpending is List<InsertionOrderDailySpend>, true);
-        expect(secondSpending.length, 2);
-        expect(secondSpending.first.date, DateTime(2020, 2, 1));
-        expect(secondSpending.first.revenue, '200.00');
-        expect(secondSpending.first.impression, '2000');
-        expect(secondSpending.last.date, DateTime(2020, 2, 2));
-        expect(secondSpending.last.revenue, '200.00');
-        expect(secondSpending.last.impression, '2000');
+        expectedSpending = [
+          InsertionOrderDailySpend((b) => b
+            ..date = DateTime(2020, 2, 1)
+            ..revenue = '200.00'
+            ..impression = '2000'),
+          InsertionOrderDailySpend((b) => b
+            ..date = DateTime(2020, 2, 2)
+            ..revenue = '200.00'
+            ..impression = '2000'),
+        ];
+        expect(actual['222222'].length, 2);
+        expect(actual['222222'], expectedSpending);
 
-        expect(thirdSpending is List<InsertionOrderDailySpend>, true);
-        expect(thirdSpending.length, 1);
-        expect(thirdSpending.first.date, DateTime(2020, 3, 1));
-        expect(thirdSpending.first.revenue, '300.00');
-        expect(thirdSpending.first.impression, '3000');
+        expectedSpending = [
+          InsertionOrderDailySpend((b) => b
+            ..date = DateTime(2020, 3, 1)
+            ..revenue = '300.00'
+            ..impression = '3000'),
+        ];
+        expect(actual['333333'].length, 1);
+        expect(actual['333333'], expectedSpending);
       });
     });
   });

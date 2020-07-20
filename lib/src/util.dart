@@ -1,3 +1,4 @@
+import 'package:decimal/decimal.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:intl/intl.dart';
 
@@ -31,11 +32,13 @@ class Util {
 
   /// Return `true` if [target] is before [start] and after [end],
   /// false otherwise.
+  /// TODO: make sure all dates are at the same time zone.
+  /// Issue: https://github.com/googleinterns/dv360-excel-plugin/issues/51
   static bool isBetweenDates(DateTime target, DateTime start, DateTime end) =>
       (target.isAfter(start) || target.isAtSameMomentAs(start)) &&
       (target.isBefore(end) || target.isAtSameMomentAs(end));
 
   /// Add two string values together.
   static String addStringRevenue(String revenueA, String revenueB) =>
-      (double.parse(revenueA) + double.parse(revenueB)).toString();
+      (Decimal.parse(revenueA) + Decimal.parse(revenueB)).toString();
 }
