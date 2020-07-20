@@ -50,10 +50,11 @@ class ReportingQueryParser {
       // and row[3] stores impression.
       revenueMap.add(
           row[0],
-          InsertionOrderDailySpend((builder) => builder
-            ..date = Util.convertStringDateToDateTime(row[1])
-            ..revenue = row[2]
-            ..impression = row[3]));
+          (InsertionOrderDailySpendBuilder()
+                ..date = Util.convertStringDateToDateTime(row[1])
+                ..revenue = row[2]
+                ..impression = row[3])
+              .build());
     }
 
     return revenueMap;

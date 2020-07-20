@@ -119,29 +119,12 @@ void main() {
 
       setUp(() => expected = Multimap<String, InsertionOrderDailySpend>());
 
-      // Copies the MapEqual function.
-      // Replaces`bValue == a[k]` in the original function with
-      // `listsEqual(bValue, a[k]`
-      bool multiMapEqual(Multimap a, Multimap b) {
-        if (a == b) return true;
-        if (a == null || b == null) return false;
-        if (a.length != b.length) return false;
-
-        for (final k in a.keys) {
-          var bValue = b[k];
-          if (bValue == null && !b.containsKey(k)) return false;
-          if (!listsEqual(bValue, a[k])) return false;
-        }
-
-        return true;
-      }
-
       test('a report json string that contains no revenue values', () {
         input = generateInput('Insertion Order ID, Revenue');
 
         final actual = ReportingQueryParser.parseRevenueFromJsonString(input);
 
-        expect(multiMapEqual(actual, expected), true);
+        expect(actual, MultimapMatcher(expected));
       });
 
       test('a report json string that contains a single row of revenue value',
@@ -152,12 +135,13 @@ void main() {
 
         final actual = ReportingQueryParser.parseRevenueFromJsonString(input);
 
-        final expectedSpending = InsertionOrderDailySpend((builder) => builder
-          ..date = DateTime(2020, 1, 1)
-          ..revenue = '88.88'
-          ..impression = '1000');
+        final expectedSpending = (InsertionOrderDailySpendBuilder()
+              ..date = DateTime(2020, 1, 1)
+              ..revenue = '88.88'
+              ..impression = '1000')
+            .build();
         expected.add('123456', expectedSpending);
-        expect(multiMapEqual(actual, expected), true);
+        expect(actual, MultimapMatcher(expected));
       });
 
       test('a report json string that contains multiple rows of revenue values',
@@ -178,43 +162,83 @@ void main() {
 
         expected.add(
             '111111',
-            InsertionOrderDailySpend((builder) => builder
-              ..date = DateTime(2020, 1, 1)
-              ..revenue = '100.00'
-              ..impression = '1000'));
+            (InsertionOrderDailySpendBuilder()
+                  ..date = DateTime(2020, 1, 1)
+                  ..revenue = '100.00'
+                  ..impression = '1000')
+                .build());
         expected.add(
             '111111',
-            InsertionOrderDailySpend((builder) => builder
-              ..date = DateTime(2020, 2, 1)
-              ..revenue = '100.00'
-              ..impression = '1000'));
+            (InsertionOrderDailySpendBuilder()
+                  ..date = DateTime(2020, 2, 1)
+                  ..revenue = '100.00'
+                  ..impression = '1000')
+                .build());
         expected.add(
             '111111',
-            InsertionOrderDailySpend((builder) => builder
-              ..date = DateTime(2020, 3, 1)
-              ..revenue = '100.00'
-              ..impression = '1000'));
+            (InsertionOrderDailySpendBuilder()
+                  ..date = DateTime(2020, 3, 1)
+                  ..revenue = '100.00'
+                  ..impression = '1000')
+                .build());
         expected.add(
             '222222',
-            InsertionOrderDailySpend((builder) => builder
-              ..date = DateTime(2020, 2, 1)
-              ..revenue = '200.00'
-              ..impression = '2000'));
+            (InsertionOrderDailySpendBuilder()
+                  ..date = DateTime(2020, 2, 1)
+                  ..revenue = '200.00'
+                  ..impression = '2000')
+                .build());
         expected.add(
             '222222',
-            InsertionOrderDailySpend((builder) => builder
-              ..date = DateTime(2020, 2, 2)
-              ..revenue = '200.00'
-              ..impression = '2000'));
+            (InsertionOrderDailySpendBuilder()
+                  ..date = DateTime(2020, 2, 2)
+                  ..revenue = '200.00'
+                  ..impression = '2000')
+                .build());
         expected.add(
             '333333',
-            InsertionOrderDailySpend((builder) => builder
-              ..date = DateTime(2020, 3, 1)
-              ..revenue = '300.00'
-              ..impression = '3000'));
+            (InsertionOrderDailySpendBuilder()
+                  ..date = DateTime(2020, 3, 1)
+                  ..revenue = '300.00'
+                  ..impression = '3000')
+                .build());
 
-        expect(multiMapEqual(actual, expected), true);
+        expect(actual, MultimapMatcher(expected));
       });
     });
   });
+}
+
+class MultimapMatcher extends Matcher {
+  final Multimap _expected;
+
+  MultimapMatcher(this._expected);
+
+  // Copies the MapEqual function.
+  // Replaces`bValue == a[k]` in the original function with
+  // `listsEqual(bValue, a[k]`
+  bool multiMapEqual(Multimap a, Multimap b) {
+    if (a == b) return true;
+    if (a == null || b == null) return false;
+    if (a.length != b.length) return false;
+
+    for (final k in a.keys) {
+      var bValue = b[k];
+      if (bValue == null && !b.containsKey(k)) return false;
+      if (!listsEqual(bValue, a[k])) return false;
+    }
+
+    return true;
+  }
+
+  @override
+  Description describe(Description description) {
+    description.add('$_expected');
+    return description;
+  }
+
+  @override
+  bool matches(item, Map matchState) {
+    return multiMapEqual(item, _expected);
+  }
 }
