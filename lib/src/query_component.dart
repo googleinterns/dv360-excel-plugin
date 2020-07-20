@@ -1,12 +1,14 @@
 import 'package:angular/angular.dart';
 import 'package:angular_forms/angular_forms.dart';
+import 'package:quiver/collection.dart';
 
 import 'excel.dart';
-import 'public_api_parser.dart';
+import 'insertion_order_daily_spend.dart';
 import 'json_js.dart';
 import 'proto/insertion_order_query.pb.dart';
+import 'public_api_parser.dart';
 import 'query_service.dart';
-import 'reporting_query_parser.dart';
+import 'reporting_api_parser.dart';
 import 'util.dart';
 
 @Component(
@@ -73,18 +75,17 @@ class QueryComponent implements OnInit {
         ? _filterInFlightInsertionOrders(insertionOrders)
         : insertionOrders;
 
-    // TODO: update reporting query to deal with multiple IOs.
-    // Issue: https://github.com/googleinterns/dv360-excel-plugin/issues/61
-    final insertionOrder = insertionOrders.first;
+    // Gets the earliest start date from the list of insertion orders.
+    final minStartDate = _getMinStartDate(insertionOrders);
 
-    // Gets dateRange for the active budget segment.
-    final activeDateRange = insertionOrder.budget.activeBudgetSegment.dateRange;
+    // Uses DBM reporting APIs to get spent (currency based or
+    // impression based) within time window [minStartDate, Now].
+    // spendingMap has a [DailySpend] for each insertion order.
+    final spendingMap =
+        await _queryAndParseSpentData(minStartDate, DateTime.now());
 
-    // Uses DBM reporting APIs to get revenue data within [activeDateRange].
-    final revenueMap = await _queryAndParseRevenueSpentData(activeDateRange);
-
-    // Add revenue spent to the parsed Insertion Order.
-    insertionOrder.spent = revenueMap[insertionOrder.insertionOrderId] ?? '';
+    // Add spent to the list of insertion orders.
+    _addSpentToInsertionOrders(insertionOrders, spendingMap);
 
     // Populate the spreadsheet.
     await _excel.populate(insertionOrders, highlightUnderpacing);
@@ -116,15 +117,16 @@ class QueryComponent implements OnInit {
 
   /// Fetches revenue spent data using DBM reporting APIs,
   /// then return a map with <ioID, revenue> key-value pairs.
-  Future<Map<String, String>> _queryAndParseRevenueSpentData(
-      InsertionOrder_Budget_BudgetSegment_DateRange dateRange) async {
-    // Creates a reporting query, and parses the queryId from response.
-    final jsonCreateQueryResponse = await _queryService
-        .execReportingCreateQuery(advertiserId, insertionOrderId, dateRange);
-    final reportingQueryId = ReportingQueryParser.parseQueryIdFromJsonString(
-        JsonJS.stringify(jsonCreateQueryResponse));
-
+  Future<Multimap<String, InsertionOrderDailySpend>> _queryAndParseSpentData(
+      DateTime startDate, DateTime endDate) async {
     try {
+      // Creates a reporting query, and parses the queryId from response.
+      final jsonCreateQueryResponse =
+          await _queryService.execReportingCreateQuery(
+              _queryType, advertiserId, insertionOrderId, startDate, endDate);
+      final reportingQueryId = ReportingQueryParser.parseQueryIdFromJsonString(
+          JsonJS.stringify(jsonCreateQueryResponse));
+
       // Uses the queryId to get the report download path.
       final jsonGetQueryResponse =
           await _queryService.execReportingGetQuery(reportingQueryId);
@@ -140,7 +142,7 @@ class QueryComponent implements OnInit {
     } catch (e) {
       /// TODO: proper error handling.
       /// Issue: https://github.com/googleinterns/dv360-excel-plugin/issues/52.
-      return <String, String>{};
+      return Multimap<String, InsertionOrderDailySpend>();
     }
   }
 
@@ -151,5 +153,34 @@ class QueryComponent implements OnInit {
             io.budget.activeBudgetSegment !=
             InsertionOrder_Budget_BudgetSegment())
         .toList();
+  }
+
+  DateTime _getMinStartDate(
+          List<InsertionOrder> insertionOrders) =>
+      insertionOrders
+          .map((io) => Util.convertProtoDateToDateTime(
+              io.budget.activeBudgetSegment.dateRange.startDate))
+          .reduce((date, minDate) => date.isBefore(minDate) ? date : minDate);
+
+  void _addSpentToInsertionOrders(List<InsertionOrder> insertionOrders,
+      Multimap<String, InsertionOrderDailySpend> spendingMap) {
+    for (final io in insertionOrders) {
+      final budgetUnit = io.budget.budgetUnit;
+      final flightStart = Util.convertProtoDateToDateTime(
+          io.budget.activeBudgetSegment.dateRange.startDate);
+      final flightEnd = Util.convertProtoDateToDateTime(
+          io.budget.activeBudgetSegment.dateRange.endDate);
+
+      final spent = spendingMap[io.insertionOrderId]
+          .where((dailySpend) =>
+              Util.isBetweenDates(dailySpend.date, flightStart, flightEnd))
+          .map((dailySpend) => budgetUnit ==
+                  InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY
+              ? dailySpend.revenue
+              : dailySpend.impression)
+          .reduce((spend, sum) => Util.addStringRevenue(spend, sum));
+
+      io.spent = spent;
+    }
   }
 }
