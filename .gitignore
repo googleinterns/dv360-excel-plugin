@@ -14,6 +14,7 @@ lib/src/private_keys.dart
 
 # Generated code
 lib/src/proto/
+lib/src/*.g.dart
 test/testing/*.g.dart
 
 # IntelliJ

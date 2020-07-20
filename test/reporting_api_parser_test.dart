@@ -94,6 +94,8 @@ void main() {
     });
 
     group('parses revenue from:', () {
+      Multimap<String, InsertionOrderDailySpend> expected;
+
       String generateInput(String reportBody) {
         return '''
         {
@@ -115,13 +117,31 @@ void main() {
         ''';
       }
 
+      setUp(() => expected = Multimap<String, InsertionOrderDailySpend>());
+
+      // Copies the MapEqual function.
+      // Replaces`bValue == a[k]` in the original function with
+      // `listsEqual(bValue, a[k]`
+      bool multiMapEqual(Multimap a, Multimap b) {
+        if (a == b) return true;
+        if (a == null || b == null) return false;
+        if (a.length != b.length) return false;
+
+        for (final k in a.keys) {
+          var bValue = b[k];
+          if (bValue == null && !b.containsKey(k)) return false;
+          if (!listsEqual(bValue, a[k])) return false;
+        }
+
+        return true;
+      }
+
       test('a report json string that contains no revenue values', () {
         input = generateInput('Insertion Order ID, Revenue');
 
         final actual = ReportingQueryParser.parseRevenueFromJsonString(input);
 
-        expect(actual is Multimap<String, InsertionOrderDailySpend>, true);
-        expect(actual.isEmpty, true);
+        expect(multiMapEqual(actual, expected), true);
       });
 
       test('a report json string that contains a single row of revenue value',
@@ -132,15 +152,12 @@ void main() {
 
         final actual = ReportingQueryParser.parseRevenueFromJsonString(input);
 
-        final expectedSpending = InsertionOrderDailySpend((b) => b
+        final expectedSpending = InsertionOrderDailySpend((builder) => builder
           ..date = DateTime(2020, 1, 1)
           ..revenue = '88.88'
           ..impression = '1000');
-
-        expect(actual is Multimap<String, InsertionOrderDailySpend>, true);
-        expect(actual.length, 1);
-        expect(actual['123456'].length, 1);
-        expect(actual['123456'], [expectedSpending]);
+        expected.add('123456', expectedSpending);
+        expect(multiMapEqual(actual, expected), true);
       });
 
       test('a report json string that contains multiple rows of revenue values',
@@ -159,47 +176,44 @@ void main() {
 
         final actual = ReportingQueryParser.parseRevenueFromJsonString(input);
 
-        expect(actual is Multimap<String, InsertionOrderDailySpend>, true);
-        expect(actual.length, 3);
+        expected.add(
+            '111111',
+            InsertionOrderDailySpend((builder) => builder
+              ..date = DateTime(2020, 1, 1)
+              ..revenue = '100.00'
+              ..impression = '1000'));
+        expected.add(
+            '111111',
+            InsertionOrderDailySpend((builder) => builder
+              ..date = DateTime(2020, 2, 1)
+              ..revenue = '100.00'
+              ..impression = '1000'));
+        expected.add(
+            '111111',
+            InsertionOrderDailySpend((builder) => builder
+              ..date = DateTime(2020, 3, 1)
+              ..revenue = '100.00'
+              ..impression = '1000'));
+        expected.add(
+            '222222',
+            InsertionOrderDailySpend((builder) => builder
+              ..date = DateTime(2020, 2, 1)
+              ..revenue = '200.00'
+              ..impression = '2000'));
+        expected.add(
+            '222222',
+            InsertionOrderDailySpend((builder) => builder
+              ..date = DateTime(2020, 2, 2)
+              ..revenue = '200.00'
+              ..impression = '2000'));
+        expected.add(
+            '333333',
+            InsertionOrderDailySpend((builder) => builder
+              ..date = DateTime(2020, 3, 1)
+              ..revenue = '300.00'
+              ..impression = '3000'));
 
-        var expectedSpending = [
-          InsertionOrderDailySpend((b) => b
-            ..date = DateTime(2020, 1, 1)
-            ..revenue = '100.00'
-            ..impression = '1000'),
-          InsertionOrderDailySpend((b) => b
-            ..date = DateTime(2020, 2, 1)
-            ..revenue = '100.00'
-            ..impression = '1000'),
-          InsertionOrderDailySpend((b) => b
-            ..date = DateTime(2020, 3, 1)
-            ..revenue = '100.00'
-            ..impression = '1000'),
-        ];
-        expect(actual['111111'].length, 3);
-        expect(actual['111111'], expectedSpending);
-
-        expectedSpending = [
-          InsertionOrderDailySpend((b) => b
-            ..date = DateTime(2020, 2, 1)
-            ..revenue = '200.00'
-            ..impression = '2000'),
-          InsertionOrderDailySpend((b) => b
-            ..date = DateTime(2020, 2, 2)
-            ..revenue = '200.00'
-            ..impression = '2000'),
-        ];
-        expect(actual['222222'].length, 2);
-        expect(actual['222222'], expectedSpending);
-
-        expectedSpending = [
-          InsertionOrderDailySpend((b) => b
-            ..date = DateTime(2020, 3, 1)
-            ..revenue = '300.00'
-            ..impression = '3000'),
-        ];
-        expect(actual['333333'].length, 1);
-        expect(actual['333333'], expectedSpending);
+        expect(multiMapEqual(actual, expected), true);
       });
     });
   });

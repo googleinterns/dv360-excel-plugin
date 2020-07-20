@@ -46,17 +46,14 @@ class ReportingQueryParser {
       // stop if reach the empty string row
       if (row[0].isEmpty) return revenueMap;
 
-      final insertionOrderId = row[0];
-      final date = Util.convertStringDateToDateTime(row[1]);
-      final revenue = row[2];
-      final impression = row[3];
-
+      // row[0] stores io id, row[1] stores date, row[2] stores revenue,
+      // and row[3] stores impression.
       revenueMap.add(
-          insertionOrderId,
-          InsertionOrderDailySpend((b) => b
-            ..date = date
-            ..revenue = revenue
-            ..impression = impression));
+          row[0],
+          InsertionOrderDailySpend((builder) => builder
+            ..date = Util.convertStringDateToDateTime(row[1])
+            ..revenue = row[2]
+            ..impression = row[3]));
     }
 
     return revenueMap;
