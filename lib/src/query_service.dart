@@ -96,7 +96,6 @@ class QueryService {
       String mediaPlanId,
       String insertionOrderId) {
     const entityStatusFilter = 'filter=entityStatus="ENTITY_STATUS_ACTIVE"';
-    final mediaPlanFilter = 'filter=campaignId="$mediaPlanId"';
     final pageTokenFilter = 'pageToken=$nextPageToken';
 
     switch (queryType) {
@@ -108,6 +107,7 @@ class QueryService {
             method: 'GET');
 
       case QueryType.byMediaPlan:
+        final mediaPlanFilter = 'filter=campaignId="$mediaPlanId"';
         return RequestArgs(
             path: 'https://displayvideo.googleapis.com/v1/advertisers/'
                 '$advertiserId/insertionOrders?'

@@ -1,5 +1,3 @@
-import 'dart:html';
-
 import 'package:angular/angular.dart';
 import 'package:angular_forms/angular_forms.dart';
 import 'package:quiver/collection.dart';
@@ -14,29 +12,7 @@ import 'util.dart';
 
 @Component(
   selector: 'query',
-  template: '''
-    <input [(ngModel)]="advertiserId" 
-           placeholder="Advertiser ID: 164337" debugId="advertiser-id-input">
-    <input [(ngModel)]="mediaPlanId" 
-           placeholder="Media Plan ID: 699530" debugId="media-plan-id-input">
-    <input [(ngModel)]="insertionOrderId" 
-           placeholder="Insertion Order ID: 8127549" debugId="io-id-input">
-    <br>
-
-    <div *ngFor="let choice of queryTypeChoices">
-      <input type="radio" (click)="queryType = choice" name="radio-group" 
-             id="{{enum2String(choice)}}-radio-btn"/>
-      <label for="radio-group">{{enum2String(choice)}}</label><br>
-    </div>
-    
-    <input type="checkbox" [(ngModel)]="highlightUnderpacing"
-           debugId="underpacing-checkbox" name="underpacing">
-    <label for="underpacing">Highlight underpacing insertion orders</label><br>
-    
-    <button (click)="onClick()" debugId="populate-btn">
-    {{buttonName}}
-    </button>
-  ''',
+  templateUrl: 'query_component.html',
   providers: [
     ClassProvider(QueryService),
     ClassProvider(ExcelDart),
@@ -52,9 +28,9 @@ class QueryComponent implements OnInit {
   List<QueryType> queryTypeChoices = QueryType.values;
   QueryType queryType;
 
-  String advertiserId = '164337';
-  String mediaPlanId = '699530';
-  String insertionOrderId = '8127549';
+  String advertiserId;
+  String mediaPlanId;
+  String insertionOrderId;
   bool highlightUnderpacing = false;
 
   QueryComponent(this._queryService, this._excel);
@@ -64,7 +40,8 @@ class QueryComponent implements OnInit {
 
   void onClick() async {
     // Uses DV360 public APIs to fetch entity data.
-    var insertionOrders = await _queryAndParseInsertionOrderEntityData();
+    List<InsertionOrder> insertionOrders =
+        await _queryAndParseInsertionOrderEntityData();
 
     // Early return if the query returns no insertion orders.
     if (insertionOrders.isEmpty) return;
