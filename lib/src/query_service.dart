@@ -5,6 +5,7 @@ import 'package:angular/angular.dart';
 import 'package:fixnum/fixnum.dart';
 
 import 'gapi.dart';
+import 'json_js.dart';
 import 'proto/insertion_order_query.pb.dart';
 import 'util.dart';
 
@@ -16,14 +17,14 @@ class QueryService {
   /// Completer is used here to convert the callback method of [execute] into
   /// a future, so that we only proceed when the request finishes executing.
   /// Having an empty [nextPageToken] will not affect the query.
-  Future<dynamic> execDV3Query(QueryType queryType, String nextPageToken,
-      String advertiserId, String insertionOrderId) async {
-    final responseCompleter = Completer<dynamic>();
+  Future<String> execDV3Query(QueryType queryType, String nextPageToken,
+      String advertiserId, String mediaPlanId, String insertionOrderId) async {
+    final responseCompleter = Completer<String>();
     GoogleAPI.client
-        .request(_generateDV3Query(
-            queryType, nextPageToken, advertiserId, insertionOrderId))
+        .request(_generateDV3Query(queryType, nextPageToken, advertiserId,
+            mediaPlanId, insertionOrderId))
         .execute(allowInterop((jsonResp, rawResp) {
-      responseCompleter.complete(jsonResp);
+      responseCompleter.complete(JsonJS.stringify(jsonResp));
     }));
 
     return responseCompleter.future;
@@ -33,18 +34,19 @@ class QueryService {
   /// complete with a raw javascript object.
   ///
   /// Completer used to convert the callback method of [execute] into a future.
-  Future<dynamic> execReportingCreateQuery(
+  Future<String> execReportingCreateQuery(
       QueryType queryType,
       String advertiserId,
+      String mediaPlanId,
       String insertionOrderId,
       DateTime startDate,
       DateTime endDate) async {
-    final responseCompleter = Completer<dynamic>();
+    final responseCompleter = Completer<String>();
     GoogleAPI.client
-        .request(_generateReportingQuery(
-            queryType, advertiserId, insertionOrderId, startDate, endDate))
+        .request(_generateReportingQuery(queryType, advertiserId, mediaPlanId,
+            insertionOrderId, startDate, endDate))
         .execute(allowInterop((jsonResp, rawResp) {
-      responseCompleter.complete(jsonResp);
+      responseCompleter.complete(JsonJS.stringify(jsonResp));
     }));
 
     return responseCompleter.future;
@@ -54,17 +56,17 @@ class QueryService {
   /// complete with a raw javascript object.
   ///
   /// Completer used to convert the callback method of [execute] into a future.
-  Future<dynamic> execReportingGetQuery(String queryId) {
+  Future<String> execReportingGetQuery(String queryId) {
     final requestArgs = RequestArgs(
         path:
             'https://www.googleapis.com/doubleclickbidmanager/v1.1/query/$queryId',
         method: 'GET');
 
-    final responseCompleter = Completer<dynamic>();
+    final responseCompleter = Completer<String>();
     GoogleAPI.client
         .request(requestArgs)
         .execute(allowInterop((jsonResp, rawResp) {
-      responseCompleter.complete(jsonResp);
+      responseCompleter.complete(JsonJS.stringify(jsonResp));
     }));
 
     return responseCompleter.future;
@@ -73,10 +75,10 @@ class QueryService {
   /// Read the report from google storage location specified by [downloadPath].
   ///
   /// Completer used to convert the callback method of [execute] into a future.
-  Future<dynamic> execReportingDownload(String downloadPath) {
+  Future<String> execReportingDownload(String downloadPath) {
     final requestArgs = RequestArgs(path: downloadPath, method: 'GET');
 
-    final responseCompleter = Completer<dynamic>();
+    final responseCompleter = Completer<String>();
     GoogleAPI.client
         .request(requestArgs)
         .execute(allowInterop((jsonResp, rawResp) {
@@ -87,15 +89,29 @@ class QueryService {
   }
 
   /// Generates query based on user inputs.
-  static RequestArgs _generateDV3Query(QueryType queryType,
-      String nextPageToken, String advertiserId, String insertionOrderId) {
+  static RequestArgs _generateDV3Query(
+      QueryType queryType,
+      String nextPageToken,
+      String advertiserId,
+      String mediaPlanId,
+      String insertionOrderId) {
+    const entityStatusFilter = 'filter=entityStatus="ENTITY_STATUS_ACTIVE"';
+    final mediaPlanFilter = 'filter=campaignId="$mediaPlanId"';
+    final pageTokenFilter = 'pageToken=$nextPageToken';
+
     switch (queryType) {
       case QueryType.byAdvertiser:
-        final filter = 'filter=entityStatus="ENTITY_STATUS_ACTIVE"';
-        final pageToken = 'pageToken=$nextPageToken';
         return RequestArgs(
             path: 'https://displayvideo.googleapis.com/v1/advertisers/'
-                '$advertiserId/insertionOrders?$filter&$pageToken',
+                '$advertiserId/insertionOrders?'
+                '$entityStatusFilter&$pageTokenFilter',
+            method: 'GET');
+
+      case QueryType.byMediaPlan:
+        return RequestArgs(
+            path: 'https://displayvideo.googleapis.com/v1/advertisers/'
+                '$advertiserId/insertionOrders?'
+                '$entityStatusFilter&$mediaPlanFilter&$pageTokenFilter',
             method: 'GET');
 
       case QueryType.byInsertionOrder:
@@ -113,6 +129,7 @@ class QueryService {
   static RequestArgs _generateReportingQuery(
       QueryType queryType,
       String advertiserId,
+      String mediaPlanId,
       String insertionOrderId,
       DateTime startDate,
       DateTime endDate) {
@@ -134,6 +151,12 @@ class QueryService {
 
     switch (queryType) {
       case QueryType.byAdvertiser:
+        break;
+
+      case QueryType.byMediaPlan:
+        parameter.params.filters.add(ReportingQueryParameter_Params_Filters()
+          ..type = '"FILTER_MEDIA_PLAN"'
+          ..value = mediaPlanId);
         break;
 
       case QueryType.byInsertionOrder:

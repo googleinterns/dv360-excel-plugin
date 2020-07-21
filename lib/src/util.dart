@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 
 import 'proto/insertion_order_query.pb.dart';
 
-enum QueryType { byAdvertiser, byInsertionOrder }
+enum QueryType { byAdvertiser, byMediaPlan, byInsertionOrder }
 
 class Util {
   /// Convert micros to string in standard unit.
