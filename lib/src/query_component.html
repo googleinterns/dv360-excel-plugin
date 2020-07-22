@@ -5,13 +5,13 @@
 <input [(ngModel)]="insertionOrderId"
        placeholder="Insertion Order ID" debugId="io-id-input"><br>
 <div *ngFor="let choice of queryTypeChoices">
-    <input type="radio" (click)="queryType = choice" name="radio-group"
-           id="{{enum2String(choice)}}-radio-btn"/>
-    <label>{{enum2String(choice)}}</label><br>
+    <input type="radio" [checked]="queryType===choice" (click)="queryType=choice" name="radio-group"
+           id="{{getQueryTypeShortName(choice)}}-radio-btn"/>
+    <label>{{getQueryTypeName(choice)}}</label><br>
 </div>
 <input type="checkbox" [(ngModel)]="highlightUnderpacing"
        debugId="underpacing-checkbox" name="underpacing">
-<label>Highlight underpacing insertion orders</label><br>
+<label>{{underpacingCheckBoxName}}</label><br>
 <button (click)="onClick()" debugId="populate-btn">
-    {{buttonName}}
+    {{populateButtonName}}
 </button>

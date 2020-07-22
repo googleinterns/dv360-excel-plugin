@@ -15,6 +15,7 @@ import 'package:test/test.dart';
 
 import 'query_component_test.template.dart' as ng;
 import 'testing/query_component_po.dart';
+import 'testing/query_component_radio_button_po.dart';
 
 @Injectable()
 class MockQueryService extends Mock implements QueryService {
@@ -58,132 +59,106 @@ class OverrideDirective {}
 class QueryTestComponent {}
 
 void main() {
-  NgTestBed testBed;
-  NgTestFixture<QueryTestComponent> fixture;
-  QueryComponentPageObject queryComponentPO;
-  MockQueryService mockQueryService;
-  MockExcelDart mockExcelDart;
-
-  setUp(() async {
-    testBed = NgTestBed.forComponent<QueryTestComponent>(
-        ng.QueryTestComponentNgFactory);
-    fixture = await testBed.create();
-    final context =
-        HtmlPageLoaderElement.createFromElement((fixture.rootElement));
-    queryComponentPO = QueryComponentPageObject.create(context);
-    mockQueryService = MockQueryService();
-    mockExcelDart = MockExcelDart();
-  });
-
-  tearDown(disposeAnyRunningTest);
-
-  group('radio button clicks change QueryType:', () {
-    test(
-        'selecting byAdvertiser invokes execDV3Query(Query.byAdvertiser, '
-        ', null, null, null)', () async {
-      await (queryComponentPO.selectByAdvertiser());
-      await (queryComponentPO.clickPopulate());
-      verify(mockQueryService.execDV3Query(
-          QueryType.byAdvertiser, '', null, null, null));
-    });
-
-    test(
-        'selecting byAdvertiser invokes execDV3Query(Query.byAdvertiser, '
-        ', null, null, null)', () async {
-      await (queryComponentPO.selectByMediaPlan());
-      await (queryComponentPO.clickPopulate());
-      verify(mockQueryService.execDV3Query(
-          QueryType.byMediaPlan, '', null, null, null));
-    });
-
-    test(
-        'selecting byAdvertiser invokes execDV3Query(Query.byAdvertiser, '
-        ', null, null, null)', () async {
-      await (queryComponentPO.selectByIO());
-      await (queryComponentPO.clickPopulate());
-      verify(mockQueryService.execDV3Query(
-          QueryType.byInsertionOrder, '', null, null, null));
-    });
-
-    test('only the last selection matters', () async {
-      await (queryComponentPO.selectByIO());
-      await (queryComponentPO.selectByAdvertiser());
-      await (queryComponentPO.selectByMediaPlan());
-      await (queryComponentPO.clickPopulate());
-      verify(mockQueryService.execDV3Query(
-          QueryType.byMediaPlan, '', null, null, null));
-    });
-  });
-
-  group('populate-button clicks invokes functions:', () {
+  group('In $QueryComponent,', () {
+    const emptyEntry = '';
     const advertiserId = 'advertiser-id';
-    const mediaPlanId = 'media-plan-id';
-    const insertionOrderId = 'io-id';
+    const mediaPlanIdA = 'media-plan-id-a';
+    const ioIdA = 'io-id-a';
+
+    final startDate = DateTime(2020, 7, 1);
+    final endDate = DateTime(2020, 7, 31);
+
+    const spendingA = '100';
+
     const queryId = 'query-id';
     const downloadLink = 'download-link';
-    final startDate = DateTime(2020, 7, 1);
+
+    const reportingCreateQueryApiJsonResponse = '{"queryId": "$queryId"}';
+    const reportingGetQueryApiJsonResponse = '''
+    {
+      "metadata": {
+        "googleCloudStoragePathForLatestReport": "$downloadLink"
+      }
+    } 
+    ''';
+
+    NgTestBed testBed;
+    NgTestFixture<QueryTestComponent> fixture;
+    QueryComponentPageObject queryComponentPO;
+    QueryComponentRadioButtonPageObject queryComponentRadioButtonPO;
+    MockQueryService mockQueryService;
+    MockExcelDart mockExcelDart;
 
     setUp(() async {
-      await queryComponentPO.typeAdvertiserId(advertiserId);
-      await queryComponentPO.typeMediaPlanId(mediaPlanId);
-      await queryComponentPO.typeInsertionOrderId(insertionOrderId);
-
-      await queryComponentPO.selectByAdvertiser();
-      await queryComponentPO.selectUnderpacing();
-
-      when(mockQueryService.execDV3Query(any, any, any, any, any))
-          .thenAnswer((_) => Future.value('{"advertiserId":"$advertiserId",'
-              '"campaignId":"$mediaPlanId",'
-              '"insertionOrderId":"$insertionOrderId",'
-              '"budget":{"budgetUnit":"BUDGET_UNIT_CURRENCY",'
-              '"budgetSegments":[{"budgetAmountMicros":"100000",'
-              '"dateRange":{"startDate":{"year":2020,"month":7,"day":1},'
-              '"endDate":{"year":2020,"month":7,"day":31}}}]}}'));
-      when(mockQueryService.execReportingCreateQuery(
-              any, any, any, any, any, any))
-          .thenAnswer((_) => Future.value('{"queryId": "$queryId"}'));
-      when(mockQueryService.execReportingGetQuery(any)).thenAnswer((_) =>
-          Future.value('{"metadata" : {"googleCloudStoragePathForLatestReport":'
-              '"$downloadLink"}}'));
-      when(mockQueryService.execReportingDownload(any))
-          .thenAnswer((_) => Future.value('{"gapiRequest" : {"data" : {"body": '
-              '"Insertion Order ID, Date, Revenue, Impression\\n'
-              'io-id,2020/07/10,88.88,1000\\n"}}}'));
-
-      await queryComponentPO.clickPopulate();
+      testBed = NgTestBed.forComponent<QueryTestComponent>(
+          ng.QueryTestComponentNgFactory);
+      fixture = await testBed.create();
+      final context =
+          HtmlPageLoaderElement.createFromElement((fixture.rootElement));
+      queryComponentPO = QueryComponentPageObject.create(context);
+      queryComponentRadioButtonPO =
+          QueryComponentRadioButtonPageObject.create(context);
+      mockQueryService = MockQueryService();
+      mockExcelDart = MockExcelDart();
     });
 
-    test(
-        'execDV3Query(QueryType.byAdvertiser, "", $advertiserId, $mediaPlanId, '
-        '$insertionOrderId)', () async {
-      verify(mockQueryService.execDV3Query(QueryType.byAdvertiser, '',
-          advertiserId, mediaPlanId, insertionOrderId));
-    });
+    tearDown(disposeAnyRunningTest);
 
-    test(
-        'execReportingCreateQuery(QueryType.byAdvertiser, $advertiserId,'
-        '$mediaPlanId, $insertionOrderId, $startDate, any)', () async {
-      verify(mockQueryService.execReportingCreateQuery(QueryType.byAdvertiser,
-          advertiserId, mediaPlanId, insertionOrderId, startDate, any));
-    });
+    String generateInsertionOrderJsonString(
+            String advertiserId,
+            String mediaPlanId,
+            String ioId,
+            DateTime startDate,
+            DateTime endDate) =>
+        '''
+      {
+        "advertiserId": "$advertiserId",
+        "campaignId": "$mediaPlanId",
+        "insertionOrderId": "$ioId",
+        "budget": {
+          "budgetUnit": "BUDGET_UNIT_CURRENCY",
+          "budgetSegments": [{
+            "dateRange": {
+              "startDate": {
+                "year": ${startDate.year},
+                "month": ${startDate.month},
+                "day": ${startDate.day}
+              },
+              "endDate": {
+                "year": ${endDate.year},
+                "month": ${endDate.month},
+                "day": ${endDate.day}
+              }
+            }
+          }]
+        }
+      }
+      ''';
 
-    test('execReportingGetQuery($queryId)', () async {
-      verify(mockQueryService.execReportingGetQuery(queryId));
-    });
+    String generateReport(String report) => '''
+      {
+        "gapiRequest": {
+          "data": {
+            "body": "Insertion Order ID, Date, Revenue, Impression\\n$report"
+          }
+        }
+      }
+      ''';
 
-    test('execReportingDownload($downloadLink)', () async {
-      verify(mockQueryService.execReportingDownload(downloadLink));
-    });
-
-    test('populate(insertionOrders, true)', () async {
-      final insertionOrders = [
+    InsertionOrder generateInsertionOrder(
+            String advertiserId,
+            String mediaPlanId,
+            String ioId,
+            DateTime startDate,
+            DateTime endDate,
+            String spent) =>
         InsertionOrder()
           ..advertiserId = advertiserId
           ..campaignId = mediaPlanId
-          ..insertionOrderId = insertionOrderId
-          ..displayName = ''
+          ..insertionOrderId = ioId
+          ..displayName = emptyEntry
           ..entityStatus = InsertionOrder_EntityStatus.ENTITY_STATUS_UNSPECIFIED
-          ..updateTime = ''
+          ..updateTime = emptyEntry
           ..pacing = InsertionOrder_Pacing()
           ..budget = (InsertionOrder_Budget()
             ..budgetUnit = InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY
@@ -191,23 +166,226 @@ void main() {
                 InsertionOrder_Budget_InsertionOrderAutomationType
                     .INSERTION_ORDER_AUTOMATION_TYPE_NONE
             ..activeBudgetSegment = (InsertionOrder_Budget_BudgetSegment()
-              ..budgetAmountMicros = '100000'
-              ..description = ''
-              ..campaignBudgetId = ''
+              ..budgetAmountMicros = emptyEntry
+              ..description = emptyEntry
               ..dateRange = (InsertionOrder_Budget_BudgetSegment_DateRange()
                 ..startDate =
                     (InsertionOrder_Budget_BudgetSegment_DateRange_Date()
-                      ..year = 2020
-                      ..month = 7
-                      ..day = 1)
+                      ..year = startDate.year
+                      ..month = startDate.month
+                      ..day = startDate.day)
                 ..endDate =
                     (InsertionOrder_Budget_BudgetSegment_DateRange_Date()
-                      ..year = 2020
-                      ..month = 7
-                      ..day = 31))))
-          ..spent = '88.88'
-      ];
-      verify(mockExcelDart.populate(insertionOrders, true));
+                      ..year = endDate.year
+                      ..month = endDate.month
+                      ..day = endDate.day))
+              ..campaignBudgetId = emptyEntry))
+          ..spent = spent;
+
+    test('making no selection defaults to ByAdvertiser', () async {
+      await queryComponentPO.clickPopulate();
+      verify(mockQueryService.execDV3Query(
+          QueryType.byAdvertiser, any, any, any, any));
+    });
+
+    test('only the last selection on query type matters', () async {
+      await queryComponentRadioButtonPO.selectByAdvertiser();
+      await queryComponentRadioButtonPO.selectByMediaPlan();
+      await queryComponentRadioButtonPO.selectByIO();
+      await queryComponentPO.clickPopulate();
+      verify(mockQueryService.execDV3Query(
+          QueryType.byInsertionOrder, any, any, any, any));
+    });
+
+    group('selecting ByAdvertiser with', () {
+      const mediaPlanIdB = 'media-plan-id-b';
+      const ioIdB = 'io-id-b';
+      const ioIdC = 'io-id-c';
+      const ioIdD = 'io-id-d';
+      const spendingB = '200';
+      const spendingC = '300';
+      const spendingD = '400';
+      List<InsertionOrder> expectedInput;
+
+      setUp(() async {
+        await queryComponentRadioButtonPO.selectByAdvertiser();
+        await queryComponentPO.typeAdvertiserId(advertiserId);
+
+        final multipleIOJsonString = '''
+        {
+          "insertionOrders": [
+            ${generateInsertionOrderJsonString(advertiserId, mediaPlanIdA, ioIdA, startDate, endDate)},
+            ${generateInsertionOrderJsonString(advertiserId, mediaPlanIdA, ioIdB, startDate, endDate)},
+            ${generateInsertionOrderJsonString(advertiserId, mediaPlanIdA, ioIdC, startDate, endDate)},
+            ${generateInsertionOrderJsonString(advertiserId, mediaPlanIdB, ioIdD, startDate, endDate)}
+          ]
+        }
+        ''';
+        final report = '$ioIdA,2020/07/10,$spendingA,1000\\n'
+            '$ioIdB,2020/07/10,$spendingB,1000\\n'
+            '$ioIdC,2020/07/10,$spendingC,1000\\n'
+            '$ioIdD,2020/07/10,$spendingD,1000\\n';
+
+        when(mockQueryService.execDV3Query(QueryType.byAdvertiser, '',
+                advertiserId, argThat(isNull), argThat(isNull)))
+            .thenAnswer((_) => Future.value(multipleIOJsonString));
+        when(mockQueryService.execReportingCreateQuery(QueryType.byAdvertiser,
+                advertiserId, argThat(isNull), argThat(isNull), startDate, any))
+            .thenAnswer(
+                (_) => Future.value(reportingCreateQueryApiJsonResponse));
+        when(mockQueryService.execReportingGetQuery(queryId))
+            .thenAnswer((_) => Future.value(reportingGetQueryApiJsonResponse));
+        when(mockQueryService.execReportingDownload(downloadLink))
+            .thenAnswer((_) => Future.value(generateReport(report)));
+
+        expectedInput = [
+          generateInsertionOrder(
+              advertiserId, mediaPlanIdA, ioIdA, startDate, endDate, spendingA),
+          generateInsertionOrder(
+              advertiserId, mediaPlanIdA, ioIdB, startDate, endDate, spendingB),
+          generateInsertionOrder(
+              advertiserId, mediaPlanIdA, ioIdC, startDate, endDate, spendingC),
+          generateInsertionOrder(
+              advertiserId, mediaPlanIdB, ioIdD, startDate, endDate, spendingD),
+        ];
+      });
+
+      test(
+          'highlight underpacing unchecked invokes populate(multiple-IO, false)',
+          () async {
+        await queryComponentPO.clickPopulate();
+        await Future.delayed(Duration(seconds: 2));
+
+        verify(mockExcelDart.populate(expectedInput, false));
+      });
+
+      test('highlight underpacing checked invokes populate(multiple-IO, true)',
+          () async {
+        await queryComponentPO.selectUnderpacing();
+        await queryComponentPO.clickPopulate();
+        await Future.delayed(Duration(seconds: 2));
+
+        verify(mockExcelDart.populate(expectedInput, true));
+      });
+    });
+
+    group('selecting ByMediaPlan with', () {
+      const ioIdB = 'io-id-b';
+      const ioIdC = 'io-id-c';
+      const spendingB = '200';
+      const spendingC = '300';
+      List<InsertionOrder> expectedInput;
+
+      setUp(() async {
+        await queryComponentRadioButtonPO.selectByMediaPlan();
+        await queryComponentPO.typeAdvertiserId(advertiserId);
+        await queryComponentPO.typeMediaPlanId(mediaPlanIdA);
+
+        final multipleIOJsonString = '''
+        {
+          "insertionOrders": [
+            ${generateInsertionOrderJsonString(advertiserId, mediaPlanIdA, ioIdA, startDate, endDate)},
+            ${generateInsertionOrderJsonString(advertiserId, mediaPlanIdA, ioIdB, startDate, endDate)},
+            ${generateInsertionOrderJsonString(advertiserId, mediaPlanIdA, ioIdC, startDate, endDate)}
+          ]
+        }
+        ''';
+        final report = '$ioIdA,2020/07/10,$spendingA,1000\\n'
+            '$ioIdB,2020/07/10,$spendingB,1000\\n'
+            '$ioIdC,2020/07/10,$spendingC,1000\\n';
+
+        when(mockQueryService.execDV3Query(QueryType.byMediaPlan, '',
+                advertiserId, mediaPlanIdA, argThat(isNull)))
+            .thenAnswer((_) => Future.value(multipleIOJsonString));
+        when(mockQueryService.execReportingCreateQuery(QueryType.byMediaPlan,
+                advertiserId, mediaPlanIdA, argThat(isNull), startDate, any))
+            .thenAnswer(
+                (_) => Future.value(reportingCreateQueryApiJsonResponse));
+        when(mockQueryService.execReportingGetQuery(queryId))
+            .thenAnswer((_) => Future.value(reportingGetQueryApiJsonResponse));
+        when(mockQueryService.execReportingDownload(downloadLink))
+            .thenAnswer((_) => Future.value(generateReport(report)));
+
+        expectedInput = [
+          generateInsertionOrder(
+              advertiserId, mediaPlanIdA, ioIdA, startDate, endDate, spendingA),
+          generateInsertionOrder(
+              advertiserId, mediaPlanIdA, ioIdB, startDate, endDate, spendingB),
+          generateInsertionOrder(
+              advertiserId, mediaPlanIdA, ioIdC, startDate, endDate, spendingC),
+        ];
+      });
+
+      test(
+          'highlight underpacing unchecked invokes populate(multiple-IO, false)',
+          () async {
+        await queryComponentPO.clickPopulate();
+
+        await Future.delayed(Duration(seconds: 2));
+        verify(mockExcelDart.populate(expectedInput, false));
+      });
+
+      test('highlight underpacing checked invokes populate(multiple-IO, true)',
+          () async {
+        await queryComponentPO.selectUnderpacing();
+        await queryComponentPO.clickPopulate();
+
+        await Future.delayed(Duration(seconds: 2));
+        verify(mockExcelDart.populate(expectedInput, true));
+      });
+    });
+
+    group('selecting ByMediaPlan with', () {
+      List<InsertionOrder> expectedInput;
+
+      setUp(() async {
+        await queryComponentRadioButtonPO.selectByIO();
+        await queryComponentPO.typeAdvertiserId(advertiserId);
+        await queryComponentPO.typeInsertionOrderId(ioIdA);
+
+        final singleIOJsonString =
+            '${generateInsertionOrderJsonString(advertiserId, mediaPlanIdA, ioIdA, startDate, endDate)}';
+        final report = '$ioIdA,2020/07/10,$spendingA,1000\\n';
+
+        when(mockQueryService.execDV3Query(QueryType.byInsertionOrder, '',
+                advertiserId, argThat(isNull), ioIdA))
+            .thenAnswer((_) => Future.value(singleIOJsonString));
+        when(mockQueryService.execReportingCreateQuery(
+                QueryType.byInsertionOrder,
+                advertiserId,
+                argThat(isNull),
+                ioIdA,
+                startDate,
+                any))
+            .thenAnswer(
+                (_) => Future.value(reportingCreateQueryApiJsonResponse));
+        when(mockQueryService.execReportingGetQuery(queryId))
+            .thenAnswer((_) => Future.value(reportingGetQueryApiJsonResponse));
+        when(mockQueryService.execReportingDownload(downloadLink))
+            .thenAnswer((_) => Future.value(generateReport(report)));
+
+        expectedInput = [
+          generateInsertionOrder(
+              advertiserId, mediaPlanIdA, ioIdA, startDate, endDate, spendingA)
+        ];
+      });
+
+      test('highlight underpacing unchecked invokes populate(single-IO, false)',
+          () async {
+        await queryComponentPO.clickPopulate();
+
+        await Future.delayed(Duration(seconds: 2));
+        verify(mockExcelDart.populate(expectedInput, false));
+      });
+
+      test('highlight underpacing checked invokes populate(single-IO, true)',
+          () async {
+        await queryComponentPO.selectUnderpacing();
+        await queryComponentPO.clickPopulate();
+
+        await Future.delayed(Duration(seconds: 2));
+        verify(mockExcelDart.populate(expectedInput, true));
+      });
     });
   });
 }

@@ -20,15 +20,6 @@ abstract class QueryComponentPageObject {
   @ByDebugId('io-id-input')
   PageLoaderElement get _insertionOrderIdInputBox;
 
-  @ById('byAdvertiser-radio-btn')
-  PageLoaderElement get _byAdvertiserRadioBtn;
-
-  @ById('byMediaPlan-radio-btn')
-  PageLoaderElement get _byMediaPlanRadioBtn;
-
-  @ById('byInsertionOrder-radio-btn')
-  PageLoaderElement get _byInsertionOrderRadioBtn;
-
   @ByDebugId('underpacing-checkbox')
   PageLoaderElement get _underpacingCheckBox;
 
@@ -40,12 +31,6 @@ abstract class QueryComponentPageObject {
 
   Future<void> typeInsertionOrderId(String id) async =>
       _insertionOrderIdInputBox.type(id);
-
-  Future<void> selectByAdvertiser() async => _byAdvertiserRadioBtn.click();
-
-  Future<void> selectByMediaPlan() async => _byMediaPlanRadioBtn.click();
-
-  Future<void> selectByIO() async => _byInsertionOrderRadioBtn.click();
 
   Future<void> selectUnderpacing() async => _underpacingCheckBox.click();
 

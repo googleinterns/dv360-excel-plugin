@@ -21,12 +21,14 @@ import 'util.dart';
   directives: [coreDirectives, formDirectives],
 )
 class QueryComponent implements OnInit {
-  final buttonName = 'populate';
+  final populateButtonName = 'populate';
+  final underpacingCheckBoxName = 'Highlight underpacing insertion orders';
   final QueryService _queryService;
   final ExcelDart _excel;
 
+  // Default selection is byAdvertiser.
+  QueryType queryType = QueryType.byAdvertiser;
   List<QueryType> queryTypeChoices = QueryType.values;
-  QueryType queryType;
 
   String advertiserId;
   String mediaPlanId;
@@ -39,6 +41,9 @@ class QueryComponent implements OnInit {
   void ngOnInit() async => await _excel.loadOffice();
 
   void onClick() async {
+    // TODO: Error handling when the necessary ids are not typed in.
+    // Issue: https://github.com/googleinterns/dv360-excel-plugin/issues/52
+
     // Uses DV360 public APIs to fetch entity data.
     List<InsertionOrder> insertionOrders =
         await _queryAndParseInsertionOrderEntityData();
@@ -68,7 +73,15 @@ class QueryComponent implements OnInit {
     await _excel.populate(insertionOrders, highlightUnderpacing);
   }
 
-  String enum2String(QueryType queryType) => queryType.toString().split('.')[1];
+  /// Convert [queryType] enum to a user-friendly string.
+  ///
+  /// Used in [query_component.html] as the radio button text.
+  String getQueryTypeName(QueryType queryType) => queryType.name;
+
+  /// Convert [queryType] enum to a short string that contains no space.
+  ///
+  /// Used in [query_component.html] as part of the radio button id.
+  String getQueryTypeShortName(QueryType queryType) => queryType.shortName;
 
   /// Fetches insertion order entity related data using DV360 public APIs,
   /// then return a list of parsed [InsertionOrder] instance.
