@@ -15,7 +15,6 @@ import 'package:test/test.dart';
 
 import 'query_component_test.template.dart' as ng;
 import 'testing/query_component_po.dart';
-import 'testing/query_component_radio_button_po.dart';
 
 @Injectable()
 class MockQueryService extends Mock implements QueryService {
@@ -254,8 +253,9 @@ void main() {
           'highlight underpacing unchecked invokes populate(multiple-IO, false)',
           () async {
         await queryComponentPO.clickPopulate();
-        await Future.delayed(Duration(seconds: 2));
 
+        // waits for all button click operations to finish.
+        await Future.delayed(Duration(seconds: 2));
         verify(mockExcelDart.populate(expectedInput, false));
       });
 
@@ -263,8 +263,9 @@ void main() {
           () async {
         await queryComponentPO.selectUnderpacing();
         await queryComponentPO.clickPopulate();
-        await Future.delayed(Duration(seconds: 2));
 
+        // waits for all button click operations to finish.
+        await Future.delayed(Duration(seconds: 2));
         verify(mockExcelDart.populate(expectedInput, true));
       });
     });
@@ -321,6 +322,7 @@ void main() {
           () async {
         await queryComponentPO.clickPopulate();
 
+        // waits for all button click operations to finish.
         await Future.delayed(Duration(seconds: 2));
         verify(mockExcelDart.populate(expectedInput, false));
       });
@@ -330,6 +332,7 @@ void main() {
         await queryComponentPO.selectUnderpacing();
         await queryComponentPO.clickPopulate();
 
+        // waits for all button click operations to finish.
         await Future.delayed(Duration(seconds: 2));
         verify(mockExcelDart.populate(expectedInput, true));
       });
@@ -374,6 +377,7 @@ void main() {
           () async {
         await queryComponentPO.clickPopulate();
 
+        // waits for all button click operations to finish.
         await Future.delayed(Duration(seconds: 2));
         verify(mockExcelDart.populate(expectedInput, false));
       });
@@ -383,6 +387,7 @@ void main() {
         await queryComponentPO.selectUnderpacing();
         await queryComponentPO.clickPopulate();
 
+        // waits for all button click operations to finish.
         await Future.delayed(Duration(seconds: 2));
         verify(mockExcelDart.populate(expectedInput, true));
       });
