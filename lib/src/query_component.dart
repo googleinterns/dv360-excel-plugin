@@ -4,7 +4,6 @@ import 'package:quiver/collection.dart';
 
 import 'excel.dart';
 import 'insertion_order_daily_spend.dart';
-import 'json_js.dart';
 import 'proto/insertion_order_query.pb.dart';
 import 'public_api_parser.dart';
 import 'query_service.dart';
@@ -13,26 +12,7 @@ import 'util.dart';
 
 @Component(
   selector: 'query',
-  template: '''
-    <input [(ngModel)]="advertiserId" 
-           placeholder="Advertiser ID: 164337" debugId="advertiser-id-input">
-    <input [(ngModel)]="insertionOrderId" 
-           placeholder="Insertion Order ID: 8127549" debugId="io-id-input">
-    <br>
-
-    <input type="radio" [(ngModel)]="advertiserQuery" name="advertiser-query">
-    <label for="advertiser-query">By advertiser</label><br>
-    <input type="radio" [(ngModel)]="insertionOrderQuery" name="advertiser-query">
-    <label for="advertiser-query">By insertion order</label><br>
-    
-    <input type="checkbox" [(ngModel)]="highlightUnderpacing"
-           debugId="underpacing" name="underpacing">
-    <label for="underpacing">Highlight underpacing insertion orders</label><br>
-    
-    <button (click)="onClick()" debugId="populate-btn">
-    {{buttonName}}
-    </button>
-  ''',
+  templateUrl: 'query_component.html',
   providers: [
     ClassProvider(QueryService),
     ClassProvider(ExcelDart),
@@ -41,19 +21,19 @@ import 'util.dart';
   directives: [coreDirectives, formDirectives],
 )
 class QueryComponent implements OnInit {
-  final buttonName = 'populate';
+  final populateButtonName = 'populate';
+  final underpacingCheckBoxName = 'Highlight underpacing insertion orders';
   final QueryService _queryService;
   final ExcelDart _excel;
 
-  QueryType _queryType;
+  // Default selection is byAdvertiser.
+  QueryType queryType = QueryType.byAdvertiser;
+  List<QueryType> queryTypeChoices = QueryType.values;
 
   String advertiserId;
+  String mediaPlanId;
   String insertionOrderId;
   bool highlightUnderpacing = false;
-
-  // Radio button states with byAdvertiser selected as default.
-  RadioButtonState advertiserQuery = RadioButtonState(true, 'byAdvertiser');
-  RadioButtonState insertionOrderQuery = RadioButtonState(false, 'byIO');
 
   QueryComponent(this._queryService, this._excel);
 
@@ -61,19 +41,21 @@ class QueryComponent implements OnInit {
   void ngOnInit() async => await _excel.loadOffice();
 
   void onClick() async {
-    // Determines the query type from radio buttons.
-    _queryType = advertiserQuery.checked
-        ? QueryType.byAdvertiser
-        : QueryType.byInsertionOrder;
+    // TODO: Error handling when the necessary ids are not typed in.
+    // Issue: https://github.com/googleinterns/dv360-excel-plugin/issues/52
 
     // Uses DV360 public APIs to fetch entity data.
-    var insertionOrders = await _queryAndParseInsertionOrderEntityData();
+    List<InsertionOrder> insertionOrders =
+        await _queryAndParseInsertionOrderEntityData();
 
-    // If [_queryType.byAdvertiser], filters out insertion orders
+    // Early return if the query returns no insertion orders.
+    if (insertionOrders.isEmpty) return;
+
+    // If query type is not by insertion order, filters out insertion orders
     // that are not in-flight.
-    insertionOrders = _queryType == QueryType.byAdvertiser
-        ? _filterInFlightInsertionOrders(insertionOrders)
-        : insertionOrders;
+    insertionOrders = queryType == QueryType.byInsertionOrder
+        ? insertionOrders
+        : _filterInFlightInsertionOrders(insertionOrders);
 
     // Gets the earliest start date from the list of insertion orders.
     final minStartDate = _getMinStartDate(insertionOrders);
@@ -91,6 +73,16 @@ class QueryComponent implements OnInit {
     await _excel.populate(insertionOrders, highlightUnderpacing);
   }
 
+  /// Convert [queryType] enum to a user-friendly string.
+  ///
+  /// Used in [query_component.html] as the radio button text.
+  String getQueryTypeName(QueryType queryType) => queryType.name;
+
+  /// Convert [queryType] enum to a short string that contains no space.
+  ///
+  /// Used in [query_component.html] as part of the radio button id.
+  String getQueryTypeShortName(QueryType queryType) => queryType.shortName;
+
   /// Fetches insertion order entity related data using DV360 public APIs,
   /// then return a list of parsed [InsertionOrder] instance.
   Future<List<InsertionOrder>> _queryAndParseInsertionOrderEntityData() async {
@@ -103,9 +95,8 @@ class QueryComponent implements OnInit {
       final nextPageToken = PublicApiParser.parseNextPageToken(jsonResponse);
 
       // Executes dv360 query, parses the response and adds results to the list.
-      final response = await _queryService.execDV3Query(
-          _queryType, nextPageToken, advertiserId, insertionOrderId);
-      jsonResponse = JsonJS.stringify(response);
+      jsonResponse = await _queryService.execDV3Query(queryType, nextPageToken,
+          advertiserId, mediaPlanId, insertionOrderId);
 
       // Adds all insertion orders in this iteration to the list.
       insertionOrderList
@@ -122,17 +113,19 @@ class QueryComponent implements OnInit {
     try {
       // Creates a reporting query, and parses the queryId from response.
       final jsonCreateQueryResponse =
-          await _queryService.execReportingCreateQuery(
-              _queryType, advertiserId, insertionOrderId, startDate, endDate);
+          await _queryService.execReportingCreateQuery(queryType, advertiserId,
+              mediaPlanId, insertionOrderId, startDate, endDate);
+
       final reportingQueryId = ReportingQueryParser.parseQueryIdFromJsonString(
-          JsonJS.stringify(jsonCreateQueryResponse));
+          jsonCreateQueryResponse);
 
       // Uses the queryId to get the report download path.
       final jsonGetQueryResponse =
           await _queryService.execReportingGetQuery(reportingQueryId);
+
       final reportingDownloadPath =
           ReportingQueryParser.parseDownloadPathFromJsonString(
-              JsonJS.stringify(jsonGetQueryResponse));
+              jsonGetQueryResponse);
 
       // Downloads the report and parse the response into a revenue map.
       final report =
@@ -147,13 +140,12 @@ class QueryComponent implements OnInit {
   }
 
   List<InsertionOrder> _filterInFlightInsertionOrders(
-      List<InsertionOrder> insertionOrders) {
-    return insertionOrders
-        .where((io) =>
-            io.budget.activeBudgetSegment !=
-            InsertionOrder_Budget_BudgetSegment())
-        .toList();
-  }
+          List<InsertionOrder> insertionOrders) =>
+      insertionOrders
+          .where((io) =>
+              io.budget.activeBudgetSegment !=
+              InsertionOrder_Budget_BudgetSegment())
+          .toList();
 
   DateTime _getMinStartDate(
           List<InsertionOrder> insertionOrders) =>

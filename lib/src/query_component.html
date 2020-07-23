@@ -1,0 +1,17 @@
+<input [(ngModel)]="advertiserId"
+       placeholder="Advertiser ID" debugId="advertiser-id-input">
+<input [(ngModel)]="mediaPlanId"
+       placeholder="Media Plan ID" debugId="media-plan-id-input">
+<input [(ngModel)]="insertionOrderId"
+       placeholder="Insertion Order ID" debugId="io-id-input"><br>
+<div *ngFor="let choice of queryTypeChoices">
+    <input type="radio" [checked]="queryType===choice" (click)="queryType=choice" name="radio-group"
+           id="{{getQueryTypeShortName(choice)}}-radio-btn"/>
+    <label>{{getQueryTypeName(choice)}}</label><br>
+</div>
+<input type="checkbox" [(ngModel)]="highlightUnderpacing"
+       debugId="underpacing-checkbox" name="underpacing">
+<label>{{underpacingCheckBoxName}}</label><br>
+<button (click)="onClick()" debugId="populate-btn">
+    {{populateButtonName}}
+</button>

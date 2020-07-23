@@ -4,7 +4,24 @@ import 'package:intl/intl.dart';
 
 import 'proto/insertion_order_query.pb.dart';
 
-enum QueryType { byAdvertiser, byInsertionOrder }
+enum QueryType { byAdvertiser, byMediaPlan, byInsertionOrder }
+
+extension QueryTypeExtension on QueryType {
+  static const names = {
+    QueryType.byAdvertiser: 'Query by advertiser ID',
+    QueryType.byMediaPlan: 'Query by median plan ID',
+    QueryType.byInsertionOrder: 'Query by insertion order ID'
+  };
+
+  static const shortNames = {
+    QueryType.byAdvertiser: 'by-advertiser',
+    QueryType.byMediaPlan: 'by-media-plan',
+    QueryType.byInsertionOrder: 'by-io'
+  };
+
+  String get name => names[this];
+  String get shortName => shortNames[this];
+}
 
 class Util {
   /// Convert micros to string in standard unit.
