@@ -8,9 +8,9 @@ enum QueryType { byAdvertiser, byMediaPlan, byInsertionOrder }
 
 extension QueryTypeExtension on QueryType {
   static const names = {
-    QueryType.byAdvertiser: 'Query by advertiser ID',
-    QueryType.byMediaPlan: 'Query by median plan ID',
-    QueryType.byInsertionOrder: 'Query by insertion order ID'
+    QueryType.byAdvertiser: 'Insertion Orders Under Advertiser',
+    QueryType.byMediaPlan: 'Insertion Orders Under Campaign',
+    QueryType.byInsertionOrder: 'Single Insertion Order'
   };
 
   static const shortNames = {

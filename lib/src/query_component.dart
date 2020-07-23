@@ -1,5 +1,6 @@
 import 'package:angular/angular.dart';
 import 'package:angular_forms/angular_forms.dart';
+import 'package:ng_bootstrap/ng_bootstrap.dart';
 import 'package:quiver/collection.dart';
 
 import 'excel.dart';
@@ -18,22 +19,34 @@ import 'util.dart';
     ClassProvider(ExcelDart),
     FORM_PROVIDERS,
   ],
-  directives: [coreDirectives, formDirectives],
+  directives: [bsAccordionDirectives, BsInput, coreDirectives, formDirectives],
 )
 class QueryComponent implements OnInit {
-  final populateButtonName = 'populate';
-  final underpacingCheckBoxName = 'Highlight underpacing insertion orders';
+  // Names used in css.
+  static const requestSectionTitle = 'Request Parameter';
+  static const advertiserParameterName = 'advertiserId';
+  static const mediaPlanParameterName = 'campaignId';
+  static const numberOnlyPattern = '^[0-9]*\$';
+  static const insertionOrderParameterName = 'insertionOrderId';
+  static const underpacingCheckBoxName =
+      'Highlight underpacing insertion orders';
+  static const populateButtonName = 'populate';
+  static const parameterAlertText = 'Missing required parameter values.';
+  static bool showAlert = false;
+  static bool showSpinner = false;
+
   final QueryService _queryService;
   final ExcelDart _excel;
 
   // Default selection is byAdvertiser.
-  QueryType queryType = QueryType.byAdvertiser;
-  List<QueryType> queryTypeChoices = QueryType.values;
+  static QueryType queryType = QueryType.byAdvertiser;
+  static List<QueryType> queryTypeChoices = QueryType.values;
 
-  String advertiserId;
-  String mediaPlanId;
-  String insertionOrderId;
-  bool highlightUnderpacing = false;
+  static String advertiserId;
+  static String mediaPlanId;
+  static String insertionOrderId;
+
+  static bool highlightUnderpacing = false;
 
   QueryComponent(this._queryService, this._excel);
 
@@ -41,8 +54,16 @@ class QueryComponent implements OnInit {
   void ngOnInit() async => await _excel.loadOffice();
 
   void onClick() async {
-    // TODO: Error handling when the necessary ids are not typed in.
-    // Issue: https://github.com/googleinterns/dv360-excel-plugin/issues/52
+    // Determines if all required parameters are filled in.
+    if (_missingRequiredParameters()) {
+      showAlert = true;
+      showSpinner = false;
+      return;
+    }
+
+    // All required parameters are filled in, show spinner and hide alert.
+    showAlert = false;
+    showSpinner = true;
 
     // Uses DV360 public APIs to fetch entity data.
     List<InsertionOrder> insertionOrders =
@@ -71,6 +92,9 @@ class QueryComponent implements OnInit {
 
     // Populate the spreadsheet.
     await _excel.populate(insertionOrders, highlightUnderpacing);
+
+    // Removes spinner when query is complete
+    showSpinner = false;
   }
 
   /// Convert [queryType] enum to a user-friendly string.
@@ -82,6 +106,25 @@ class QueryComponent implements OnInit {
   ///
   /// Used in [query_component.html] as part of the radio button id.
   String getQueryTypeShortName(QueryType queryType) => queryType.shortName;
+
+  bool _missingRequiredParameters() {
+    switch (queryType) {
+      case QueryType.byAdvertiser:
+        return advertiserId == null || advertiserId.isEmpty;
+
+      case QueryType.byMediaPlan:
+        return advertiserId == null ||
+            advertiserId.isEmpty ||
+            mediaPlanId == null ||
+            mediaPlanId.isEmpty;
+
+      case QueryType.byInsertionOrder:
+        return advertiserId == null ||
+            advertiserId.isEmpty ||
+            insertionOrderId == null ||
+            insertionOrderId.isEmpty;
+    }
+  }
 
   /// Fetches insertion order entity related data using DV360 public APIs,
   /// then return a list of parsed [InsertionOrder] instance.

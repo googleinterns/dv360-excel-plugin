@@ -1,17 +1,81 @@
-<input [(ngModel)]="advertiserId"
-       placeholder="Advertiser ID" debugId="advertiser-id-input">
-<input [(ngModel)]="mediaPlanId"
-       placeholder="Media Plan ID" debugId="media-plan-id-input">
-<input [(ngModel)]="insertionOrderId"
-       placeholder="Insertion Order ID" debugId="io-id-input"><br>
-<div *ngFor="let choice of queryTypeChoices">
-    <input type="radio" [checked]="queryType===choice" (click)="queryType=choice" name="radio-group"
-           id="{{getQueryTypeShortName(choice)}}-radio-btn"/>
-    <label>{{getQueryTypeName(choice)}}</label><br>
+<div class="jumbotron d-flex align-items-center">
+    <div class="container-fluid">
+        <!-- accordion component for selecting query type and typing input parameter values-->
+        <bs-accordion [closeOthers]="true">
+            <bs-accordion-panel class='query-type-name'
+                                id="{{getQueryTypeShortName(choice)}}-panel"
+                                *ngFor="let choice of queryTypeChoices"
+                                heading="{{getQueryTypeName(choice)}}"
+                                [isOpen]="queryType===choice"
+                                (click)="queryType=choice">
+                <div class="section-name">{{requestSectionTitle}}</div>
+                <form class="form-group">
+                    <div>
+                        <label class="parameter-name">{{advertiserParameterName}}</label><br>
+                        <input class="form-control parameter-input"
+                               placeholder="integer" debugId="advertiser-id-input"
+                               #parameter="ngForm"
+                               [(ngModel)]="advertiserId"
+                               pattern="{{numberOnlyPattern}}"
+                               [class.is-invalid]="!parameter.valid">
+                        <div *ngIf="!parameter.valid" class="text-danger small">
+                            {{advertiserParameterName}} should only contain numbers
+                        </div>
+                    </div>
+                    <div *ngIf="choice==queryTypeChoices[1]">
+                        <label class="parameter-name">{{mediaPlanParameterName}}</label><br>
+                        <input class="form-control parameter-input"
+                               placeholder="integer" debugId="media-plan-id-input"
+                               #parameter="ngForm"
+                               [(ngModel)]="mediaPlanId"
+                               pattern="{{numberOnlyPattern}}"
+                               [class.is-invalid]="!parameter.valid">
+                        <div *ngIf="!parameter.valid" class="text-danger small">
+                            {{mediaPlanParameterName}} should only contain numbers
+                        </div>
+                    </div>
+                    <div *ngIf="choice==queryTypeChoices.last">
+                        <label class="parameter-name">{{insertionOrderParameterName}}</label><br>
+                        <input class="form-control parameter-input"
+                               placeholder="integer" debugId="io-id-input"
+                               #parameter="ngForm"
+                               [(ngModel)]="insertionOrderId"
+                               pattern="{{numberOnlyPattern}}"
+                               [class.is-invalid]="!parameter.valid">
+                        <div *ngIf="!parameter.valid" class="text-danger small">
+                            {{insertionOrderParameterName}} should only contain numbers
+                        </div>
+                    </div>
+                </form>
+            </bs-accordion-panel>
+        </bs-accordion>
+
+        <!-- highlight underpacing checkbox-->
+        <div class="underpacing-checkbox">
+            <label class="underpacing-checkbox-name">
+                <input type="checkbox" debugId="underpacing-checkbox"
+                       [(ngModel)]="highlightUnderpacing">
+                <small>{{underpacingCheckBoxName}}</small>
+            </label>
+        </div>
+
+        <!-- error message-->
+        <div class="alert alert-danger" role="alert" id="parameter-alert" [hidden]="!showAlert">
+            {{parameterAlertText}}
+        </div>
+
+        <!-- populate button-->
+        <div class="populate-button">
+            <button type="button" class="btn btn-primary" id="populate-btn" debugId="populate-btn"
+                    (click)="onClick()">
+                <span *ngIf="showSpinner"
+                      class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                {{populateButtonName}}
+            </button>
+        </div>
+    </div>
 </div>
-<input type="checkbox" [(ngModel)]="highlightUnderpacing"
-       debugId="underpacing-checkbox" name="underpacing">
-<label>{{underpacingCheckBoxName}}</label><br>
-<button (click)="onClick()" debugId="populate-btn">
-    {{populateButtonName}}
-</button>
+
+
+
+
