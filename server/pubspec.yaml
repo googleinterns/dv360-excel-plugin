@@ -1,7 +1,6 @@
 name: server
-description: An empty Aqueduct application.
+description: a server to manage and run scheduled rules for DV360 entities
 version: 0.0.1
-author: stable|kernel <jobs@stablekernel.com>
 
 environment:
   sdk: ">=2.0.0 <3.0.0"
@@ -12,3 +11,4 @@ dependencies:
 dev_dependencies:
   test: ^1.0.0
   aqueduct_test: ^1.0.0
+  pedantic: ^1.9.0
