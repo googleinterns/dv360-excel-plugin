@@ -9,10 +9,14 @@ abstract class QueryComponentPageObject {
       $QueryComponentPageObject.create;
 
   @ByDebugId('populate-btn')
-  PageLoaderElement get _button;
+  PageLoaderElement get populateButton;
 
-  @ByDebugId('advertiser-id-input')
-  PageLoaderElement get _advertiserIdInputBox;
+  @ByTagName('div')
+  @WithAttribute('aria-hidden', 'false')
+  PageLoaderElement get _visibleAccordionPanel;
+
+  PageLoaderElement get _advertiserIdInputBox =>
+      _visibleAccordionPanel.byTag('input');
 
   @ByDebugId('media-plan-id-input')
   PageLoaderElement get _mediaPlanIdInputBox;
@@ -22,6 +26,9 @@ abstract class QueryComponentPageObject {
 
   @ByDebugId('underpacing-checkbox')
   PageLoaderElement get _underpacingCheckBox;
+
+  @ByDebugId('populate-btn-spinner')
+  PageLoaderElement get populateButtonSpinner;
 
   Future<void> typeAdvertiserId(String id) async =>
       _advertiserIdInputBox.type(id);
@@ -34,28 +41,28 @@ abstract class QueryComponentPageObject {
 
   Future<void> selectUnderpacing() async => _underpacingCheckBox.click();
 
-  Future<void> clickPopulate() async => _button.click();
+  Future<void> clickPopulate() async => populateButton.click();
 }
 
 @PageObject()
-abstract class QueryComponentRadioButtonPageObject {
-  QueryComponentRadioButtonPageObject();
+abstract class QueryComponentAccordionPageObject {
+  QueryComponentAccordionPageObject();
 
-  factory QueryComponentRadioButtonPageObject.create(
-      PageLoaderElement context) = $QueryComponentRadioButtonPageObject.create;
+  factory QueryComponentAccordionPageObject.create(PageLoaderElement context) =
+      $QueryComponentAccordionPageObject.create;
 
-  @ById('by-advertiser-radio-btn')
-  PageLoaderElement get _byAdvertiserRadioBtn;
+  @ById('by-advertiser-panel')
+  PageLoaderElement get _byAdvertiserPanel;
 
-  @ById('by-media-plan-radio-btn')
-  PageLoaderElement get _byMediaPlanRadioBtn;
+  @ById('by-media-plan-panel')
+  PageLoaderElement get _byMediaPlanPanel;
 
-  @ById('by-io-radio-btn')
-  PageLoaderElement get _byInsertionOrderRadioBtn;
+  @ById('by-io-panel')
+  PageLoaderElement get _byInsertionOrderPanel;
 
-  Future<void> selectByAdvertiser() async => _byAdvertiserRadioBtn.click();
+  Future<void> selectByAdvertiser() async => _byAdvertiserPanel.click();
 
-  Future<void> selectByMediaPlan() async => _byMediaPlanRadioBtn.click();
+  Future<void> selectByMediaPlan() async => _byMediaPlanPanel.click();
 
-  Future<void> selectByIO() async => _byInsertionOrderRadioBtn.click();
+  Future<void> selectByIO() async => _byInsertionOrderPanel.click();
 }

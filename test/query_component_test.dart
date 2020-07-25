@@ -11,6 +11,7 @@ import 'package:dv360_excel_plugin/src/query_service.dart';
 import 'package:dv360_excel_plugin/src/util.dart';
 import 'package:mockito/mockito.dart';
 import 'package:pageloader/html.dart';
+import 'package:pageloader/testing.dart';
 import 'package:test/test.dart';
 
 import 'query_component_test.template.dart' as ng;
@@ -60,9 +61,9 @@ class QueryTestComponent {}
 void main() {
   group('In $QueryComponent,', () {
     const emptyEntry = '';
-    const advertiserId = 'advertiser-id';
-    const mediaPlanIdA = 'media-plan-id-a';
-    const ioIdA = 'io-id-a';
+    const advertiserId = '10000';
+    const mediaPlanIdA = '20000';
+    const ioIdA = '30000';
 
     final startDate = DateTime(2020, 7, 1);
     final endDate = DateTime(2020, 7, 31);
@@ -84,7 +85,7 @@ void main() {
     NgTestBed testBed;
     NgTestFixture<QueryTestComponent> fixture;
     QueryComponentPageObject queryComponentPO;
-    QueryComponentRadioButtonPageObject queryComponentRadioButtonPO;
+    QueryComponentAccordionPageObject queryComponentAccordionPO;
     MockQueryService mockQueryService;
     MockExcelDart mockExcelDart;
 
@@ -95,8 +96,8 @@ void main() {
       final context =
           HtmlPageLoaderElement.createFromElement((fixture.rootElement));
       queryComponentPO = QueryComponentPageObject.create(context);
-      queryComponentRadioButtonPO =
-          QueryComponentRadioButtonPageObject.create(context);
+      queryComponentAccordionPO =
+          QueryComponentAccordionPageObject.create(context);
       mockQueryService = MockQueryService();
       mockExcelDart = MockExcelDart();
     });
@@ -182,33 +183,37 @@ void main() {
           ..spent = spent;
 
     test('making no selection defaults to ByAdvertiser', () async {
+      await queryComponentPO.typeAdvertiserId(advertiserId);
       await queryComponentPO.clickPopulate();
-      verify(mockQueryService.execDV3Query(
-          QueryType.byAdvertiser, any, any, any, any));
+      verify(mockQueryService.execDV3Query(QueryType.byAdvertiser, '',
+          advertiserId, argThat(isNull), argThat(isNull)));
     });
 
     test('only the last selection on query type matters', () async {
-      await queryComponentRadioButtonPO.selectByAdvertiser();
-      await queryComponentRadioButtonPO.selectByMediaPlan();
-      await queryComponentRadioButtonPO.selectByIO();
+      await queryComponentAccordionPO.selectByAdvertiser();
+      await queryComponentAccordionPO.selectByMediaPlan();
+      await queryComponentAccordionPO.selectByIO();
+      await queryComponentAccordionPO.selectByAdvertiser();
+
+      await queryComponentPO.typeAdvertiserId(advertiserId);
       await queryComponentPO.clickPopulate();
-      verify(mockQueryService.execDV3Query(
-          QueryType.byInsertionOrder, any, any, any, any));
+
+      verify(mockQueryService.execDV3Query(QueryType.byAdvertiser, '',
+          advertiserId, argThat(isNull), argThat(isNull)));
     });
 
-    group('selecting ByAdvertiser with', () {
-      const mediaPlanIdB = 'media-plan-id-b';
-      const ioIdB = 'io-id-b';
-      const ioIdC = 'io-id-c';
-      const ioIdD = 'io-id-d';
+    group('selecting ByAdvertiser panel with', () {
+      const mediaPlanIdB = '20001';
+      const ioIdB = '30001';
+      const ioIdC = '30002';
+      const ioIdD = '30003';
       const spendingB = '200';
       const spendingC = '300';
       const spendingD = '400';
       List<InsertionOrder> expectedInput;
 
       setUp(() async {
-        await queryComponentRadioButtonPO.selectByAdvertiser();
-        await queryComponentPO.typeAdvertiserId(advertiserId);
+        await queryComponentAccordionPO.selectByAdvertiser();
 
         final multipleIOJsonString = '''
         {
@@ -249,9 +254,22 @@ void main() {
         ];
       });
 
-      test(
-          'highlight underpacing unchecked invokes populate(multiple-IO, false)',
+      tearDown(() => clearInteractions(mockQueryService));
+
+      test('no advertiser id disables the populate button', () async {
+        await queryComponentPO.clickPopulate();
+        verifyNever(mockQueryService.execDV3Query(any, any, any, any, any));
+      });
+
+      test('non-integer advertiser id disables the populate button', () async {
+        await queryComponentPO.typeAdvertiserId('wrong-format-id');
+        await queryComponentPO.clickPopulate();
+        verifyNever(mockQueryService.execDV3Query(any, any, any, any, any));
+      });
+
+      test('highlighting unchecked invokes populate(multiple-IO, false)',
           () async {
+        await queryComponentPO.typeAdvertiserId(advertiserId);
         await queryComponentPO.clickPopulate();
 
         // waits for all button click operations to finish.
@@ -259,8 +277,9 @@ void main() {
         verify(mockExcelDart.populate(expectedInput, false));
       });
 
-      test('highlight underpacing checked invokes populate(multiple-IO, true)',
+      test('highlighting checked invokes populate(multiple-IO, true)',
           () async {
+        await queryComponentPO.typeAdvertiserId(advertiserId);
         await queryComponentPO.selectUnderpacing();
         await queryComponentPO.clickPopulate();
 
@@ -270,17 +289,15 @@ void main() {
       });
     });
 
-    group('selecting ByMediaPlan with', () {
-      const ioIdB = 'io-id-b';
-      const ioIdC = 'io-id-c';
+    group('selecting ByMediaPlan panel with', () {
+      const ioIdB = '30001';
+      const ioIdC = '30002';
       const spendingB = '200';
       const spendingC = '300';
       List<InsertionOrder> expectedInput;
 
       setUp(() async {
-        await queryComponentRadioButtonPO.selectByMediaPlan();
-        await queryComponentPO.typeAdvertiserId(advertiserId);
-        await queryComponentPO.typeMediaPlanId(mediaPlanIdA);
+        await queryComponentAccordionPO.selectByMediaPlan();
 
         final multipleIOJsonString = '''
         {
@@ -317,9 +334,45 @@ void main() {
         ];
       });
 
+      tearDown(() => clearInteractions(mockQueryService));
+
+      test('no advertiser id and no media plan id disables the populate button',
+          () async {
+        await queryComponentPO.clickPopulate();
+        verifyNever(mockQueryService.execDV3Query(any, any, any, any, any));
+      });
+
+      test('no advertiser id disables the populate button', () async {
+        await queryComponentPO.typeMediaPlanId(mediaPlanIdA);
+        await queryComponentPO.clickPopulate();
+        verifyNever(mockQueryService.execDV3Query(any, any, any, any, any));
+      });
+
+      test('non-integer advertiser id disables the populate button', () async {
+        await queryComponentPO.typeAdvertiserId('wrong-format-id');
+        await queryComponentPO.typeMediaPlanId(mediaPlanIdA);
+        await queryComponentPO.clickPopulate();
+        verifyNever(mockQueryService.execDV3Query(any, any, any, any, any));
+      });
+
+      test('no media plan id disables the populate button', () async {
+        await queryComponentPO.typeAdvertiserId(advertiserId);
+        await queryComponentPO.clickPopulate();
+        verifyNever(mockQueryService.execDV3Query(any, any, any, any, any));
+      });
+
+      test('non-integer media plan id disables the populate button', () async {
+        await queryComponentPO.typeAdvertiserId(advertiserId);
+        await queryComponentPO.typeMediaPlanId('wrong-format-id');
+        await queryComponentPO.clickPopulate();
+        verifyNever(mockQueryService.execDV3Query(any, any, any, any, any));
+      });
+
       test(
           'highlight underpacing unchecked invokes populate(multiple-IO, false)',
           () async {
+        await queryComponentPO.typeAdvertiserId(advertiserId);
+        await queryComponentPO.typeMediaPlanId(mediaPlanIdA);
         await queryComponentPO.clickPopulate();
 
         // waits for all button click operations to finish.
@@ -329,6 +382,8 @@ void main() {
 
       test('highlight underpacing checked invokes populate(multiple-IO, true)',
           () async {
+        await queryComponentPO.typeAdvertiserId(advertiserId);
+        await queryComponentPO.typeMediaPlanId(mediaPlanIdA);
         await queryComponentPO.selectUnderpacing();
         await queryComponentPO.clickPopulate();
 
@@ -338,13 +393,11 @@ void main() {
       });
     });
 
-    group('selecting ByMediaPlan with', () {
+    group('selecting ByInsertionOrder with', () {
       List<InsertionOrder> expectedInput;
 
       setUp(() async {
-        await queryComponentRadioButtonPO.selectByIO();
-        await queryComponentPO.typeAdvertiserId(advertiserId);
-        await queryComponentPO.typeInsertionOrderId(ioIdA);
+        await queryComponentAccordionPO.selectByIO();
 
         final singleIOJsonString =
             '${generateInsertionOrderJsonString(advertiserId, mediaPlanIdA, ioIdA, startDate, endDate)}';
@@ -373,8 +426,44 @@ void main() {
         ];
       });
 
-      test('highlight underpacing unchecked invokes populate(single-IO, false)',
+      tearDown(() => clearInteractions(mockQueryService));
+
+      test('no advertiser id and no io id disables the populate button',
           () async {
+        await queryComponentPO.clickPopulate();
+        verifyNever(mockQueryService.execDV3Query(any, any, any, any, any));
+      });
+
+      test('no advertiser id disables the populate button', () async {
+        await queryComponentPO.typeInsertionOrderId(ioIdA);
+        await queryComponentPO.clickPopulate();
+        verifyNever(mockQueryService.execDV3Query(any, any, any, any, any));
+      });
+
+      test('non-integer advertiser id disables the populate button', () async {
+        await queryComponentPO.typeAdvertiserId('wrong-format-id');
+        await queryComponentPO.typeInsertionOrderId(ioIdA);
+        await queryComponentPO.clickPopulate();
+        verifyNever(mockQueryService.execDV3Query(any, any, any, any, any));
+      });
+
+      test('no io id disables the populate button', () async {
+        await queryComponentPO.typeAdvertiserId(advertiserId);
+        await queryComponentPO.clickPopulate();
+        verifyNever(mockQueryService.execDV3Query(any, any, any, any, any));
+      });
+
+      test('non-integer io id disables the populate button', () async {
+        await queryComponentPO.typeAdvertiserId(advertiserId);
+        await queryComponentPO.typeInsertionOrderId('wrong-format-id');
+        await queryComponentPO.clickPopulate();
+        verifyNever(mockQueryService.execDV3Query(any, any, any, any, any));
+      });
+
+      test('highlighting unchecked invokes populate(single-IO, false)',
+          () async {
+        await queryComponentPO.typeAdvertiserId(advertiserId);
+        await queryComponentPO.typeInsertionOrderId(ioIdA);
         await queryComponentPO.clickPopulate();
 
         // waits for all button click operations to finish.
@@ -382,8 +471,9 @@ void main() {
         verify(mockExcelDart.populate(expectedInput, false));
       });
 
-      test('highlight underpacing checked invokes populate(single-IO, true)',
-          () async {
+      test('highlighting checked invokes populate(single-IO, true)', () async {
+        await queryComponentPO.typeAdvertiserId(advertiserId);
+        await queryComponentPO.typeInsertionOrderId(ioIdA);
         await queryComponentPO.selectUnderpacing();
         await queryComponentPO.clickPopulate();
 

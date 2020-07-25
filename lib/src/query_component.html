@@ -9,9 +9,10 @@
                                 [isOpen]="queryType===choice"
                                 (click)="queryType=choice">
                 <div class="section-name">{{requestSectionTitle}}</div>
-                <form class="form-group">
-                    <div>
-                        <label class="parameter-name">{{advertiserParameterName}}</label><br>
+                <form>
+                    <!-- advertiser id input box-->
+                    <div class="form-group">
+                        <label class="parameter-name">{{advertiserParameterName}}</label>
                         <input class="form-control parameter-input"
                                placeholder="integer" debugId="advertiser-id-input"
                                #parameter="ngForm"
@@ -19,11 +20,12 @@
                                pattern="{{numberOnlyPattern}}"
                                [class.is-invalid]="!parameter.valid">
                         <div *ngIf="!parameter.valid" class="text-danger small">
-                            {{advertiserParameterName}} should only contain numbers
+                            {{advertiserParameterName}} should be an integer
                         </div>
                     </div>
-                    <div *ngIf="choice==queryTypeChoices[1]">
-                        <label class="parameter-name">{{mediaPlanParameterName}}</label><br>
+                    <!-- media plan id input box-->
+                    <div class="form-group" *ngIf="choice==queryTypeChoices[1]" >
+                        <label class="parameter-name">{{mediaPlanParameterName}}</label>
                         <input class="form-control parameter-input"
                                placeholder="integer" debugId="media-plan-id-input"
                                #parameter="ngForm"
@@ -31,11 +33,12 @@
                                pattern="{{numberOnlyPattern}}"
                                [class.is-invalid]="!parameter.valid">
                         <div *ngIf="!parameter.valid" class="text-danger small">
-                            {{mediaPlanParameterName}} should only contain numbers
+                            {{mediaPlanParameterName}} should be an integer
                         </div>
                     </div>
-                    <div *ngIf="choice==queryTypeChoices.last">
-                        <label class="parameter-name">{{insertionOrderParameterName}}</label><br>
+                    <!-- insertion order id input box-->
+                    <div class="form-group" *ngIf="choice==queryTypeChoices.last" >
+                        <label class="parameter-name">{{insertionOrderParameterName}}</label>
                         <input class="form-control parameter-input"
                                placeholder="integer" debugId="io-id-input"
                                #parameter="ngForm"
@@ -43,7 +46,7 @@
                                pattern="{{numberOnlyPattern}}"
                                [class.is-invalid]="!parameter.valid">
                         <div *ngIf="!parameter.valid" class="text-danger small">
-                            {{insertionOrderParameterName}} should only contain numbers
+                            {{insertionOrderParameterName}} should be an integer
                         </div>
                     </div>
                 </form>
@@ -59,23 +62,16 @@
             </label>
         </div>
 
-        <!-- error message-->
-        <div class="alert alert-danger" role="alert" id="parameter-alert" [hidden]="!showAlert">
-            {{parameterAlertText}}
-        </div>
-
         <!-- populate button-->
         <div class="populate-button">
-            <button type="button" class="btn btn-primary" id="populate-btn" debugId="populate-btn"
+            <button type="button" class="btn btn-success" debugId="populate-btn"
+                    [disabled]="disablePopulateButton()"
                     (click)="onClick()">
                 <span *ngIf="showSpinner"
+                      debugId="populate-btn-spinner"
                       class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                 {{populateButtonName}}
             </button>
         </div>
     </div>
 </div>
-
-
-
-

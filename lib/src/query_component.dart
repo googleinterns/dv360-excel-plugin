@@ -22,47 +22,69 @@ import 'util.dart';
   directives: [bsAccordionDirectives, BsInput, coreDirectives, formDirectives],
 )
 class QueryComponent implements OnInit {
-  // Names used in css.
+  // Values used in html.
+  static const queryTypeChoices = QueryType.values;
   static const requestSectionTitle = 'Request Parameter';
   static const advertiserParameterName = 'advertiserId';
   static const mediaPlanParameterName = 'campaignId';
-  static const numberOnlyPattern = '^[0-9]*\$';
   static const insertionOrderParameterName = 'insertionOrderId';
+  static const numberOnlyPattern = '^[0-9]+\$';
   static const underpacingCheckBoxName =
       'Highlight underpacing insertion orders';
   static const populateButtonName = 'populate';
-  static const parameterAlertText = 'Missing required parameter values.';
-  static bool showAlert = false;
-  static bool showSpinner = false;
+
+  // Stores accordion panel selection, default is byAdvertiser.
+  QueryType queryType = QueryType.byAdvertiser;
+
+  // Stores input box values.
+  String advertiserId;
+  String mediaPlanId;
+  String insertionOrderId;
+
+  // Stores checkbox value, default is false.
+  bool highlightUnderpacing = false;
+
+  // Controls when to show the spinner on the populate button.
+  bool showSpinner = false;
 
   final QueryService _queryService;
   final ExcelDart _excel;
-
-  // Default selection is byAdvertiser.
-  static QueryType queryType = QueryType.byAdvertiser;
-  static List<QueryType> queryTypeChoices = QueryType.values;
-
-  static String advertiserId;
-  static String mediaPlanId;
-  static String insertionOrderId;
-
-  static bool highlightUnderpacing = false;
 
   QueryComponent(this._queryService, this._excel);
 
   @override
   void ngOnInit() async => await _excel.loadOffice();
 
-  void onClick() async {
-    // Determines if all required parameters are filled in.
-    if (_missingRequiredParameters()) {
-      showAlert = true;
-      showSpinner = false;
-      return;
-    }
+  /// Disables the populate button if missing required input ids or
+  /// if the ids are not integers.
+  ///
+  /// Binds to the [disabled] attribute on the populate button.
+  bool disablePopulateButton() {
+    var invalid = false;
+    final numberOnly = RegExp(numberOnlyPattern);
+    switch (queryType) {
+      case QueryType.byMediaPlan:
+        invalid = mediaPlanId == null || !numberOnly.hasMatch(mediaPlanId);
+        continue checkAdvertiser;
 
-    // All required parameters are filled in, show spinner and hide alert.
-    showAlert = false;
+      case QueryType.byInsertionOrder:
+        invalid =
+            insertionOrderId == null || !numberOnly.hasMatch(insertionOrderId);
+        continue checkAdvertiser;
+
+      checkAdvertiser:
+      case QueryType.byAdvertiser:
+        return advertiserId == null ||
+            !numberOnly.hasMatch(advertiserId) ||
+            invalid;
+
+      default:
+        return false;
+    }
+  }
+
+  void onClick() async {
+    // All required parameters are filled in, show spinner.
     showSpinner = true;
 
     // Uses DV360 public APIs to fetch entity data.
@@ -93,38 +115,19 @@ class QueryComponent implements OnInit {
     // Populate the spreadsheet.
     await _excel.populate(insertionOrders, highlightUnderpacing);
 
-    // Removes spinner when query is complete
+    // Removes spinner when query is complete.
     showSpinner = false;
   }
 
   /// Convert [queryType] enum to a user-friendly string.
   ///
-  /// Used in [query_component.html] as the radio button text.
+  /// Used in [query_component.html] as the accordion panel header text.
   String getQueryTypeName(QueryType queryType) => queryType.name;
 
   /// Convert [queryType] enum to a short string that contains no space.
   ///
-  /// Used in [query_component.html] as part of the radio button id.
+  /// Used in [query_component.html] as part of the accordion panel id.
   String getQueryTypeShortName(QueryType queryType) => queryType.shortName;
-
-  bool _missingRequiredParameters() {
-    switch (queryType) {
-      case QueryType.byAdvertiser:
-        return advertiserId == null || advertiserId.isEmpty;
-
-      case QueryType.byMediaPlan:
-        return advertiserId == null ||
-            advertiserId.isEmpty ||
-            mediaPlanId == null ||
-            mediaPlanId.isEmpty;
-
-      case QueryType.byInsertionOrder:
-        return advertiserId == null ||
-            advertiserId.isEmpty ||
-            insertionOrderId == null ||
-            insertionOrderId.isEmpty;
-    }
-  }
 
   /// Fetches insertion order entity related data using DV360 public APIs,
   /// then return a list of parsed [InsertionOrder] instance.
