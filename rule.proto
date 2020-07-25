@@ -1,0 +1,221 @@
+syntax = "proto2";
+package dv360_excel_plugin;
+
+/* A message that represents a scheduled rule for manipulating DV360 entities.
+ */
+message Rule {
+  /* required
+   * The name of the rule, set by the user.
+   */
+  optional string name = 1;
+
+  /* required
+   * The id that uniquely identified each rule.
+   */
+  optional int32 id = 2;
+
+  // required
+  optional Action action = 3;
+
+  // required
+  optional Condition condition = 4;
+
+  // required
+  optional Schedule schedule = 5;
+}
+
+/*
+ * A message representing the action applied to a DV360 entity.
+ */
+message Action {
+  enum Type {
+    UNSPECIFIED_TYPE = 0;
+    CHANGE_LINE_ITEM_STATUS = 1;
+    CHANGE_BIDDING_STRATEGY = 2;
+    CHANGE_FIXED_BID_PRICE = 3;
+    DUPLICATE_LINE_ITEM = 4;
+  }
+
+  /* required
+   * The type of action.
+   */
+  optional Type type = 1;
+
+  /*
+   * The action parameters to change line items' status.
+   */
+  message ChangeLineItemStatusParams {
+    // Line items to which the action applies.
+    repeated string line_items = 1;
+
+    enum Status {
+      UNSPECIFIED_STATUS = 0;
+      ACTIVE = 1;
+      PAUSED = 2;
+    }
+
+    /* required
+     * The status of which the line item will be changed to.
+     * Can be set to either active or paused.
+     */
+    optional Status status = 2;
+  }
+
+  /*
+   * The action parameters to change line items' bidding strategy.
+   */
+  message ChangeBiddingStrategyParams {
+    // Line items to which the action applies.
+    repeated string line_items = 1;
+
+    enum Strategy {
+      UNSPECIFIED_STRATEGY = 0;
+      FIXED_BID = 1;
+      MAXIMIZE_SPEND_BID = 2;
+      PERFORMANCE_GOAL_BID = 3;
+    }
+
+    /* required
+     * The bidding strategy of which the line item will be changed to.
+     * Can be FixedBid, MaximizeSpendBid, or PerformanceGoalBid.
+     */
+    optional Strategy strategy = 2;
+  }
+
+  /*
+   * The action parameters to change line items' FixedBid price.
+   */
+  message ChangeFixedBidPriceParams {
+    // Line items to which the action applies.
+    repeated string line_items = 1;
+
+    enum Change {
+      UNSPECIFIED_CHANGE = 0;
+      INCREASE = 1;
+      DECREASE = 2;
+    }
+
+    /* required
+     * Whether the FixedBid price is increased or decreased.
+     */
+    optional Change change = 2;
+
+    /* required
+     * How much the FixedBid price is changed.
+     * Can either be absolute value or percentage.
+     */
+    oneof quantity {
+      int32 value = 3;
+      int32 percentage = 4;
+    }
+  }
+
+  /*
+   * The action parameters to duplicate line items.
+   */
+  message DuplicateLineItemParams {
+    // Line items to which the action applies.
+    repeated string line_items = 1;
+
+    /* required
+     * The insertion order at which the line items will be duplicated.
+     */
+    optional string insertion_order_destination = 2;
+  }
+
+  /* required
+   * The parameters used for each type of action.
+   */
+  oneof params {
+    ChangeLineItemStatusParams change_line_item_status_params = 2;
+    ChangeBiddingStrategyParams change_bidding_strategy_params = 3;
+    ChangeFixedBidPriceParams change_fixed_bid_price_params = 4;
+    DuplicateLineItemParams duplicate_line_items_params = 5;
+  }
+}
+
+/* required
+ * A message representing the condition that will be checked before the action is executed.
+ */
+message Condition {
+  enum Type {
+    UNSPECIFIED_TYPE = 0;
+    CPM = 1;
+    CPA = 2;
+    CPC = 3;
+    SPENDING = 4;
+  }
+
+  /* required
+   * The type of condition.
+   * Can be dependent on the cost-per-mille (CPM), cost-per-action (CPA), or cost-per-click (CPC),
+   * or spending of the line item.
+   */
+  optional Type type = 1;
+
+  enum Relation {
+    UNSPECIFIED_RELATION = 0;
+    LESSER = 1;
+    GREATER = 2;
+  }
+
+  /* required
+   * The relation with which the CPM, CPC, CPA, or spending will be compared.
+   * Can be either lesser than or greater than.
+   */
+  optional Relation relation = 2;
+
+  /* required
+   * The value which the CPA, CPC, CPA or spending will be compared against.
+   */
+  optional int32 value = 3;
+}
+
+/* required
+ * A message representing the schedule the rule will be run.
+ */
+message Schedule {
+  enum Type {
+    UNSPECIFIED_SCHEDULE = 0;
+    REPEATING = 1;
+    ONE_TIME = 2;
+  }
+
+  /* required
+   * The rule can be scheduled for either repeating or one-time.
+   */
+  optional Type type = 1;
+
+  /*
+   * The parameters for a repeating rule.
+   */
+  message RepeatingParams {
+    /* required
+     * The cron expression representing the repeating schedule.
+     */
+    optional string cron_expression = 1;
+  }
+
+  /*
+   * The parameters for a one-time rule.
+   */
+  message OneTimeParams {
+    /* required
+     * The cron expression representing the date and time, except the year.
+     * This is a workaround to bypass the fact that Cloud Scheduler doesn't
+     * support one-time jobs.
+     */
+    optional string cron_expression = 1;
+
+    // required
+    optional int32 year = 2;
+  }
+
+  /* required
+   * The parameters used for each type of scheduling.
+   */
+  oneof params {
+    RepeatingParams repeating_params = 2;
+    OneTimeParams one_time_params = 3;
+  }
+}
