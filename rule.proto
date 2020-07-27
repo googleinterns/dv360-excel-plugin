@@ -17,7 +17,7 @@ message Rule {
   // required
   optional Action action = 3;
 
-  // required
+  // optional
   optional Condition condition = 4;
 
   // required
