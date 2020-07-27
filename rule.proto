@@ -40,7 +40,7 @@ message Action {
    */
   message ChangeLineItemStatusParams {
     // Line items to which the action applies.
-    repeated string line_items = 1;
+    repeated int64 line_items = 1;
 
     enum Status {
       UNSPECIFIED_STATUS = 0;
@@ -69,7 +69,6 @@ message Schedule {
   enum Type {
     UNSPECIFIED_SCHEDULE = 0;
     REPEATING = 1;
-    ONE_TIME = 2;
   }
 
   /* required
