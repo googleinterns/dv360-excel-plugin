@@ -11,33 +11,11 @@ abstract class QueryComponentPageObject {
   @ByDebugId('populate-btn')
   PageLoaderElement get populateButton;
 
-  @ByTagName('div')
-  @WithAttribute('aria-hidden', 'false')
-  PageLoaderElement get _visibleAccordionPanel;
-
-  PageLoaderElement get _advertiserIdInputBox =>
-      _visibleAccordionPanel.byTag('input');
-
-  @ByDebugId('media-plan-id-input')
-  PageLoaderElement get _mediaPlanIdInputBox;
-
-  @ByDebugId('io-id-input')
-  PageLoaderElement get _insertionOrderIdInputBox;
-
-  @ByDebugId('underpacing-checkbox')
-  PageLoaderElement get _underpacingCheckBox;
-
   @ByDebugId('populate-btn-spinner')
   PageLoaderElement get populateButtonSpinner;
 
-  Future<void> typeAdvertiserId(String id) async =>
-      _advertiserIdInputBox.type(id);
-
-  Future<void> typeMediaPlanId(String id) async =>
-      _mediaPlanIdInputBox.type(id);
-
-  Future<void> typeInsertionOrderId(String id) async =>
-      _insertionOrderIdInputBox.type(id);
+  @ByDebugId('underpacing-checkbox')
+  PageLoaderElement get _underpacingCheckBox;
 
   Future<void> selectUnderpacing() async => _underpacingCheckBox.click();
 
@@ -60,9 +38,31 @@ abstract class QueryComponentAccordionPageObject {
   @ById('by-io-panel')
   PageLoaderElement get _byInsertionOrderPanel;
 
+  @ByTagName('div')
+  @WithAttribute('aria-hidden', 'false')
+  PageLoaderElement get _visibleAccordionPanel;
+
+  PageLoaderElement get _advertiserIdInputBox =>
+      _visibleAccordionPanel.byTag('input');
+
+  @ByDebugId('media-plan-id-input')
+  PageLoaderElement get _mediaPlanIdInputBox;
+
+  @ByDebugId('io-id-input')
+  PageLoaderElement get _insertionOrderIdInputBox;
+
   Future<void> selectByAdvertiser() async => _byAdvertiserPanel.click();
 
   Future<void> selectByMediaPlan() async => _byMediaPlanPanel.click();
 
   Future<void> selectByIO() async => _byInsertionOrderPanel.click();
+
+  Future<void> typeAdvertiserId(String id) async =>
+      _advertiserIdInputBox.type(id);
+
+  Future<void> typeMediaPlanId(String id) async =>
+      _mediaPlanIdInputBox.type(id);
+
+  Future<void> typeInsertionOrderId(String id) async =>
+      _insertionOrderIdInputBox.type(id);
 }
