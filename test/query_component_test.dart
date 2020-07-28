@@ -98,7 +98,7 @@ void main() {
     const report2 = '$ioId1,2020/07/10,$spending1,1000\\n'
         '$ioId2,2020/07/10,$spending2,1000\\n'
         '$ioId3,2020/07/10,$spending3,1000\\n';
-    final report3 = '$ioId1,2020/07/10,$spending1,1000\\n';
+    const report3 = '$ioId1,2020/07/10,$spending1,1000\\n';
 
     NgTestBed testBed;
     NgTestFixture<QueryTestComponent> fixture;
