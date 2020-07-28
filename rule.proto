@@ -38,8 +38,9 @@ message Action {
 
 // The action parameters to change line items' status.
 message ChangeLineItemStatusParams {
-  // Line items to which the action applies.
-  repeated int64 line_items = 1;
+  // required
+  // The ID of line items to which the action applies.
+  repeated int64 line_item_ids = 1;
 
   enum Status {
     UNSPECIFIED_STATUS = 0;
