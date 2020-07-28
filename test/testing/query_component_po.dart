@@ -9,7 +9,7 @@ abstract class QueryComponentPageObject {
       $QueryComponentPageObject.create;
 
   @ByDebugId('populate-btn')
-  PageLoaderElement get populateButton;
+  PageLoaderElement get _populateButton;
 
   @ByDebugId('populate-btn-spinner')
   PageLoaderElement get populateButtonSpinner;
@@ -19,7 +19,7 @@ abstract class QueryComponentPageObject {
 
   Future<void> selectUnderpacing() async => _underpacingCheckBox.click();
 
-  Future<void> clickPopulate() async => populateButton.click();
+  Future<void> clickPopulate() async => _populateButton.click();
 }
 
 @PageObject()
