@@ -24,3 +24,11 @@ jobs:
       run: PATH="$PATH:/usr/lib/dart/bin" pub get
     - name: Run tests
       run: PATH="$PATH:/usr/lib/dart/bin" pub run build_runner test -- -p chrome
+    - name: Install dependencies for rules builder
+      run: PATH="$PATH:/usr/lib/dart/bin" pub get 
+      working-directory: ./server
+      if: always()
+    - name: Run tests for rules builder
+      run: PATH="$PATH:/usr/lib/dart/bin" pub run test 
+      working-directory: ./server
+      if: always()
