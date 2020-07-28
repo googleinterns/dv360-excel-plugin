@@ -29,28 +29,28 @@ message Action {
   // The type of action.
   optional Type type = 1;
 
-   // The action parameters to change line items' status.
-  message ChangeLineItemStatusParams {
-    // Line items to which the action applies.
-    repeated int64 line_items = 1;
-
-    enum Status {
-      UNSPECIFIED_STATUS = 0;
-      ACTIVE = 1;
-      PAUSED = 2;
-    }
-
-    // required
-    // The status of which the line item will be changed to.
-    // Can be set to either active or paused.
-    optional Status status = 2;
-  }
-
   // required
   // The parameters used for each type of action.
   oneof params {
     ChangeLineItemStatusParams change_line_item_status_params = 2;
   }
+}
+
+// The action parameters to change line items' status.
+message ChangeLineItemStatusParams {
+  // Line items to which the action applies.
+  repeated int64 line_items = 1;
+
+  enum Status {
+    UNSPECIFIED_STATUS = 0;
+    ACTIVE = 1;
+    PAUSED = 2;
+  }
+
+  // required
+  // The status of which the line item will be changed to.
+  // Can be set to either active or paused.
+  optional Status status = 2;
 }
 
 // required
