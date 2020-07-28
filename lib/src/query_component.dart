@@ -1,5 +1,6 @@
 import 'package:angular/angular.dart';
 import 'package:angular_forms/angular_forms.dart';
+import 'package:ng_bootstrap/ng_bootstrap.dart';
 import 'package:quiver/collection.dart';
 
 import 'excel.dart';
@@ -18,31 +19,73 @@ import 'util.dart';
     ClassProvider(ExcelDart),
     FORM_PROVIDERS,
   ],
-  directives: [coreDirectives, formDirectives],
+  directives: [bsAccordionDirectives, BsInput, coreDirectives, formDirectives],
 )
 class QueryComponent implements OnInit {
-  final populateButtonName = 'populate';
-  final underpacingCheckBoxName = 'Highlight underpacing insertion orders';
-  final QueryService _queryService;
-  final ExcelDart _excel;
+  // Values used in html.
+  static const queryTypeChoices = QueryType.values;
+  static const requestSectionTitle = 'Request Parameter';
+  static const advertiserParameterName = 'advertiserId';
+  static const mediaPlanParameterName = 'campaignId';
+  static const insertionOrderParameterName = 'insertionOrderId';
+  static const numberOnlyPattern = '^[0-9]+\$';
+  static const underpacingCheckBoxName =
+      'Highlight underpacing insertion orders';
+  static const populateButtonName = 'populate';
 
-  // Default selection is byAdvertiser.
+  // Stores accordion panel selection, default is byAdvertiser.
   QueryType queryType = QueryType.byAdvertiser;
-  List<QueryType> queryTypeChoices = QueryType.values;
 
+  // Stores input box values.
   String advertiserId;
   String mediaPlanId;
   String insertionOrderId;
+
+  // Stores checkbox value, default is false.
   bool highlightUnderpacing = false;
+
+  // Controls when to show the spinner on the populate button.
+  bool showSpinner = false;
+
+  final QueryService _queryService;
+  final ExcelDart _excel;
 
   QueryComponent(this._queryService, this._excel);
 
   @override
   void ngOnInit() async => await _excel.loadOffice();
 
+  /// Disables the populate button if missing required input ids or
+  /// if the ids are not integers.
+  ///
+  /// Binds to the [disabled] attribute on the populate button.
+  bool disablePopulateButton() {
+    var invalid = false;
+    final numberOnly = RegExp(numberOnlyPattern);
+    switch (queryType) {
+      case QueryType.byMediaPlan:
+        invalid = mediaPlanId == null || !numberOnly.hasMatch(mediaPlanId);
+        continue checkAdvertiser;
+
+      case QueryType.byInsertionOrder:
+        invalid =
+            insertionOrderId == null || !numberOnly.hasMatch(insertionOrderId);
+        continue checkAdvertiser;
+
+      checkAdvertiser:
+      case QueryType.byAdvertiser:
+        return advertiserId == null ||
+            !numberOnly.hasMatch(advertiserId) ||
+            invalid;
+
+      default:
+        return false;
+    }
+  }
+
   void onClick() async {
-    // TODO: Error handling when the necessary ids are not typed in.
-    // Issue: https://github.com/googleinterns/dv360-excel-plugin/issues/52
+    // All required parameters are filled in, show spinner.
+    showSpinner = true;
 
     // Uses DV360 public APIs to fetch entity data.
     List<InsertionOrder> insertionOrders =
@@ -71,16 +114,19 @@ class QueryComponent implements OnInit {
 
     // Populate the spreadsheet.
     await _excel.populate(insertionOrders, highlightUnderpacing);
+
+    // Removes spinner when query is complete.
+    showSpinner = false;
   }
 
   /// Convert [queryType] enum to a user-friendly string.
   ///
-  /// Used in [query_component.html] as the radio button text.
+  /// Used in [query_component.html] as the accordion panel header text.
   String getQueryTypeName(QueryType queryType) => queryType.name;
 
   /// Convert [queryType] enum to a short string that contains no space.
   ///
-  /// Used in [query_component.html] as part of the radio button id.
+  /// Used in [query_component.html] as part of the accordion panel id.
   String getQueryTypeShortName(QueryType queryType) => queryType.shortName;
 
   /// Fetches insertion order entity related data using DV360 public APIs,
