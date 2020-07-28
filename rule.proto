@@ -1,17 +1,14 @@
 syntax = "proto2";
 package dv360_excel_plugin;
 
-/* A message that represents a scheduled rule for manipulating DV360 entities.
- */
+// A message that represents a scheduled rule for manipulating DV360 entities.
 message Rule {
-  /* required
-   * The name of the rule, set by the user.
-   */
+  // required
+  // The name of the rule, set by the user.
   optional string name = 1;
 
-  /* required
-   * The id that uniquely identified each rule.
-   */
+  // required
+  // The id that uniquely identified each rule.
   optional int32 id = 2;
 
   // required
@@ -21,23 +18,18 @@ message Rule {
   optional Schedule schedule = 4;
 }
 
-/*
- * A message representing the action applied to a DV360 entity.
- */
+// A message representing the action applied to a DV360 entity.
 message Action {
   enum Type {
     UNSPECIFIED_TYPE = 0;
     CHANGE_LINE_ITEM_STATUS = 1;
   }
 
-  /* required
-   * The type of action.
-   */
+  // required
+  // The type of action.
   optional Type type = 1;
 
-  /*
-   * The action parameters to change line items' status.
-   */
+   // The action parameters to change line items' status.
   message ChangeLineItemStatusParams {
     // Line items to which the action applies.
     repeated int64 line_items = 1;
@@ -48,47 +40,40 @@ message Action {
       PAUSED = 2;
     }
 
-    /* required
-     * The status of which the line item will be changed to.
-     * Can be set to either active or paused.
-     */
+    // required
+    // The status of which the line item will be changed to.
+    // Can be set to either active or paused.
     optional Status status = 2;
   }
 
-  /* required
-   * The parameters used for each type of action.
-   */
+  // required
+  // The parameters used for each type of action.
   oneof params {
     ChangeLineItemStatusParams change_line_item_status_params = 2;
   }
 }
-/* required
- * A message representing the schedule the rule will be run.
- */
+
+// required
+// A message representing the schedule the rule will be run.
 message Schedule {
   enum Type {
     UNSPECIFIED_SCHEDULE = 0;
     REPEATING = 1;
   }
 
-  /* required
-   * The rule can be scheduled for either repeating or one-time.
-   */
+  // required
+  // The rule can be scheduled for either repeating or one-time.
   optional Type type = 1;
 
-  /*
-   * The parameters for a repeating rule.
-   */
+  // The parameters for a repeating rule.
   message RepeatingParams {
-    /* required
-     * The cron expression representing the repeating schedule.
-     */
+    // required
+    // The cron expression representing the repeating schedule.
     optional string cron_expression = 1;
   }
 
-  /* required
-   * The parameters used for each type of scheduling.
-   */
+  // required
+  // The parameters used for each type of scheduling.
   oneof params {
     RepeatingParams repeating_params = 2;
   }
