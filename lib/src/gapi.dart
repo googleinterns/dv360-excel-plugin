@@ -117,16 +117,27 @@ class GoogleAuth {
   external GoogleUser get currentUser;
 
   /// Signs in the user with the options specified to gapi.auth2.init().
-  external Future<dynamic> signIn([SignInArgs args]);
+  external JsPromise signIn([SignInArgs args]);
 
   /// Signs out the current account from the application.
-  external Future<dynamic> signOut();
+  external JsPromise signOut();
 
   /// Revokes all of the scopes that the user granted.
   external void disconnect();
 
   /// Calls the onInit function when the GoogleAuth object is fully initialized.
-  external Future<dynamic> then(Function onInit, [Function onError]);
+  external void then(Function onInit, [Function onError]);
+}
+
+/// Wrapper class for javascript Promise class.
+///
+/// ``` js
+///   Promise.then()
+/// ```
+@JS()
+class JsPromise {
+  external JsPromise then(dynamic Function(dynamic value) fulfilled,
+      [dynamic Function(dynamic reason) rejected]);
 }
 
 /// Input argument to [GoogleAuth.signIn()].
