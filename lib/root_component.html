@@ -1,8 +1,70 @@
-<nav class="title-row shadow-sm navbar navbar-light bg-white">
-    <a class="navbar-brand" href="#" id="title" debugId="title">
-        <img src="assets/logo_display_video.svg" width="30" height="30" class="d-inline-block align-top" alt="">
-        {{title}}
-    </a>
-</nav>
-<query></query>
-<credential></credential>
+<!-- landing page-->
+<div *ngIf="isUserValidated!==undefined && !isUserValidated" class="landing-page">
+    <div class="jumbotron d-flex align-items-center bg-white">
+        <div class="container-fluid text-center">
+            <!-- welcome message-->
+            <div class="mb-4">
+                <div class="row">
+                    <div class="col">
+                        <h1>{{welcomeTitle}}</h1>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <h6 *ngIf="isExcelEnvironment!== undefined && isExcelEnvironment"
+                            class="secondary-msg">{{welcomeMessage}}</h6>
+                        <h6 *ngIf="isExcelEnvironment!== undefined && !isExcelEnvironment"
+                            class="secondary-msg">{{sideloadMessage}}</h6>
+                    </div>
+                </div>
+            </div>
+            <!-- display sign on button only if the application is sideloaded in Excel taskpane -->
+            <div *ngIf="isExcelEnvironment!== undefined && isExcelEnvironment" class="sign-in-button">
+                <button class="btn btn-primary" debugId="sign-on-btn" (click)="onClick()">
+                    {{signOnButtonName}}
+                </button>
+            </div>
+            <!-- dv360 logo with text-->
+            <div class="fixed-bottom pb-5">
+                <img src="assets/logo_display_video_with_text.svg" width="90" height="30" alt="">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- main page-->
+<div *ngIf="isExcelEnvironment!== undefined && isExcelEnvironment && isUserValidated!==undefined && isUserValidated"
+     class="main-page">
+    <!-- header-->
+    <nav class="title-row shadow-sm navbar navbar-light bg-white">
+        <a class="navbar-brand nav-title-text" debugId="title">
+            <img src="assets/logo_display_video.svg" width="30" height="30" class="d-inline-block align-top" alt="">
+            {{title}}
+        </a>
+    </nav>
+
+    <!-- nav bar-->
+    <bs-tabsx>
+        <!-- query builder-->
+        <bs-tabx header="{{queryBuilderTabName}}">
+            <div class="jumbotron d-flex align-items-center">
+                <div class="container-fluid">
+                    <!-- query component-->
+                    <query></query>
+                    <!-- sign off button-->
+                    <div class="d-flex justify-content-end">
+                        <small><a debugId="sign-off-btn" (click)="onClick()" href="#">{{signOutButtonName}}</a></small>
+                    </div>
+                </div>
+            </div>
+        </bs-tabx>
+
+        <!-- rules builder-->
+        <bs-tabx header="{{rulesBuilderTabName}}">
+            <p>Coming soon</p>
+        </bs-tabx>
+    </bs-tabsx>
+</div>
+
+
+

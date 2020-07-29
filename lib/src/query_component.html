@@ -1,77 +1,73 @@
-<div class="jumbotron d-flex align-items-center">
-    <div class="container-fluid">
-        <!-- accordion component for selecting query type and typing input parameter values-->
-        <bs-accordion [closeOthers]="true">
-            <bs-accordion-panel class='query-type-name'
-                                id="{{getQueryTypeShortName(choice)}}-panel"
-                                *ngFor="let choice of queryTypeChoices"
-                                heading="{{getQueryTypeName(choice)}}"
-                                [isOpen]="queryType===choice"
-                                (click)="queryType=choice">
-                <div class="section-name">{{requestSectionTitle}}</div>
-                <form>
-                    <!-- advertiser id input box-->
-                    <div class="form-group">
-                        <label class="parameter-name">{{advertiserParameterName}}</label>
-                        <input class="form-control parameter-input"
-                               placeholder="integer" debugId="advertiser-id-input"
-                               #parameter="ngForm"
-                               [(ngModel)]="advertiserId"
-                               pattern="{{numberOnlyPattern}}"
-                               [class.is-invalid]="!parameter.valid">
-                        <div *ngIf="!parameter.valid" class="text-danger small">
-                            {{advertiserParameterName}} should be an integer
-                        </div>
-                    </div>
-                    <!-- media plan id input box-->
-                    <div class="form-group" *ngIf="choice==queryTypeChoices[1]" >
-                        <label class="parameter-name">{{mediaPlanParameterName}}</label>
-                        <input class="form-control parameter-input"
-                               placeholder="integer" debugId="media-plan-id-input"
-                               #parameter="ngForm"
-                               [(ngModel)]="mediaPlanId"
-                               pattern="{{numberOnlyPattern}}"
-                               [class.is-invalid]="!parameter.valid">
-                        <div *ngIf="!parameter.valid" class="text-danger small">
-                            {{mediaPlanParameterName}} should be an integer
-                        </div>
-                    </div>
-                    <!-- insertion order id input box-->
-                    <div class="form-group" *ngIf="choice==queryTypeChoices.last" >
-                        <label class="parameter-name">{{insertionOrderParameterName}}</label>
-                        <input class="form-control parameter-input"
-                               placeholder="integer" debugId="io-id-input"
-                               #parameter="ngForm"
-                               [(ngModel)]="insertionOrderId"
-                               pattern="{{numberOnlyPattern}}"
-                               [class.is-invalid]="!parameter.valid">
-                        <div *ngIf="!parameter.valid" class="text-danger small">
-                            {{insertionOrderParameterName}} should be an integer
-                        </div>
-                    </div>
-                </form>
-            </bs-accordion-panel>
-        </bs-accordion>
+<!-- accordion component for selecting query type and typing input parameter values-->
+<bs-accordion [closeOthers]="true">
+    <bs-accordion-panel class='query-type-name'
+                        id="{{getQueryTypeShortName(choice)}}-panel"
+                        *ngFor="let choice of queryTypeChoices"
+                        heading="{{getQueryTypeName(choice)}}"
+                        [isOpen]="queryType===choice"
+                        (click)="queryType=choice">
+        <div class="section-name">{{requestSectionTitle}}</div>
+        <form>
+            <!-- advertiser id input box-->
+            <div class="form-group">
+                <label class="parameter-name">{{advertiserParameterName}}</label>
+                <input class="form-control parameter-input"
+                       placeholder="integer" debugId="advertiser-id-input"
+                       #parameter="ngForm"
+                       [(ngModel)]="advertiserId"
+                       pattern="{{numberOnlyPattern}}"
+                       [class.is-invalid]="!parameter.valid">
+                <div *ngIf="!parameter.valid" class="text-danger small">
+                    {{advertiserParameterName}} should be an integer
+                </div>
+            </div>
+            <!-- media plan id input box-->
+            <div class="form-group" *ngIf="choice==queryTypeChoices[1]">
+                <label class="parameter-name">{{mediaPlanParameterName}}</label>
+                <input class="form-control parameter-input"
+                       placeholder="integer" debugId="media-plan-id-input"
+                       #parameter="ngForm"
+                       [(ngModel)]="mediaPlanId"
+                       pattern="{{numberOnlyPattern}}"
+                       [class.is-invalid]="!parameter.valid">
+                <div *ngIf="!parameter.valid" class="text-danger small">
+                    {{mediaPlanParameterName}} should be an integer
+                </div>
+            </div>
+            <!-- insertion order id input box-->
+            <div class="form-group" *ngIf="choice==queryTypeChoices.last">
+                <label class="parameter-name">{{insertionOrderParameterName}}</label>
+                <input class="form-control parameter-input"
+                       placeholder="integer" debugId="io-id-input"
+                       #parameter="ngForm"
+                       [(ngModel)]="insertionOrderId"
+                       pattern="{{numberOnlyPattern}}"
+                       [class.is-invalid]="!parameter.valid">
+                <div *ngIf="!parameter.valid" class="text-danger small">
+                    {{insertionOrderParameterName}} should be an integer
+                </div>
+            </div>
+        </form>
+    </bs-accordion-panel>
+</bs-accordion>
 
-        <!-- highlight underpacing checkbox-->
-        <div class="underpacing-checkbox">
-            <label class="underpacing-checkbox-name">
-                <input type="checkbox" debugId="underpacing-checkbox"
-                       [(ngModel)]="highlightUnderpacing">
-                <small>{{underpacingCheckBoxName}}</small>
-            </label>
-        </div>
+<!-- highlight underpacing checkbox-->
+<div class="underpacing-checkbox">
+    <label class="underpacing-checkbox-name">
+        <input type="checkbox" debugId="underpacing-checkbox"
+               [(ngModel)]="highlightUnderpacing">
+        <small>{{underpacingCheckBoxName}}</small>
+    </label>
+</div>
 
-        <!-- populate button-->
-        <div class="populate-button">
-            <button type="button" class="btn btn-success" debugId="populate-btn"
-                    [disabled]="disablePopulateButton()"
-                    (click)="onClick()">
+<!-- populate button-->
+<div class="populate-button">
+    <button type="button" class="btn btn-success" debugId="populate-btn"
+            [disabled]="disablePopulateButton()"
+            (click)="onClick()">
                 <span *ngIf="showSpinner"
                       debugId="populate-btn-spinner"
                       class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                {{populateButtonName}}
-            </button>
-        </div>
-    </div>
+        {{populateButtonName}}
+    </button>
 </div>

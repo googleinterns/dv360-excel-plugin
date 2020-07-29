@@ -1,4 +1,5 @@
 $title-section-background-color: #202124;
+$nav-section-background-color: #34A853;
 $body-background-color: #E9ECEF;
 
 $title-font: "Google Sans";
@@ -6,17 +7,57 @@ $body-font: sans-serif;
 $parameter-font: "Roboto Mono";
 
 $title-font-color: rgba(0,0,0,.65);
+$nav-inactive-header-font-color: #FFFFFFB3;
 $regular-font-color: #212121;
-$parameter-font-color: #757575;
+$secondary-font-color: #757575;
 
 body {
   background-color: $body-background-color;
   font-family: $body-font;
 }
 
-#title {
+.landing-page .jumbotron {
+  height: 100vh;
+  margin-bottom: 0;
+}
+
+.secondary-msg {
+  color: $secondary-font-color;
+  font-weight: 100;
+}
+
+.nav-title-text {
   font-family: $title-font;
   color: $title-font-color;
+}
+
+bs-tabsx .nav-tabs{
+  font-size: 12px;
+  background-color: $nav-section-background-color;
+}
+
+bs-tabsx .nav-tabs .nav-item{
+  margin: 0rem 0.5rem 0rem 0.5rem;
+}
+
+bs-tabsx .nav-tabs .nav-link{
+  color: $nav-inactive-header-font-color;
+  border: none;
+}
+
+bs-tabsx .nav-tabs .nav-link:hover{
+  border-bottom: 2px solid $nav-inactive-header-font-color;
+}
+
+bs-tabsx .nav-tabs .nav-link.active{
+  color: white;
+  background-color: $nav-section-background-color;
+  border: none;
+  border-bottom: 2px solid white;
+}
+
+bs-tabsx .tab-content {
+  border: none;
 }
 
 .section-name {
@@ -28,11 +69,11 @@ body {
 .card-header a:link, a:visited {
   text-decoration:none;
   color: $regular-font-color;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .parameter-name {
-  color: $parameter-font-color;
+  color: $secondary-font-color;
   font: 14px $parameter-font;
 }
 
@@ -44,7 +85,6 @@ body {
 .underpacing-checkbox {
   margin-top: 10px;
   margin-bottom: 10px;
-  font-size: 16px;
 }
 
 .btn.btn-success {

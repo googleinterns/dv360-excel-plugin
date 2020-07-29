@@ -21,7 +21,7 @@ import 'util.dart';
   ],
   directives: [bsAccordionDirectives, BsInput, coreDirectives, formDirectives],
 )
-class QueryComponent implements OnInit {
+class QueryComponent {
   // Values used in html.
   static const queryTypeChoices = QueryType.values;
   static const requestSectionTitle = 'Request Parameter';
@@ -51,9 +51,6 @@ class QueryComponent implements OnInit {
   final ExcelDart _excel;
 
   QueryComponent(this._queryService, this._excel);
-
-  @override
-  void ngOnInit() async => await _excel.loadOffice();
 
   /// Disables the populate button if missing required input ids or
   /// if the ids are not integers.

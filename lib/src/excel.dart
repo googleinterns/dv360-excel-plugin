@@ -80,12 +80,14 @@ class ExcelDart {
     'End_Date',
   ];
 
-  /// Loads the Office JS library.
+  /// Loads the Office JS library and returns whether the app
+  /// is side-loaded in Excel
   ///
   /// Uses completer to convert call back function to future.
-  Future<void> loadOffice() {
-    final completer = Completer<void>();
-    Office.onReady(allowInterop((info) => completer.complete()));
+  Future<bool> loadOffice() {
+    final completer = Completer<bool>();
+    Office.onReady(
+        allowInterop((info) => completer.complete(info.host == 'Excel')));
     return completer.future;
   }
 
