@@ -1,5 +1,5 @@
 <!-- landing page-->
-<div *ngIf="isUserValidated!==undefined && !isUserValidated" class="landing-page" debugId="landing-page">
+<div *ngIf="showLandingPage" class="landing-page" debugId="landing-page">
     <div class="jumbotron d-flex align-items-center bg-white">
         <div class="container-fluid text-center">
             <!-- welcome message-->
@@ -11,17 +11,15 @@
                 </div>
                 <div class="row">
                     <div class="col">
-                        <h6 *ngIf="isExcelEnvironment!== undefined && isExcelEnvironment"
-                            class="secondary-msg"
-                            debugId="welcome-msg">{{welcomeMessage}}</h6>
-                        <h6 *ngIf="isExcelEnvironment!== undefined && !isExcelEnvironment"
-                            class="secondary-msg"
-                            debugId="sideload-msg">{{sideloadMessage}}</h6>
+                        <h6 *ngIf="!showSideloadMessage" class="secondary-msg" debugId="welcome-msg">
+                            {{welcomeMessage}}</h6>
+                        <h6 *ngIf="showSideloadMessage" class="secondary-msg" debugId="sideload-msg">
+                            {{sideloadMessage}}</h6>
                     </div>
                 </div>
             </div>
             <!-- display sign on button only if the application is sideloaded in Excel taskpane -->
-            <div *ngIf="isExcelEnvironment!== undefined && isExcelEnvironment" class="sign-in-button">
+            <div *ngIf="!showSideloadMessage" class="sign-in-button">
                 <button class="btn btn-primary" debugId="sign-on-btn" (click)="onClick()">
                     {{signOnButtonName}}
                 </button>
@@ -35,7 +33,7 @@
 </div>
 
 <!-- main page-->
-<div *ngIf="isExcelEnvironment!==undefined && isExcelEnvironment && isUserValidated!==undefined && isUserValidated"
+<div *ngIf="!showLandingPage"
      class="main-page" debugId="main-page">
     <!-- header-->
     <nav class="title-row shadow-sm navbar navbar-light bg-white">

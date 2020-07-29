@@ -85,6 +85,9 @@ void main() {
     test(
         'handleClientLoad(), initClient() and loadOffice()'
         'are invoked during init', () async {
+      when(mockCredential.initClient()).thenAnswer((_) => Future.value(true));
+      when(mockExcelDart.loadOffice()).thenAnswer((_) => Future.value(true));
+
       fixture = await testBed.create();
 
       verify(mockCredential.handleClientLoad());

@@ -20,14 +20,20 @@ class RootComponent implements OnInit {
   final sideloadMessage = 'Please sideload the add-in to continue';
   final queryBuilderTabName = 'Query Builder';
   final rulesBuilderTabName = 'Rules Builder';
-  final signOnButtonName = 'GET STARTED';
+  final signOnButtonName = 'Get started';
   final signOutButtonName = 'Sign out';
 
   // The current sign-in status.
-  bool isUserValidated;
+  bool _isUserValidated;
 
   // The current environment status.
-  bool isExcelEnvironment;
+  bool _isExcelEnvironment;
+
+  // Controls when to show landing page.
+  bool showLandingPage = false;
+
+  // Controls when to the show the sideload message in landing page.
+  bool showSideloadMessage = false;
 
   final CredentialService _credential;
   final ExcelDart _excelDart;
@@ -37,9 +43,18 @@ class RootComponent implements OnInit {
   @override
   void ngOnInit() async {
     await _credential.handleClientLoad();
-    isUserValidated = await _credential.initClient();
-    isExcelEnvironment = await _excelDart.loadOffice();
+    _isUserValidated = await _credential.initClient();
+    _isExcelEnvironment = await _excelDart.loadOffice();
+    _updatePage();
   }
 
-  void onClick() async => isUserValidated = await _credential.handleAuthClick();
+  void onClick() async {
+    _isUserValidated = await _credential.handleAuthClick();
+    _updatePage();
+  }
+
+  void _updatePage() {
+    showLandingPage = !_isExcelEnvironment || !_isUserValidated;
+    showSideloadMessage = !_isExcelEnvironment;
+  }
 }
