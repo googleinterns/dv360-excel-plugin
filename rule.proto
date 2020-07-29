@@ -7,7 +7,6 @@ message Rule {
   // The name of the rule, set by the user.
   optional string name = 1;
 
-  // required
   // The id that uniquely identified each rule.
   optional int32 id = 2;
 
@@ -42,6 +41,10 @@ message ChangeLineItemStatusParams {
   // The ID of line items to which the action applies.
   repeated int64 line_item_ids = 1;
 
+  // required
+  // The ID of advertiser to which the line items belong to.
+  optional int64 advertiser_id = 2;
+
   enum Status {
     UNSPECIFIED_STATUS = 0;
     ACTIVE = 1;
@@ -50,11 +53,9 @@ message ChangeLineItemStatusParams {
 
   // required
   // The status of which the line item will be changed to.
-  // Can be set to either active or paused.
-  optional Status status = 2;
+  optional Status status = 3;
 }
 
-// required
 // A message representing the schedule the rule will be run.
 message Schedule {
   enum Type {
