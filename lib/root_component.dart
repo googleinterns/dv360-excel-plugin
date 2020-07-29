@@ -32,6 +32,9 @@ class RootComponent implements OnInit {
   // Controls when to show landing page.
   bool showLandingPage = false;
 
+  // Controls when to show main page.
+  bool showMainPage = false;
+
   // Controls when to the show the sideload message in landing page.
   bool showSideloadMessage = false;
 
@@ -56,5 +59,6 @@ class RootComponent implements OnInit {
   void _updatePage() {
     showLandingPage = !_isExcelEnvironment || !_isUserValidated;
     showSideloadMessage = !_isExcelEnvironment;
+    showMainPage = !showLandingPage;
   }
 }
