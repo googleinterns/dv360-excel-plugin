@@ -30,13 +30,19 @@ class RootComponent implements OnInit {
   bool _isExcelEnvironment;
 
   // Controls when to show landing page.
-  bool showLandingPage = false;
+  bool get showLandingPage {
+    if (_isUserValidated == null || _isExcelEnvironment == null) return false;
+    return !_isUserValidated || !_isExcelEnvironment;
+  }
 
   // Controls when to show main page.
-  bool showMainPage = false;
+  bool get showMainPage {
+    if (_isUserValidated == null || _isExcelEnvironment == null) return false;
+    return _isUserValidated && _isExcelEnvironment;
+  }
 
   // Controls when to the show the sideload message in landing page.
-  bool showSideloadMessage = false;
+  bool get showSideloadMessage => !_isExcelEnvironment;
 
   final CredentialService _credential;
   final ExcelDart _excelDart;
@@ -48,17 +54,8 @@ class RootComponent implements OnInit {
     await _credential.handleClientLoad();
     _isUserValidated = await _credential.initClient();
     _isExcelEnvironment = await _excelDart.loadOffice();
-    _updatePage();
   }
 
-  void onClick() async {
-    _isUserValidated = await _credential.handleAuthClick();
-    _updatePage();
-  }
-
-  void _updatePage() {
-    showLandingPage = !_isExcelEnvironment || !_isUserValidated;
-    showSideloadMessage = !_isExcelEnvironment;
-    showMainPage = !showLandingPage;
-  }
+  void onClick() async =>
+      _isUserValidated = await _credential.handleAuthClick();
 }
