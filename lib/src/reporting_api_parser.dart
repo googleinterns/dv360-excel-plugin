@@ -11,7 +11,7 @@ class ReportingQueryParser {
   static String parseQueryIdFromJsonString(String jsonString) {
     Map<String, dynamic> map = json.decode(jsonString);
     if (map.containsKey('error'))
-      throw QueryBuilderException(map['error']['message']);
+      throw ParserResponseException(map['error']['message']);
     return map['queryId'];
   }
 

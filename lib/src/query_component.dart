@@ -120,7 +120,7 @@ class QueryComponent {
 
       // Removes spinner when query is complete.
       showSpinner = false;
-    } on QueryBuilderException catch (e) {
+    } on ParserResponseException catch (e) {
       showSpinner = false;
       showAlert = true;
       alertMessage = e.toString();

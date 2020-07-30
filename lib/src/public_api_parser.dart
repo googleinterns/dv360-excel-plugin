@@ -48,7 +48,7 @@ class PublicApiParser {
     // If map contains key 'insertionOrders', multiple IOs are returned.
     // And if it doesn't, the map itself represents one insertion order.
     if (map.containsKey('error')) {
-      throw QueryBuilderException(map['error']['message']);
+      throw ParserResponseException(map['error']['message']);
     } else if (map.containsKey('insertionOrders')) {
       return List.from(map['insertionOrders'])
           .map((ioMap) => _createInsertionOrder(ioMap))

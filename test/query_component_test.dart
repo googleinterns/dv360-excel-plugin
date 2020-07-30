@@ -242,7 +242,7 @@ void main() {
       setUp(() async {
         when(mockQueryService.execDV3Query(QueryType.byAdvertiser, '',
                 advertiserId, argThat(isNull), argThat(isNull)))
-            .thenAnswer((_) => throw QueryBuilderException(expected));
+            .thenAnswer((_) => throw ParserResponseException(expected));
 
         await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
         await queryComponentPO.clickPopulate();

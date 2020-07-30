@@ -23,9 +23,9 @@ extension QueryTypeExtension on QueryType {
   String get shortName => shortNames[this];
 }
 
-class QueryBuilderException implements Exception {
+class ParserResponseException implements Exception {
   final String _message;
-  QueryBuilderException(this._message);
+  ParserResponseException(this._message);
 
   @override
   String toString() {
