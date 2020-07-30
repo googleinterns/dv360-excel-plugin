@@ -47,6 +47,10 @@ class QueryComponent {
   // Controls when to show the spinner on the populate button.
   bool showSpinner = false;
 
+  // Controls when to show the alert message.
+  bool showAlert = false;
+  String alertMessage;
+
   final QueryService _queryService;
   final ExcelDart _excel;
 
@@ -81,39 +85,46 @@ class QueryComponent {
   }
 
   void onClick() async {
-    // All required parameters are filled in, show spinner.
-    showSpinner = true;
+    try {
+      // All required parameters are filled in, show spinner and remove alert.
+      showSpinner = true;
+      showAlert = false;
 
-    // Uses DV360 public APIs to fetch entity data.
-    List<InsertionOrder> insertionOrders =
-        await _queryAndParseInsertionOrderEntityData();
+      // Uses DV360 public APIs to fetch entity data.
+      List<InsertionOrder> insertionOrders =
+          await _queryAndParseInsertionOrderEntityData();
 
-    // Early return if the query returns no insertion orders.
-    if (insertionOrders.isEmpty) return;
+      // Early return if the query returns no insertion orders.
+      if (insertionOrders.isEmpty) return;
 
-    // If query type is not by insertion order, filters out insertion orders
-    // that are not in-flight.
-    insertionOrders = queryType == QueryType.byInsertionOrder
-        ? insertionOrders
-        : _filterInFlightInsertionOrders(insertionOrders);
+      // If query type is not by insertion order, filters out insertion orders
+      // that are not in-flight.
+      insertionOrders = queryType == QueryType.byInsertionOrder
+          ? insertionOrders
+          : _filterInFlightInsertionOrders(insertionOrders);
 
-    // Gets the earliest start date from the list of insertion orders.
-    final minStartDate = _getMinStartDate(insertionOrders);
+      // Gets the earliest start date from the list of insertion orders.
+      final minStartDate = _getMinStartDate(insertionOrders);
 
-    // Uses DBM reporting APIs to get spent (currency based or
-    // impression based) within time window [minStartDate, Now].
-    // spendingMap has a [DailySpend] for each insertion order.
-    final spendingMap =
-        await _queryAndParseSpentData(minStartDate, DateTime.now());
+      // Uses DBM reporting APIs to get spent (currency based or
+      // impression based) within time window [minStartDate, Now].
+      // spendingMap has a [DailySpend] for each insertion order.
+      final spendingMap =
+          await _queryAndParseSpentData(minStartDate, DateTime.now());
 
-    // Add spent to the list of insertion orders.
-    _addSpentToInsertionOrders(insertionOrders, spendingMap);
+      // Add spent to the list of insertion orders.
+      _addSpentToInsertionOrders(insertionOrders, spendingMap);
 
-    // Populate the spreadsheet.
-    await _excel.populate(insertionOrders, highlightUnderpacing);
+      // Populate the spreadsheet.
+      await _excel.populate(insertionOrders, highlightUnderpacing);
 
-    // Removes spinner when query is complete.
-    showSpinner = false;
+      // Removes spinner when query is complete.
+      showSpinner = false;
+    } on ParserResponseException catch (e) {
+      showSpinner = false;
+      showAlert = true;
+      alertMessage = e.toString();
+    }
   }
 
   /// Convert [queryType] enum to a user-friendly string.
@@ -153,33 +164,27 @@ class QueryComponent {
   /// then return a map with <ioID, revenue> key-value pairs.
   Future<Multimap<String, InsertionOrderDailySpend>> _queryAndParseSpentData(
       DateTime startDate, DateTime endDate) async {
-    try {
-      // Creates a reporting query, and parses the queryId from response.
-      final jsonCreateQueryResponse =
-          await _queryService.execReportingCreateQuery(queryType, advertiserId,
-              mediaPlanId, insertionOrderId, startDate, endDate);
+    // Creates a reporting query, and parses the queryId from response.
+    final jsonCreateQueryResponse =
+        await _queryService.execReportingCreateQuery(queryType, advertiserId,
+            mediaPlanId, insertionOrderId, startDate, endDate);
 
-      final reportingQueryId = ReportingQueryParser.parseQueryIdFromJsonString(
-          jsonCreateQueryResponse);
+    final reportingQueryId = ReportingQueryParser.parseQueryIdFromJsonString(
+        jsonCreateQueryResponse);
 
-      // Uses the queryId to get the report download path.
-      final jsonGetQueryResponse =
-          await _queryService.execReportingGetQuery(reportingQueryId);
+    // Uses the queryId to get the report download path.
+    final jsonGetQueryResponse =
+        await _queryService.execReportingGetQuery(reportingQueryId);
 
-      final reportingDownloadPath =
-          ReportingQueryParser.parseDownloadPathFromJsonString(
-              jsonGetQueryResponse);
+    final reportingDownloadPath =
+        ReportingQueryParser.parseDownloadPathFromJsonString(
+            jsonGetQueryResponse);
 
-      // Downloads the report and parse the response into a revenue map.
-      final report =
-          await _queryService.execReportingDownload(reportingDownloadPath);
+    // Downloads the report and parse the response into a revenue map.
+    final report =
+        await _queryService.execReportingDownload(reportingDownloadPath);
 
-      return ReportingQueryParser.parseRevenueFromJsonString(report);
-    } catch (e) {
-      /// TODO: proper error handling.
-      /// Issue: https://github.com/googleinterns/dv360-excel-plugin/issues/52.
-      return Multimap<String, InsertionOrderDailySpend>();
-    }
+    return ReportingQueryParser.parseRevenueFromJsonString(report);
   }
 
   List<InsertionOrder> _filterInFlightInsertionOrders(

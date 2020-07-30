@@ -17,7 +17,12 @@ abstract class QueryComponentPageObject {
   @ByDebugId('underpacing-checkbox')
   PageLoaderElement get _underpacingCheckBox;
 
+  @ByDebugId('query-alert')
+  PageLoaderElement get queryAlert;
+
   Future<void> selectUnderpacing() async => _underpacingCheckBox.click();
+
+  Future<String> getAlertMessage() async => queryAlert.innerText;
 
   Future<void> clickPopulate() async => _populateButton.click();
 }

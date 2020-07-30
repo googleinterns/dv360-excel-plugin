@@ -60,6 +60,11 @@
     </label>
 </div>
 
+<!-- error message-->
+<div *ngIf="showAlert" class="alert alert-danger" role="alert" debugId="query-alert">
+    {{alertMessage}}
+</div>
+
 <!-- populate button-->
 <div class="populate-button">
     <button type="button" class="btn btn-success" debugId="populate-btn"
