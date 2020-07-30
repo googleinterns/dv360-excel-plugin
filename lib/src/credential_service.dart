@@ -22,24 +22,24 @@ class CredentialService {
   static const _dbmDiscoveryUrl =
       'https://content.googleapis.com/discovery/v1/apis/doubleclickbidmanager/v1.1/rest';
 
-  final GoogleApiDart googleAPIDart;
+  final GoogleApiDart _googleAPIDart;
 
-  CredentialService(this.googleAPIDart);
+  CredentialService(this._googleAPIDart);
 
   /// Loads gapi.client library.
   ///
   /// Uses [Completer] to convert callback function to [Future].
-  Future<void> handleClientLoad() => googleAPIDart.loadLibrary('client:auth2');
+  Future<void> handleClientLoad() => _googleAPIDart.loadLibrary('client:auth2');
 
   /// Handles sign-in/out button clicks and returns the current sign-in status.
   Future<bool> handleAuthClick() async {
-    if (googleAPIDart.getSignInStatus()) {
-      await googleAPIDart.signOut();
-      return Future.value(false);
+    if (_googleAPIDart.getSignInStatus()) {
+      await _googleAPIDart.signOut();
+      return false;
     } else {
       final arg = SignInArgs(ux_mode: 'redirect', redirect_uri: _redirectURI);
-      await googleAPIDart.signIn(arg);
-      return Future.value(true);
+      await _googleAPIDart.signIn(arg);
+      return true;
     }
   }
 
@@ -54,7 +54,7 @@ class CredentialService {
         discoveryDocs: [_dv3DiscoveryUrl, _dbmDiscoveryUrl],
         scope: _scope);
 
-    return googleAPIDart.initClient(initArgs, () {
+    return _googleAPIDart.initClient(initArgs, () {
       final googleAuth = GoogleAPI.auth2.getAuthInstance();
 
       // Listens for sign-in state changes.
