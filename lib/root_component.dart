@@ -1,4 +1,5 @@
 import 'package:angular/angular.dart';
+import 'package:dv360_excel_plugin/src/gapi.dart';
 import 'package:ng_bootstrap/ng_bootstrap.dart';
 
 import 'src/credential_service.dart';
@@ -9,7 +10,11 @@ import 'src/query_component.dart';
   selector: 'application-root',
   templateUrl: 'root_component.html',
   directives: [bsTabsxDirectives, coreDirectives, QueryComponent],
-  providers: [ClassProvider(CredentialService), ClassProvider(ExcelDart)],
+  providers: [
+    ClassProvider(CredentialService),
+    ClassProvider(ExcelDart),
+    ClassProvider(GoogleApiDart)
+  ],
 )
 class RootComponent implements OnInit {
   // Names used in html.

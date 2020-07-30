@@ -1,11 +1,67 @@
 @JS()
 library gapi;
 
+import 'dart:async';
+
+import 'package:angular/angular.dart';
 import 'package:js/js.dart';
 
 /// Below are wrapper functions for gapi APIs.
 /// Type definitions can be found at
 /// https://github.com/google/google-api-javascript-client/blob/master/docs/reference.md.
+
+@Injectable()
+class GoogleApiDart {
+  /// Loads the Google API javascript library.
+  ///
+  /// Uses [Completer] to turn callback function into [Future].
+  Future<void> loadLibrary(String library) {
+    final completer = Completer<void>();
+    GoogleAPI.load(library, allowInterop(() => completer.complete()));
+    return completer.future;
+  }
+
+  /// Initializes the [GoogleAPI.auth] object and calls [callback] that returns
+  /// the current sign-in status.
+  ///
+  /// This function must be called before calling any [Auth2] methods.
+  /// Uses [Completer] to turn turn callback function into [Future].
+  Future<bool> initClient(InitArgs args, bool Function() callback) {
+    final completer = Completer<bool>();
+    GoogleAPI.client
+        .init(args)
+        .then(allowInterop((_) => completer.complete(callback())));
+
+    return completer.future;
+  }
+
+  /// Gets the current sign-in status.
+  bool getSignInStatus() => GoogleAPI.auth2.getAuthInstance().isSignedIn.get();
+
+  /// Signs in the user using the specific [SignInArgs].
+  ///
+  /// Uses [Completer] to turn callback function of [JsPromise] into [Future].
+  Future<void> signIn(SignInArgs arg) {
+    final completer = Completer<void>();
+    GoogleAPI.auth2
+        .getAuthInstance()
+        .signIn(arg)
+        .then(allowInterop((_) => completer.complete()));
+    return completer.future;
+  }
+
+  /// Signs out the current account from the application, and
+  /// revokes all of the scopes that the user granted.
+  ///
+  /// Uses [Completer] to turn callback function of [JsPromise] into [Future].
+  Future<void> signOut() {
+    final completer = Completer<void>();
+    final googleAuth = GoogleAPI.auth2.getAuthInstance();
+    googleAuth.signOut().then(allowInterop((_) => completer.complete()));
+    googleAuth.disconnect();
+    return completer.future;
+  }
+}
 
 /// Top level JS class gapi.
 ///
