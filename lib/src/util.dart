@@ -23,6 +23,16 @@ extension QueryTypeExtension on QueryType {
   String get shortName => shortNames[this];
 }
 
+class QueryBuilderException implements Exception {
+  final String _message;
+  QueryBuilderException(this._message);
+
+  @override
+  String toString() {
+    return _message;
+  }
+}
+
 class Util {
   /// Convert micros to string in standard unit.
   static String convertMicrosToStandardUnitString(Int64 micros) {

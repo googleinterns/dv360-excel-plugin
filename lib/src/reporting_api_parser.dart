@@ -8,8 +8,12 @@ import 'insertion_order_daily_spend.dart';
 
 class ReportingQueryParser {
   /// Parse queryId from a json string.
-  static String parseQueryIdFromJsonString(String jsonString) =>
-      json.decode(jsonString)['queryId'];
+  static String parseQueryIdFromJsonString(String jsonString) {
+    Map<String, dynamic> map = json.decode(jsonString);
+    if (map.containsKey('error'))
+      throw QueryBuilderException(map['error']['message']);
+    return map['queryId'];
+  }
 
   /// Parse google storage download from a json string.
   static String parseDownloadPathFromJsonString(String jsonString) =>

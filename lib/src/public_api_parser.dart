@@ -1,9 +1,9 @@
 import 'dart:convert';
 
+import 'package:dv360_excel_plugin/src/util.dart';
+
 import 'proto/insertion_order_query.pb.dart';
 
-/// TODO: parse and handle dv360 public api error.
-/// Issue:https://github.com/googleinterns/dv360-excel-plugin/issues/52
 class PublicApiParser {
   static const _emptyEntry = '';
 
@@ -44,9 +44,12 @@ class PublicApiParser {
   static List<InsertionOrder> parseInsertionOrders(String jsonString) {
     Map<String, dynamic> map = json.decode(jsonString);
 
+    // Throws QueryBuilderException if response json contains error.
     // If map contains key 'insertionOrders', multiple IOs are returned.
     // And if it doesn't, the map itself represents one insertion order.
-    if (map.containsKey('insertionOrders')) {
+    if (map.containsKey('error')) {
+      throw QueryBuilderException(map['error']['message']);
+    } else if (map.containsKey('insertionOrders')) {
       return List.from(map['insertionOrders'])
           .map((ioMap) => _createInsertionOrder(ioMap))
           .toList();

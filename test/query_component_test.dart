@@ -236,6 +236,34 @@ void main() {
           advertiserId, argThat(isNull), argThat(isNull)));
     });
 
+    group('raising QueryBuilderException', () {
+      const expected = 'a QueryBuilderException has been raised';
+
+      setUp(() async {
+        when(mockQueryService.execDV3Query(QueryType.byAdvertiser, '',
+                advertiserId, argThat(isNull), argThat(isNull)))
+            .thenAnswer((_) => throw QueryBuilderException(expected));
+
+        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
+        await queryComponentPO.clickPopulate();
+
+        await fixture.update();
+      });
+
+      tearDown(() => clearInteractions(mockQueryService));
+
+      test('displays the alert and shows $expected', () async {
+        final actual = await queryComponentPO.getAlertMessage();
+
+        expect(queryComponentPO.queryAlert, exists);
+        expect(actual, expected);
+      });
+
+      test('removes the spinner', () async {
+        expect(queryComponentPO.populateButtonSpinner, notExists);
+      });
+    });
+
     group('selecting ByAdvertiser panel with', () {
       setUp(() async {
         reportCompleter = Completer<String>();
@@ -334,6 +362,18 @@ void main() {
         await fixture
             .update((_) => reportCompleter.complete(generateReport(report1)));
         expect(queryComponentPO.populateButtonSpinner, notExists);
+      });
+
+      test(
+          'correct ids raises no QueryBuilderException and hides the alert message',
+          () async {
+        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
+        await queryComponentPO.clickPopulate();
+
+        // waits for the last operation execReportingDownload() to finish.
+        await fixture
+            .update((_) => reportCompleter.complete(generateReport(report1)));
+        expect(queryComponentPO.queryAlert, notExists);
       });
     });
 
@@ -459,6 +499,19 @@ void main() {
             .update((_) => reportCompleter.complete(generateReport(report1)));
         expect(queryComponentPO.populateButtonSpinner, notExists);
       });
+
+      test(
+          'correct ids raises no QueryBuilderException and hides the alert message',
+          () async {
+        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
+        await queryComponentAccordionPO.typeMediaPlanId(mediaPlanId1);
+        await queryComponentPO.clickPopulate();
+
+        // waits for the last operation execReportingDownload() to finish.
+        await fixture
+            .update((_) => reportCompleter.complete(generateReport(report1)));
+        expect(queryComponentPO.queryAlert, notExists);
+      });
     });
 
     group('selecting ByInsertionOrder with', () {
@@ -574,6 +627,19 @@ void main() {
         await fixture
             .update((_) => reportCompleter.complete(generateReport(report1)));
         expect(queryComponentPO.populateButtonSpinner, notExists);
+      });
+
+      test(
+          'correct ids raises no QueryBuilderException and hides the alert message',
+          () async {
+        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
+        await queryComponentAccordionPO.typeInsertionOrderId(ioId1);
+        await queryComponentPO.clickPopulate();
+
+        // waits for the last operation execReportingDownload() to finish.
+        await fixture
+            .update((_) => reportCompleter.complete(generateReport(report1)));
+        expect(queryComponentPO.queryAlert, notExists);
       });
     });
   });
