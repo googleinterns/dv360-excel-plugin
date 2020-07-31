@@ -6,6 +6,8 @@ import 'dart:async';
 import 'package:angular/angular.dart';
 import 'package:js/js.dart';
 
+import 'json_js.dart';
+
 /// Below are wrapper functions for gapi APIs.
 /// Type definitions can be found at
 /// https://github.com/google/google-api-javascript-client/blob/master/docs/reference.md.
@@ -59,6 +61,25 @@ class GoogleApiDart {
     final googleAuth = GoogleAPI.auth2.getAuthInstance();
     googleAuth.signOut().then(allowInterop((_) => completer.complete()));
     googleAuth.disconnect();
+    return completer.future;
+  }
+
+  /// Executes the request specified by [RequestArgs] and returns the response
+  /// parsed as a json string.
+  ///
+  /// Uses [Completer] to turn callback function into [Future].
+  /// [jsonResp] contains the response parsed as a javascript json object.
+  /// If the response is not JSON, this field will be false, and [rawResp]
+  /// is the HTTP response.
+  Future<String> request(RequestArgs args) {
+    final completer = Completer<String>();
+    GoogleAPI.client.request(args).execute(allowInterop((jsonResp, rawResp) {
+      if (jsonResp == false) {
+        return completer.complete(rawResp);
+      } else {
+        return completer.complete(JsonJS.stringify(jsonResp));
+      }
+    }));
     return completer.future;
   }
 }
