@@ -4,6 +4,7 @@ import 'package:angular/angular.dart';
 import 'package:fixnum/fixnum.dart';
 
 import 'gapi.dart';
+import 'google_api_request_args.dart';
 import 'proto/insertion_order_query.pb.dart';
 import 'util.dart';
 
@@ -41,17 +42,21 @@ class QueryService {
   /// Executes DBM reporting getQuery and returns a future that will
   /// complete with a raw javascript object.
   Future<String> execReportingGetQuery(String queryId) =>
-      _googleApiDart.request(RequestArgs(
-          path:
-              'https://www.googleapis.com/doubleclickbidmanager/v1.1/query/$queryId',
-          method: 'GET'));
+      _googleApiDart.request((GoogleApiRequestArgsBuilder()
+            ..path =
+                'https://www.googleapis.com/doubleclickbidmanager/v1.1/query/$queryId'
+            ..method = 'GET')
+          .build());
 
   /// Read the report from google storage location specified by [downloadPath].
   Future<String> execReportingDownload(String downloadPath) =>
-      _googleApiDart.request(RequestArgs(path: downloadPath, method: 'GET'));
+      _googleApiDart.request((GoogleApiRequestArgsBuilder()
+            ..path = downloadPath
+            ..method = 'GET')
+          .build());
 
   /// Generates query based on user inputs.
-  static RequestArgs _generateDV3Query(
+  static GoogleApiRequestArgs _generateDV3Query(
       QueryType queryType,
       String nextPageToken,
       String advertiserId,
@@ -62,33 +67,36 @@ class QueryService {
 
     switch (queryType) {
       case QueryType.byAdvertiser:
-        return RequestArgs(
-            path: 'https://displayvideo.googleapis.com/v1/advertisers/'
-                '$advertiserId/insertionOrders?'
-                '$entityStatusFilter&$pageTokenFilter',
-            method: 'GET');
+        return (GoogleApiRequestArgsBuilder()
+              ..path = 'https://displayvideo.googleapis.com/v1/advertisers/'
+                  '$advertiserId/insertionOrders?'
+                  '$entityStatusFilter&$pageTokenFilter'
+              ..method = 'GET')
+            .build();
 
       case QueryType.byMediaPlan:
         final mediaPlanFilter = 'filter=campaignId="$mediaPlanId"';
-        return RequestArgs(
-            path: 'https://displayvideo.googleapis.com/v1/advertisers/'
-                '$advertiserId/insertionOrders?'
-                '$entityStatusFilter&$mediaPlanFilter&$pageTokenFilter',
-            method: 'GET');
+        return (GoogleApiRequestArgsBuilder()
+              ..path = 'https://displayvideo.googleapis.com/v1/advertisers/'
+                  '$advertiserId/insertionOrders?'
+                  '$entityStatusFilter&$mediaPlanFilter&$pageTokenFilter'
+              ..method = 'GET')
+            .build();
 
       case QueryType.byInsertionOrder:
-        return RequestArgs(
-            path: 'https://displayvideo.googleapis.com/v1/advertisers/'
-                '$advertiserId/insertionOrders/$insertionOrderId',
-            method: 'GET');
+        return (GoogleApiRequestArgsBuilder()
+              ..path = 'https://displayvideo.googleapis.com/v1/advertisers/'
+                  '$advertiserId/insertionOrders/$insertionOrderId'
+              ..body = 'GET')
+            .build();
 
       default:
-        return RequestArgs();
+        return GoogleApiRequestArgsBuilder().build();
     }
   }
 
   /// Generates query based on user inputs.
-  static RequestArgs _generateReportingQuery(
+  static GoogleApiRequestArgs _generateReportingQuery(
       QueryType queryType,
       String advertiserId,
       String mediaPlanId,
@@ -128,12 +136,13 @@ class QueryService {
         break;
 
       default:
-        return RequestArgs();
+        return GoogleApiRequestArgsBuilder().build();
     }
 
-    return RequestArgs(
-        path: 'https://www.googleapis.com/doubleclickbidmanager/v1.1/query',
-        method: 'POST',
-        body: parameter.toProto3Json().toString());
+    return (GoogleApiRequestArgsBuilder()
+          ..path = 'https://www.googleapis.com/doubleclickbidmanager/v1.1/query'
+          ..method = 'POST'
+          ..body = parameter.toProto3Json().toString())
+        .build();
   }
 }

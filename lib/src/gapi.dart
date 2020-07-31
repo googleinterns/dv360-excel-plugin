@@ -6,6 +6,7 @@ import 'dart:async';
 import 'package:angular/angular.dart';
 import 'package:js/js.dart';
 
+import 'google_api_request_args.dart';
 import 'json_js.dart';
 
 /// Below are wrapper functions for gapi APIs.
@@ -30,7 +31,7 @@ class GoogleApiDart {
   /// Uses [Completer] to turn turn callback function into [Future].
   Future<bool> initClient(String apiKey, String clientId,
       List<String> discoveryDocs, String scope, bool Function() callback) {
-    final initArgs = InitArgs(
+    final initArgs = InitArgsJs(
         apiKey: apiKey,
         clientId: clientId,
         discoveryDocs: discoveryDocs,
@@ -47,14 +48,14 @@ class GoogleApiDart {
   /// Gets the current sign-in status.
   bool getSignInStatus() => GoogleAPI.auth2.getAuthInstance().isSignedIn.get();
 
-  /// Signs in the user using the specific [SignInArgs].
+  /// Signs in the user using the specific [SignInArgsJs].
   ///
   /// Uses [Completer] to turn callback function of [JsPromise] into [Future].
   Future<void> signIn(String uxMode, String redirectUri) {
     final completer = Completer<void>();
     GoogleAPI.auth2
         .getAuthInstance()
-        .signIn(SignInArgs(ux_mode: uxMode, redirect_uri: redirectUri))
+        .signIn(SignInArgsJs(ux_mode: uxMode, redirect_uri: redirectUri))
         .then(allowInterop((_) => completer.complete()));
     return completer.future;
   }
@@ -71,16 +72,21 @@ class GoogleApiDart {
     return completer.future;
   }
 
-  /// Executes the request specified by [RequestArgs] and returns the response
+  /// Executes the request specified by [RequestArgsJs] and returns the response
   /// parsed as a json string.
   ///
   /// Uses [Completer] to turn callback function into [Future].
   /// [jsonResp] contains the response parsed as a javascript json object.
   /// If the response is not JSON, this field will be false, and [rawResp]
   /// is the HTTP response.
-  Future<String> request(RequestArgs args) {
+  Future<String> request(GoogleApiRequestArgs args) {
+    final requestArgsJs =
+        RequestArgsJs(path: args.path, method: args.method, body: args.body);
+
     final completer = Completer<String>();
-    GoogleAPI.client.request(args).execute(allowInterop((jsonResp, rawResp) {
+    GoogleAPI.client
+        .request(requestArgsJs)
+        .execute(allowInterop((jsonResp, rawResp) {
       if (jsonResp == false) {
         return completer.complete(rawResp);
       } else {
@@ -119,11 +125,11 @@ class GoogleAPI {
 /// ```
 @JS()
 class Client {
-  /// Initializes the JavaScript client with [InitArgs].
-  external GoogleAuth init(InitArgs args);
+  /// Initializes the JavaScript client with [InitArgsJs].
+  external GoogleAuth init(InitArgsJs args);
 
-  /// Creates a HTTP request with [RequestArgs] for making RESTful requests.
-  external Request request(RequestArgs args);
+  /// Creates a HTTP request with [RequestArgsJs] for making RESTful requests.
+  external Request request(RequestArgsJs args);
 }
 
 /// Wrapper for gapi.client.Request function.
@@ -141,13 +147,13 @@ class Request {
 /// Input argument to [Client.init()].
 @JS()
 @anonymous
-class InitArgs {
+class InitArgsJs {
   external String get apiKey;
   external List<String> get discoveryDocs;
   external String get clientId;
   external String get scope;
 
-  external factory InitArgs(
+  external factory InitArgsJs(
       {String apiKey,
       String clientId,
       List<String> discoveryDocs,
@@ -157,14 +163,14 @@ class InitArgs {
 /// Input argument to [Client.request()].
 @JS()
 @anonymous
-class RequestArgs {
+class RequestArgsJs {
   external String get path;
   external String get method;
   external Map<String, String> get params;
   external String get headers;
   external String get body;
 
-  external factory RequestArgs(
+  external factory RequestArgsJs(
       {String path,
       String method,
       Map<String, String> params,
@@ -201,7 +207,7 @@ class GoogleAuth {
   external GoogleUser get currentUser;
 
   /// Signs in the user with the options specified to gapi.auth2.init().
-  external JsPromise signIn([SignInArgs args]);
+  external JsPromise signIn([SignInArgsJs args]);
 
   /// Signs out the current account from the application.
   external JsPromise signOut();
@@ -227,13 +233,13 @@ class JsPromise {
 /// Input argument to [GoogleAuth.signIn()].
 @JS()
 @anonymous
-class SignInArgs {
+class SignInArgsJs {
   external String get prompt;
   external String get scope;
   external String get ux_mode;
   external String get redirect_uri;
 
-  external factory SignInArgs(
+  external factory SignInArgsJs(
       {String prompt, String scope, String ux_mode, String redirect_uri});
 }
 
