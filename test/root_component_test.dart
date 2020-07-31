@@ -4,13 +4,11 @@ import 'dart:async';
 import 'package:angular/angular.dart';
 import 'package:angular_test/angular_test.dart';
 import 'package:dv360_excel_plugin/root_component.dart';
-import 'package:dv360_excel_plugin/src/credential_service.dart';
 import 'package:dv360_excel_plugin/src/excel.dart';
 import 'package:dv360_excel_plugin/src/gapi.dart';
 import 'package:mockito/mockito.dart';
 import 'package:pageloader/html.dart';
 import 'package:pageloader/testing.dart';
-import 'package:quiver/collection.dart';
 import 'package:test/test.dart';
 
 import 'root_component_test.template.dart' as ng;
