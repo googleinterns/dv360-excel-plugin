@@ -37,32 +37,28 @@ class CredentialService {
       await _googleAPIDart.signOut();
       return false;
     } else {
-      final arg = SignInArgs(ux_mode: 'redirect', redirect_uri: _redirectURI);
-      await _googleAPIDart.signIn(arg);
+      await _googleAPIDart.signIn('redirect', _redirectURI);
       return true;
     }
   }
 
   /// Initializes the [GoogleAPI.client] object and
   /// returns the current sign-in status.
-  Future<bool> initClient() async {
-    // [apikey] and [clientId] are obtained from google api console.
-    // [scope] specifies space-delimited list of access scopes.
-    final initArgs = InitArgs(
-        apiKey: key_store.apiKey,
-        clientId: key_store.clientID,
-        discoveryDocs: [_dv3DiscoveryUrl, _dbmDiscoveryUrl],
-        scope: _scope);
+  Future<bool> initClient() async => _googleAPIDart.initClient(
+      key_store.apiKey,
+      key_store.clientID,
+      [_dv3DiscoveryUrl, _dbmDiscoveryUrl],
+      _scope,
+      _initClientCallback);
 
-    return _googleAPIDart.initClient(initArgs, () {
-      final googleAuth = GoogleAPI.auth2.getAuthInstance();
+  static bool _initClientCallback() {
+    final googleAuth = GoogleAPI.auth2.getAuthInstance();
 
-      // Listens for sign-in state changes.
-      googleAuth.isSignedIn.listen(allowInterop(_setSignInStatus));
+    // Listens for sign-in state changes.
+    googleAuth.isSignedIn.listen(allowInterop(_setSignInStatus));
 
-      // Handles initial sign-in state (check if user is already signed in).
-      return _setSignInStatus(googleAuth.isSignedIn.get());
-    });
+    // Handles initial sign-in state (check if user is already signed in).
+    return _setSignInStatus(googleAuth.isSignedIn.get());
   }
 
   static bool _setSignInStatus(bool isSignedIn) {

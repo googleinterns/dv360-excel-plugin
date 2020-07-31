@@ -28,10 +28,17 @@ class GoogleApiDart {
   ///
   /// This function must be called before calling any [Auth2] methods.
   /// Uses [Completer] to turn turn callback function into [Future].
-  Future<bool> initClient(InitArgs args, bool Function() callback) {
+  Future<bool> initClient(String apiKey, String clientId,
+      List<String> discoveryDocs, String scope, bool Function() callback) {
+    final initArgs = InitArgs(
+        apiKey: apiKey,
+        clientId: clientId,
+        discoveryDocs: discoveryDocs,
+        scope: scope);
+
     final completer = Completer<bool>();
     GoogleAPI.client
-        .init(args)
+        .init(initArgs)
         .then(allowInterop((_) => completer.complete(callback())));
 
     return completer.future;
@@ -43,11 +50,11 @@ class GoogleApiDart {
   /// Signs in the user using the specific [SignInArgs].
   ///
   /// Uses [Completer] to turn callback function of [JsPromise] into [Future].
-  Future<void> signIn(SignInArgs arg) {
+  Future<void> signIn(String uxMode, String redirectUri) {
     final completer = Completer<void>();
     GoogleAPI.auth2
         .getAuthInstance()
-        .signIn(arg)
+        .signIn(SignInArgs(ux_mode: uxMode, redirect_uri: redirectUri))
         .then(allowInterop((_) => completer.complete()));
     return completer.future;
   }

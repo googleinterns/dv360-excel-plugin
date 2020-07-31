@@ -6,6 +6,7 @@ import 'package:angular_test/angular_test.dart';
 import 'package:dv360_excel_plugin/root_component.dart';
 import 'package:dv360_excel_plugin/src/excel.dart';
 import 'package:dv360_excel_plugin/src/gapi.dart';
+import 'package:intl/intl.dart';
 import 'package:mockito/mockito.dart';
 import 'package:pageloader/html.dart';
 import 'package:pageloader/testing.dart';
@@ -57,6 +58,17 @@ class RootTestComponent {}
 
 void main() {
   group('In $RootComponent,', () {
+    const apiKey = 'API_KEY';
+    const clientId = 'CLIENT_ID';
+    const redirectUri = 'http://localhost:8080';
+    const scope = 'https://www.googleapis.com/auth/display-video '
+        'https://www.googleapis.com/auth/doubleclickbidmanager '
+        'https://www.googleapis.com/auth/devstorage.read_only';
+    const discoveryDocs = [
+      'https://displayvideo.googleapis.com/\$discovery/rest?version=v1',
+      'https://content.googleapis.com/discovery/v1/apis/doubleclickbidmanager/v1.1/rest'
+    ];
+
     NgTestBed testBed;
     NgTestFixture<RootTestComponent> fixture;
     RootComponentLandingPagePageObject rootComponentLandingPagePO;
@@ -85,13 +97,15 @@ void main() {
       fixture = await testBed.create();
 
       verify(mockGoogleApiDart.loadLibrary('client:auth2'));
-      verify(mockGoogleApiDart.initClient(any, any));
+      verify(mockGoogleApiDart.initClient(
+          apiKey, clientId, discoveryDocs, scope, any));
       verify(mockExcelDart.loadOffice());
     });
 
     group('when app is not running in excel and user is not validated,', () {
       setUp(() async {
-        when(mockGoogleApiDart.initClient(any, any))
+        when(mockGoogleApiDart.initClient(
+                apiKey, clientId, discoveryDocs, scope, any))
             .thenAnswer((_) => googleApiCompleter.future);
         when(mockExcelDart.loadOffice())
             .thenAnswer((_) => excelCompleter.future);
@@ -134,7 +148,8 @@ void main() {
 
     group('when app is running in excel and user is not validated,', () {
       setUp(() async {
-        when(mockGoogleApiDart.initClient(any, any))
+        when(mockGoogleApiDart.initClient(
+                apiKey, clientId, discoveryDocs, scope, any))
             .thenAnswer((_) => googleApiCompleter.future);
         when(mockExcelDart.loadOffice())
             .thenAnswer((_) => excelCompleter.future);
@@ -177,7 +192,8 @@ void main() {
 
     group('when app is running in excel and user is validated,', () {
       setUp(() async {
-        when(mockGoogleApiDart.initClient(any, any))
+        when(mockGoogleApiDart.initClient(
+                apiKey, clientId, discoveryDocs, scope, any))
             .thenAnswer((_) => googleApiCompleter.future);
         when(mockExcelDart.loadOffice())
             .thenAnswer((_) => excelCompleter.future);
@@ -212,7 +228,8 @@ void main() {
 
     group('when landing page is displayed, clicking on the sign-on button', () {
       setUp(() async {
-        when(mockGoogleApiDart.initClient(any, any))
+        when(mockGoogleApiDart.initClient(
+                apiKey, clientId, discoveryDocs, scope, any))
             .thenAnswer((_) => googleApiCompleter.future);
         when(mockExcelDart.loadOffice())
             .thenAnswer((_) => excelCompleter.future);
@@ -255,7 +272,8 @@ void main() {
 
     group('when main page is displayed, clicking on the sign-off button', () {
       setUp(() async {
-        when(mockGoogleApiDart.initClient(any, any))
+        when(mockGoogleApiDart.initClient(
+                apiKey, clientId, discoveryDocs, scope, any))
             .thenAnswer((_) => googleApiCompleter.future);
         when(mockExcelDart.loadOffice())
             .thenAnswer((_) => excelCompleter.future);
