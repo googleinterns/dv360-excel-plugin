@@ -53,6 +53,13 @@ class QueryComponent {
   bool showAlert = false;
   String alertMessage;
 
+  // The earliest startDate that reporting API can take.
+  DateTime reportStartDate = DateTime(
+      DateTime.now().year - 2, DateTime.now().month, DateTime.now().day);
+
+  // Futures used to await DV3 public and DBM reporting requests.
+  List<Future<dynamic>> apiRequestFutures = <Future<dynamic>>[];
+
   final QueryService _queryService;
   final ExcelDart _excel;
 
@@ -93,26 +100,20 @@ class QueryComponent {
       showAlert = false;
 
       // Uses DV360 public APIs to fetch entity data.
-      List<InsertionOrder> insertionOrders =
-          await _queryAndParseInsertionOrderEntityData();
-
-      // Early return if the query returns no insertion orders.
-      if (insertionOrders.isEmpty) return;
-
-      // If query type is not by insertion order, filters out insertion orders
-      // that are not in-flight.
-      insertionOrders = queryType == QueryType.byInsertionOrder
-          ? insertionOrders
-          : _filterInFlightInsertionOrders(insertionOrders);
-
-      // Gets the earliest start date from the list of insertion orders.
-      final minStartDate = _getMinStartDate(insertionOrders);
+      Future<List<InsertionOrder>> publicApiResponse =
+          _queryAndParseInsertionOrderEntityData();
+      apiRequestFutures.add(publicApiResponse);
 
       // Uses DBM reporting APIs to get spent (currency based or
-      // impression based) within time window [minStartDate, Now].
-      // spendingMap has a [DailySpend] for each insertion order.
-      final spendingMap =
-          await _queryAndParseSpentData(minStartDate, DateTime.now());
+      // impression based) within time window [reportStartDate, Now].
+      Future<Multimap<String, InsertionOrderDailySpend>> reportingApiResponse =
+          _queryAndParseSpentData(reportStartDate, DateTime.now());
+      apiRequestFutures.add(reportingApiResponse);
+
+      // Waits for all requests to finish.
+      final responseList = await Future.wait(apiRequestFutures);
+      var insertionOrders = responseList.first;
+      final spendingMap = responseList.last;
 
       // Add spent to the list of insertion orders.
       _addSpentToInsertionOrders(insertionOrders, spendingMap);
@@ -189,40 +190,33 @@ class QueryComponent {
     return ReportingQueryParser.parseRevenueFromJsonString(report);
   }
 
-  List<InsertionOrder> _filterInFlightInsertionOrders(
-          List<InsertionOrder> insertionOrders) =>
-      insertionOrders
-          .where((io) =>
-              io.budget.activeBudgetSegment !=
-              InsertionOrder_Budget_BudgetSegment())
-          .toList();
-
-  DateTime _getMinStartDate(
-          List<InsertionOrder> insertionOrders) =>
-      insertionOrders
-          .map((io) => Util.convertProtoDateToDateTime(
-              io.budget.activeBudgetSegment.dateRange.startDate))
-          .reduce((date, minDate) => date.isBefore(minDate) ? date : minDate);
-
   void _addSpentToInsertionOrders(List<InsertionOrder> insertionOrders,
       Multimap<String, InsertionOrderDailySpend> spendingMap) {
     for (final io in insertionOrders) {
+      // Continues if the spending map doesn't have spending data for this io
+      // at all.
+      if (!spendingMap.containsKey(io.insertionOrderId)) continue;
+
       final budgetUnit = io.budget.budgetUnit;
       final flightStart = Util.convertProtoDateToDateTime(
           io.budget.activeBudgetSegment.dateRange.startDate);
       final flightEnd = Util.convertProtoDateToDateTime(
           io.budget.activeBudgetSegment.dateRange.endDate);
 
-      final spent = spendingMap[io.insertionOrderId]
+      final activeSpent = spendingMap[io.insertionOrderId]
           .where((dailySpend) =>
               Util.isBetweenDates(dailySpend.date, flightStart, flightEnd))
           .map((dailySpend) => budgetUnit ==
                   InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY
               ? dailySpend.revenue
-              : dailySpend.impression)
-          .reduce((spend, sum) => Util.addStringRevenue(spend, sum));
+              : dailySpend.impression);
 
-      io.spent = spent;
+      // Continues if the spending map doesn't have spending data for this io
+      // within [reportStartDate, now].
+      if (activeSpent.isEmpty) continue;
+      // Sums up and updates spent if otherwise.
+      io.spent =
+          activeSpent.reduce((spend, sum) => Util.addStringRevenue(spend, sum));
     }
   }
 }

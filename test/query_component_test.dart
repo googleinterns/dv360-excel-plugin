@@ -277,8 +277,8 @@ void main() {
       const expected = 'a QueryBuilderException has been raised';
 
       setUp(() async {
-        when(mockQueryService.execDV3Query(QueryType.byAdvertiser, '',
-                advertiserId, argThat(isNull), argThat(isNull)))
+        when(mockGoogleApiDart.request(argThat(
+                isDV3RequestWith(QueryType.byAdvertiser, advertiserId))))
             .thenAnswer((_) => throw ParserResponseException(expected));
 
         await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
@@ -287,7 +287,7 @@ void main() {
         await fixture.update();
       });
 
-      tearDown(() => clearInteractions(mockQueryService));
+      tearDown(() => clearInteractions(mockGoogleApiDart));
 
       test('displays the alert and shows $expected', () async {
         final actual = await queryComponentPO.getAlertMessage();

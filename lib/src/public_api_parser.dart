@@ -52,6 +52,9 @@ class PublicApiParser {
     } else if (map.containsKey('insertionOrders')) {
       return List.from(map['insertionOrders'])
           .map((ioMap) => _createInsertionOrder(ioMap))
+          .where((io) =>
+              io.budget.activeBudgetSegment !=
+              InsertionOrder_Budget_BudgetSegment.getDefault())
           .toList();
     } else {
       return [_createInsertionOrder(map)];
@@ -78,7 +81,8 @@ class PublicApiParser {
       ..updateTime = map['updateTime'] ?? _emptyEntry
       ..entityStatus = _createEntityStatus(map['entityStatus'])
       ..pacing = _createPacing(map['pacing'])
-      ..budget = _createBudget(map['budget']);
+      ..budget = _createBudget(map['budget'])
+      ..spent = '0';
 
     return insertionOrder;
   }
@@ -112,7 +116,7 @@ class PublicApiParser {
     budget.activeBudgetSegment = segmentMaps
         .map(_createBudgetSegment)
         .firstWhere((segment) => _isActiveSegment(segment, DateTime.now()),
-            orElse: () => InsertionOrder_Budget_BudgetSegment());
+            orElse: () => InsertionOrder_Budget_BudgetSegment.getDefault());
 
     return budget;
   }
