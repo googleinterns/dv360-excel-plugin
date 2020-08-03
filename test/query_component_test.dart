@@ -224,6 +224,58 @@ void main() {
           argThat(isDV3RequestWith(QueryType.byAdvertiser, advertiserId))));
     });
 
+    group('when underpacing checkbox', () {
+      setUp(() async {
+        reportCompleter = Completer<String>();
+
+        await queryComponentAccordionPO.selectByIO();
+
+        final singleIOJsonString =
+            '${generateInsertionOrderJsonString(advertiserId, mediaPlanId1, ioId1, startDate, endDate)}';
+
+        when(mockGoogleApiDart.request(argThat(isDV3RequestWith(
+                QueryType.byInsertionOrder, advertiserId,
+                ioId: ioId1))))
+            .thenAnswer((_) => Future.value(singleIOJsonString));
+        when(mockGoogleApiDart.request(argThat(
+                isReportingCreateQueryRequestWith(
+                    QueryType.byInsertionOrder, advertiserId, ioId: ioId1))))
+            .thenAnswer(
+                (_) => Future.value(reportingCreateQueryApiJsonResponse));
+        when(mockGoogleApiDart
+                .request(argThat(isReportingGetQueryRequestWith(queryId))))
+            .thenAnswer((_) => Future.value(reportingGetQueryApiJsonResponse));
+        when(mockGoogleApiDart
+                .request(argThat(isReportingDownloadRequestWith(downloadLink))))
+            .thenAnswer((_) => reportCompleter.future);
+      });
+
+      tearDown(() => clearInteractions(mockGoogleApiDart));
+
+      test('is selected, populate(any, true) is invoked', () async {
+        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
+        await queryComponentAccordionPO.typeInsertionOrderId(ioId1);
+        await queryComponentPO.selectUnderpacing();
+        await queryComponentPO.clickPopulate();
+
+        // waits for the last operation execReportingDownload() to finish.
+        await fixture
+            .update((_) => reportCompleter.complete(generateReport(report1)));
+        verify(mockExcelDart.populate(any, true));
+      });
+
+      test('is not selected, populate(any, false) is invoked', () async {
+        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
+        await queryComponentAccordionPO.typeInsertionOrderId(ioId1);
+        await queryComponentPO.clickPopulate();
+
+        // waits for the last operation execReportingDownload() to finish.
+        await fixture
+            .update((_) => reportCompleter.complete(generateReport(report1)));
+        verify(mockExcelDart.populate(any, false));
+      });
+    });
+
     group('selecting ByAdvertiser panel with', () {
       setUp(() async {
         reportCompleter = Completer<String>();
@@ -241,16 +293,20 @@ void main() {
         }
         ''';
 
-        final answers = [
-          Future.value(multipleIOJsonString),
-          Future.value(reportingCreateQueryApiJsonResponse),
-          Future.value(reportingGetQueryApiJsonResponse),
-          reportCompleter.future,
-        ];
-
-        var callCount = 0;
-        when(mockGoogleApiDart.request(any))
-            .thenAnswer((_) => answers[callCount++]);
+        when(mockGoogleApiDart.request(argThat(
+                isDV3RequestWith(QueryType.byAdvertiser, advertiserId))))
+            .thenAnswer((_) => Future.value(multipleIOJsonString));
+        when(mockGoogleApiDart.request(argThat(
+                isReportingCreateQueryRequestWith(
+                    QueryType.byAdvertiser, advertiserId))))
+            .thenAnswer(
+                (_) => Future.value(reportingCreateQueryApiJsonResponse));
+        when(mockGoogleApiDart
+                .request(argThat(isReportingGetQueryRequestWith(queryId))))
+            .thenAnswer((_) => Future.value(reportingGetQueryApiJsonResponse));
+        when(mockGoogleApiDart
+                .request(argThat(isReportingDownloadRequestWith(downloadLink))))
+            .thenAnswer((_) => reportCompleter.future);
 
         expectedInput = [
           generateInsertionOrder(
@@ -277,7 +333,7 @@ void main() {
         verifyNever(mockGoogleApiDart.request(any));
       });
 
-      test('highlighting unchecked invokes populate(multiple-IO, false)',
+      test('highlighting unchecked invokes populate() with correct list of IOs',
           () async {
         await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
         await queryComponentPO.clickPopulate();
@@ -285,39 +341,7 @@ void main() {
         // waits for the last operation execReportingDownload() to finish.
         await fixture
             .update((_) => reportCompleter.complete(generateReport(report1)));
-
-        verify(mockGoogleApiDart.request(
-            argThat(isDV3RequestWith(QueryType.byAdvertiser, advertiserId))));
-        verify(mockGoogleApiDart.request(argThat(
-            isReportingCreateQueryRequestWith(
-                QueryType.byAdvertiser, advertiserId))));
-        verify(mockGoogleApiDart
-            .request(argThat(isReportingGetQueryRequestWith(queryId))));
-        verify(mockGoogleApiDart
-            .request(argThat(isReportingDownloadRequestWith(downloadLink))));
-        verify(mockExcelDart.populate(expectedInput, false));
-      });
-
-      test('highlighting checked invokes populate(multiple-IO, true)',
-          () async {
-        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
-        await queryComponentPO.selectUnderpacing();
-        await queryComponentPO.clickPopulate();
-
-        // waits for the last operation execReportingDownload() to finish.
-        await fixture
-            .update((_) => reportCompleter.complete(generateReport(report1)));
-
-        verify(mockGoogleApiDart.request(
-            argThat(isDV3RequestWith(QueryType.byAdvertiser, advertiserId))));
-        verify(mockGoogleApiDart.request(argThat(
-            isReportingCreateQueryRequestWith(
-                QueryType.byAdvertiser, advertiserId))));
-        verify(mockGoogleApiDart
-            .request(argThat(isReportingGetQueryRequestWith(queryId))));
-        verify(mockGoogleApiDart
-            .request(argThat(isReportingDownloadRequestWith(downloadLink))));
-        verify(mockExcelDart.populate(expectedInput, true));
+        verify(mockExcelDart.populate(expectedInput, any));
       });
 
       test(
@@ -360,16 +384,22 @@ void main() {
         }
         ''';
 
-        final answers = [
-          Future.value(multipleIOJsonString),
-          Future.value(reportingCreateQueryApiJsonResponse),
-          Future.value(reportingGetQueryApiJsonResponse),
-          reportCompleter.future,
-        ];
-
-        var callCount = 0;
-        when(mockGoogleApiDart.request(any))
-            .thenAnswer((_) => answers[callCount++]);
+        when(mockGoogleApiDart.request(argThat(isDV3RequestWith(
+                QueryType.byMediaPlan, advertiserId,
+                mediaPlanId: mediaPlanId1))))
+            .thenAnswer((_) => Future.value(multipleIOJsonString));
+        when(mockGoogleApiDart.request(argThat(
+                isReportingCreateQueryRequestWith(
+                    QueryType.byMediaPlan, advertiserId,
+                    mediaPlanId: mediaPlanId1))))
+            .thenAnswer(
+                (_) => Future.value(reportingCreateQueryApiJsonResponse));
+        when(mockGoogleApiDart
+                .request(argThat(isReportingGetQueryRequestWith(queryId))))
+            .thenAnswer((_) => Future.value(reportingGetQueryApiJsonResponse));
+        when(mockGoogleApiDart
+                .request(argThat(isReportingDownloadRequestWith(downloadLink))))
+            .thenAnswer((_) => reportCompleter.future);
 
         expectedInput = [
           generateInsertionOrder(
@@ -416,7 +446,7 @@ void main() {
       });
 
       test(
-          'highlight underpacing unchecked invokes populate(multiple-IO, false)',
+          'highlight underpacing unchecked invokes populate() with correct list of IOs',
           () async {
         await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
         await queryComponentAccordionPO.typeMediaPlanId(mediaPlanId1);
@@ -425,44 +455,7 @@ void main() {
         // waits for the last operation execReportingDownload() to finish.
         await fixture
             .update((_) => reportCompleter.complete(generateReport(report2)));
-
-        verify(mockGoogleApiDart.request(argThat(isDV3RequestWith(
-            QueryType.byMediaPlan, advertiserId,
-            mediaPlanId: mediaPlanId1))));
-        verify(mockGoogleApiDart.request(argThat(
-            isReportingCreateQueryRequestWith(
-                QueryType.byMediaPlan, advertiserId,
-                mediaPlanId: mediaPlanId1))));
-        verify(mockGoogleApiDart
-            .request(argThat(isReportingGetQueryRequestWith(queryId))));
-        verify(mockGoogleApiDart
-            .request(argThat(isReportingDownloadRequestWith(downloadLink))));
-        verify(mockExcelDart.populate(expectedInput, false));
-      });
-
-      test('highlight underpacing checked invokes populate(multiple-IO, true)',
-          () async {
-        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
-        await queryComponentAccordionPO.typeMediaPlanId(mediaPlanId1);
-        await queryComponentPO.selectUnderpacing();
-        await queryComponentPO.clickPopulate();
-
-        // waits for the last operation execReportingDownload() to finish.
-        await fixture
-            .update((_) => reportCompleter.complete(generateReport(report2)));
-
-        verify(mockGoogleApiDart.request(argThat(isDV3RequestWith(
-            QueryType.byMediaPlan, advertiserId,
-            mediaPlanId: mediaPlanId1))));
-        verify(mockGoogleApiDart.request(argThat(
-            isReportingCreateQueryRequestWith(
-                QueryType.byMediaPlan, advertiserId,
-                mediaPlanId: mediaPlanId1))));
-        verify(mockGoogleApiDart
-            .request(argThat(isReportingGetQueryRequestWith(queryId))));
-        verify(mockGoogleApiDart
-            .request(argThat(isReportingDownloadRequestWith(downloadLink))));
-        verify(mockExcelDart.populate(expectedInput, true));
+        verify(mockExcelDart.populate(expectedInput, any));
       });
 
       test(
@@ -500,16 +493,21 @@ void main() {
         final singleIOJsonString =
             '${generateInsertionOrderJsonString(advertiserId, mediaPlanId1, ioId1, startDate, endDate)}';
 
-        final answers = [
-          Future.value(singleIOJsonString),
-          Future.value(reportingCreateQueryApiJsonResponse),
-          Future.value(reportingGetQueryApiJsonResponse),
-          reportCompleter.future,
-        ];
-
-        var callCount = 0;
-        when(mockGoogleApiDart.request(any))
-            .thenAnswer((_) => answers[callCount++]);
+        when(mockGoogleApiDart.request(argThat(isDV3RequestWith(
+                QueryType.byInsertionOrder, advertiserId,
+                ioId: ioId1))))
+            .thenAnswer((_) => Future.value(singleIOJsonString));
+        when(mockGoogleApiDart.request(argThat(
+                isReportingCreateQueryRequestWith(
+                    QueryType.byInsertionOrder, advertiserId, ioId: ioId1))))
+            .thenAnswer(
+                (_) => Future.value(reportingCreateQueryApiJsonResponse));
+        when(mockGoogleApiDart
+                .request(argThat(isReportingGetQueryRequestWith(queryId))))
+            .thenAnswer((_) => Future.value(reportingGetQueryApiJsonResponse));
+        when(mockGoogleApiDart
+                .request(argThat(isReportingDownloadRequestWith(downloadLink))))
+            .thenAnswer((_) => reportCompleter.future);
 
         expectedInput = [
           generateInsertionOrder(
@@ -551,7 +549,7 @@ void main() {
         verifyNever(mockGoogleApiDart.request(any));
       });
 
-      test('highlighting unchecked invokes populate(single-IO, false)',
+      test('highlighting unchecked invokes populate() with correct list of IOs',
           () async {
         await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
         await queryComponentAccordionPO.typeInsertionOrderId(ioId1);
@@ -560,43 +558,7 @@ void main() {
         // waits for the last operation execReportingDownload() to finish.
         await fixture
             .update((_) => reportCompleter.complete(generateReport(report3)));
-
-        verify(mockGoogleApiDart.request(argThat(isDV3RequestWith(
-            QueryType.byInsertionOrder, advertiserId,
-            ioId: ioId1))));
-        verify(mockGoogleApiDart.request(argThat(
-            isReportingCreateQueryRequestWith(
-                QueryType.byInsertionOrder, advertiserId,
-                ioId: ioId1))));
-        verify(mockGoogleApiDart
-            .request(argThat(isReportingGetQueryRequestWith(queryId))));
-        verify(mockGoogleApiDart
-            .request(argThat(isReportingDownloadRequestWith(downloadLink))));
-        verify(mockExcelDart.populate(expectedInput, false));
-      });
-
-      test('highlighting checked invokes populate(single-IO, true)', () async {
-        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
-        await queryComponentAccordionPO.typeInsertionOrderId(ioId1);
-        await queryComponentPO.selectUnderpacing();
-        await queryComponentPO.clickPopulate();
-
-        // waits for the last operation execReportingDownload() to finish.
-        await fixture
-            .update((_) => reportCompleter.complete(generateReport(report3)));
-
-        verify(mockGoogleApiDart.request(argThat(isDV3RequestWith(
-            QueryType.byInsertionOrder, advertiserId,
-            ioId: ioId1))));
-        verify(mockGoogleApiDart.request(argThat(
-            isReportingCreateQueryRequestWith(
-                QueryType.byInsertionOrder, advertiserId,
-                ioId: ioId1))));
-        verify(mockGoogleApiDart
-            .request(argThat(isReportingGetQueryRequestWith(queryId))));
-        verify(mockGoogleApiDart
-            .request(argThat(isReportingDownloadRequestWith(downloadLink))));
-        verify(mockExcelDart.populate(expectedInput, true));
+        verify(mockExcelDart.populate(expectedInput, any));
       });
 
       test(
