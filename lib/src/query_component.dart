@@ -1,5 +1,6 @@
 import 'package:angular/angular.dart';
 import 'package:angular_forms/angular_forms.dart';
+import 'package:dv360_excel_plugin/src/gapi.dart';
 import 'package:ng_bootstrap/ng_bootstrap.dart';
 import 'package:quiver/collection.dart';
 
@@ -15,9 +16,10 @@ import 'util.dart';
   selector: 'query',
   templateUrl: 'query_component.html',
   providers: [
-    ClassProvider(QueryService),
     ClassProvider(ExcelDart),
     FORM_PROVIDERS,
+    ClassProvider(GoogleApiDart),
+    ClassProvider(QueryService),
   ],
   directives: [bsAccordionDirectives, BsInput, coreDirectives, formDirectives],
 )

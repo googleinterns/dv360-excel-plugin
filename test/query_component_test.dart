@@ -5,9 +5,10 @@ import 'dart:async';
 import 'package:angular/angular.dart';
 import 'package:angular_test/angular_test.dart';
 import 'package:dv360_excel_plugin/src/excel.dart';
+import 'package:dv360_excel_plugin/src/gapi.dart';
+import 'package:dv360_excel_plugin/src/google_api_request_args.dart';
 import 'package:dv360_excel_plugin/src/proto/insertion_order_query.pb.dart';
 import 'package:dv360_excel_plugin/src/query_component.dart';
-import 'package:dv360_excel_plugin/src/query_service.dart';
 import 'package:dv360_excel_plugin/src/util.dart';
 import 'package:mockito/mockito.dart';
 import 'package:pageloader/html.dart';
@@ -18,12 +19,12 @@ import 'query_component_test.template.dart' as ng;
 import 'testing/query_component_po.dart';
 
 @Injectable()
-class MockQueryService extends Mock implements QueryService {
-  MockQueryService._private();
+class MockGoogleApiDart extends Mock implements GoogleApiDart {
+  MockGoogleApiDart._private();
 
-  static final MockQueryService _singleton = MockQueryService._private();
+  static final MockGoogleApiDart _singleton = MockGoogleApiDart._private();
 
-  factory MockQueryService() {
+  factory MockGoogleApiDart() {
     return _singleton;
   }
 }
@@ -42,7 +43,7 @@ class MockExcelDart extends Mock implements ExcelDart {
 @Directive(
   selector: '[override]',
   providers: [
-    ClassProvider(QueryService, useClass: MockQueryService),
+    ClassProvider(GoogleApiDart, useClass: MockGoogleApiDart),
     ClassProvider(ExcelDart, useClass: MockExcelDart)
   ],
 )
@@ -72,7 +73,7 @@ void main() {
     const ioId4 = '30003';
 
     final startDate = DateTime(2020, 7, 1);
-    final endDate = DateTime(2020, 7, 31);
+    final endDate = DateTime.now().add(Duration(days: 10));
 
     const spending1 = '100';
     const spending2 = '200';
@@ -104,10 +105,9 @@ void main() {
     NgTestFixture<QueryTestComponent> fixture;
     QueryComponentPageObject queryComponentPO;
     QueryComponentAccordionPageObject queryComponentAccordionPO;
-    MockQueryService mockQueryService;
+    MockGoogleApiDart mockGoogleApiDart;
     MockExcelDart mockExcelDart;
 
-    List<InsertionOrder> expectedInput;
     Completer<String> reportCompleter;
 
     setUp(() async {
@@ -119,7 +119,7 @@ void main() {
       queryComponentPO = QueryComponentPageObject.create(context);
       queryComponentAccordionPO =
           QueryComponentAccordionPageObject.create(context);
-      mockQueryService = MockQueryService();
+      mockGoogleApiDart = MockGoogleApiDart();
       mockExcelDart = MockExcelDart();
     });
 
@@ -206,8 +206,8 @@ void main() {
     test('making no selection defaults to ByAdvertiser', () async {
       await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
       await queryComponentPO.clickPopulate();
-      verify(mockQueryService.execDV3Query(QueryType.byAdvertiser, '',
-          advertiserId, argThat(isNull), argThat(isNull)));
+      verify(mockGoogleApiDart.request(
+          argThat(isDV3RequestWith(QueryType.byAdvertiser, advertiserId))));
     });
 
     test('only the last selection on query type matters', () async {
@@ -219,21 +219,58 @@ void main() {
       await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
       await queryComponentPO.clickPopulate();
 
-      verify(mockQueryService.execDV3Query(QueryType.byAdvertiser, '',
-          advertiserId, argThat(isNull), argThat(isNull)));
+      verify(mockGoogleApiDart.request(
+          argThat(isDV3RequestWith(QueryType.byAdvertiser, advertiserId))));
     });
 
-    test('only the last selection on query type matters', () async {
-      await queryComponentAccordionPO.selectByAdvertiser();
-      await queryComponentAccordionPO.selectByMediaPlan();
-      await queryComponentAccordionPO.selectByIO();
-      await queryComponentAccordionPO.selectByAdvertiser();
+    group('when underpacing checkbox', () {
+      setUp(() async {
+        reportCompleter = Completer<String>();
 
-      await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
-      await queryComponentPO.clickPopulate();
+        await queryComponentAccordionPO.selectByIO();
 
-      verify(mockQueryService.execDV3Query(QueryType.byAdvertiser, '',
-          advertiserId, argThat(isNull), argThat(isNull)));
+        final singleIOJsonString =
+            '${generateInsertionOrderJsonString(advertiserId, mediaPlanId1, ioId1, startDate, endDate)}';
+
+        when(mockGoogleApiDart.request(argThat(isDV3RequestWith(
+                QueryType.byInsertionOrder, advertiserId,
+                ioId: ioId1))))
+            .thenAnswer((_) => Future.value(singleIOJsonString));
+        when(mockGoogleApiDart.request(argThat(
+                isReportingCreateQueryRequestWith(
+                    QueryType.byInsertionOrder, advertiserId, ioId: ioId1))))
+            .thenAnswer(
+                (_) => Future.value(reportingCreateQueryApiJsonResponse));
+        when(mockGoogleApiDart
+                .request(argThat(isReportingGetQueryRequestWith(queryId))))
+            .thenAnswer((_) => Future.value(reportingGetQueryApiJsonResponse));
+        when(mockGoogleApiDart
+                .request(argThat(isReportingDownloadRequestWith(downloadLink))))
+            .thenAnswer((_) => reportCompleter.future);
+      });
+
+      tearDown(() => clearInteractions(mockGoogleApiDart));
+
+      test('is selected, populate(any, true) is invoked', () async {
+        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
+        await queryComponentAccordionPO.typeInsertionOrderId(ioId1);
+        await queryComponentPO.selectUnderpacing();
+        await queryComponentPO.clickPopulate();
+
+        await fixture
+            .update((_) => reportCompleter.complete(generateReport(report1)));
+        verify(mockExcelDart.populate(any, true));
+      });
+
+      test('is not selected, populate(any, false) is invoked', () async {
+        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
+        await queryComponentAccordionPO.typeInsertionOrderId(ioId1);
+        await queryComponentPO.clickPopulate();
+
+        await fixture
+            .update((_) => reportCompleter.complete(generateReport(report1)));
+        verify(mockExcelDart.populate(any, false));
+      });
     });
 
     group('raising QueryBuilderException', () {
@@ -281,19 +318,42 @@ void main() {
         }
         ''';
 
-        when(mockQueryService.execDV3Query(QueryType.byAdvertiser, '',
-                advertiserId, argThat(isNull), argThat(isNull)))
+        when(mockGoogleApiDart.request(argThat(
+                isDV3RequestWith(QueryType.byAdvertiser, advertiserId))))
             .thenAnswer((_) => Future.value(multipleIOJsonString));
-        when(mockQueryService.execReportingCreateQuery(QueryType.byAdvertiser,
-                advertiserId, argThat(isNull), argThat(isNull), startDate, any))
+        when(mockGoogleApiDart.request(argThat(
+                isReportingCreateQueryRequestWith(
+                    QueryType.byAdvertiser, advertiserId))))
             .thenAnswer(
                 (_) => Future.value(reportingCreateQueryApiJsonResponse));
-        when(mockQueryService.execReportingGetQuery(queryId))
+        when(mockGoogleApiDart
+                .request(argThat(isReportingGetQueryRequestWith(queryId))))
             .thenAnswer((_) => Future.value(reportingGetQueryApiJsonResponse));
-        when(mockQueryService.execReportingDownload(downloadLink))
+        when(mockGoogleApiDart
+                .request(argThat(isReportingDownloadRequestWith(downloadLink))))
             .thenAnswer((_) => reportCompleter.future);
+      });
 
-        expectedInput = [
+      tearDown(() => clearInteractions(mockGoogleApiDart));
+
+      test('no advertiser id disables the populate button', () async {
+        await queryComponentPO.clickPopulate();
+        verifyNever(mockGoogleApiDart.request(any));
+      });
+
+      test('non-integer advertiser id disables the populate button', () async {
+        await queryComponentAccordionPO.typeAdvertiserId('wrong-format-id');
+        await queryComponentPO.clickPopulate();
+        verifyNever(mockGoogleApiDart.request(any));
+      });
+
+      test('valid advertiser id invokes populate() with correct IOs', () async {
+        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
+        await queryComponentPO.clickPopulate();
+
+        await fixture
+            .update((_) => reportCompleter.complete(generateReport(report1)));
+        final expectedInputs = [
           generateInsertionOrder(
               advertiserId, mediaPlanId1, ioId1, startDate, endDate, spending1),
           generateInsertionOrder(
@@ -303,62 +363,25 @@ void main() {
           generateInsertionOrder(
               advertiserId, mediaPlanId2, ioId4, startDate, endDate, spending4),
         ];
-      });
-
-      tearDown(() => clearInteractions(mockQueryService));
-
-      test('no advertiser id disables the populate button', () async {
-        await queryComponentPO.clickPopulate();
-        verifyNever(mockQueryService.execDV3Query(any, any, any, any, any));
-      });
-
-      test('non-integer advertiser id disables the populate button', () async {
-        await queryComponentAccordionPO.typeAdvertiserId('wrong-format-id');
-        await queryComponentPO.clickPopulate();
-        verifyNever(mockQueryService.execDV3Query(any, any, any, any, any));
-      });
-
-      test('highlighting unchecked invokes populate(multiple-IO, false)',
-          () async {
-        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
-        await queryComponentPO.clickPopulate();
-
-        // waits for the last operation execReportingDownload() to finish.
-        await fixture
-            .update((_) => reportCompleter.complete(generateReport(report1)));
-        verify(mockExcelDart.populate(expectedInput, false));
-      });
-
-      test('highlighting checked invokes populate(multiple-IO, true)',
-          () async {
-        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
-        await queryComponentPO.selectUnderpacing();
-        await queryComponentPO.clickPopulate();
-
-        // waits for the last operation execReportingDownload() to finish.
-        await fixture
-            .update((_) => reportCompleter.complete(generateReport(report1)));
-        verify(mockExcelDart.populate(expectedInput, true));
+        verify(mockExcelDart.populate(expectedInputs, any));
       });
 
       test(
-          'correct ids invokes populate() and '
-          'displays the spinner when populate() is running', () async {
+          'valid advertiser id displays the spinner when populate() is running',
+          () async {
         await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
         await queryComponentPO.clickPopulate();
 
-        // waits for the fixture to update, but keeps populate() hanging.
         await fixture.update();
         expect(queryComponentPO.populateButtonSpinner, isVisible);
       });
 
       test(
-          'correct ids invokes populate() and '
-          'hides the spinner when populate() finishes running', () async {
+          'valid advertiser id hides the spinner when populate() finishes running',
+          () async {
         await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
         await queryComponentPO.clickPopulate();
 
-        // waits for the last operation execReportingDownload() to finish.
         await fixture
             .update((_) => reportCompleter.complete(generateReport(report1)));
         expect(queryComponentPO.populateButtonSpinner, notExists);
@@ -393,19 +416,66 @@ void main() {
         }
         ''';
 
-        when(mockQueryService.execDV3Query(QueryType.byMediaPlan, '',
-                advertiserId, mediaPlanId1, argThat(isNull)))
+        when(mockGoogleApiDart.request(argThat(isDV3RequestWith(
+                QueryType.byMediaPlan, advertiserId,
+                mediaPlanId: mediaPlanId1))))
             .thenAnswer((_) => Future.value(multipleIOJsonString));
-        when(mockQueryService.execReportingCreateQuery(QueryType.byMediaPlan,
-                advertiserId, mediaPlanId1, argThat(isNull), startDate, any))
+        when(mockGoogleApiDart.request(argThat(
+                isReportingCreateQueryRequestWith(
+                    QueryType.byMediaPlan, advertiserId,
+                    mediaPlanId: mediaPlanId1))))
             .thenAnswer(
                 (_) => Future.value(reportingCreateQueryApiJsonResponse));
-        when(mockQueryService.execReportingGetQuery(queryId))
+        when(mockGoogleApiDart
+                .request(argThat(isReportingGetQueryRequestWith(queryId))))
             .thenAnswer((_) => Future.value(reportingGetQueryApiJsonResponse));
-        when(mockQueryService.execReportingDownload(downloadLink))
+        when(mockGoogleApiDart
+                .request(argThat(isReportingDownloadRequestWith(downloadLink))))
             .thenAnswer((_) => reportCompleter.future);
+      });
 
-        expectedInput = [
+      tearDown(() => clearInteractions(mockGoogleApiDart));
+
+      test('no advertiser id and no media plan id disables the populate button',
+          () async {
+        await queryComponentPO.clickPopulate();
+        verifyNever(mockGoogleApiDart.request(any));
+      });
+
+      test('no advertiser id disables the populate button', () async {
+        await queryComponentAccordionPO.typeMediaPlanId(mediaPlanId1);
+        await queryComponentPO.clickPopulate();
+        verifyNever(mockGoogleApiDart.request(any));
+      });
+
+      test('non-integer advertiser id disables the populate button', () async {
+        await queryComponentAccordionPO.typeAdvertiserId('wrong-format-id');
+        await queryComponentAccordionPO.typeMediaPlanId(mediaPlanId1);
+        await queryComponentPO.clickPopulate();
+        verifyNever(mockGoogleApiDart.request(any));
+      });
+
+      test('no media plan id disables the populate button', () async {
+        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
+        await queryComponentPO.clickPopulate();
+        verifyNever(mockGoogleApiDart.request(any));
+      });
+
+      test('non-integer media plan id disables the populate button', () async {
+        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
+        await queryComponentAccordionPO.typeMediaPlanId('wrong-format-id');
+        await queryComponentPO.clickPopulate();
+        verifyNever(mockGoogleApiDart.request(any));
+      });
+
+      test('valid ids invokes populate() with correct IOs', () async {
+        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
+        await queryComponentAccordionPO.typeMediaPlanId(mediaPlanId1);
+        await queryComponentPO.clickPopulate();
+
+        await fixture
+            .update((_) => reportCompleter.complete(generateReport(report2)));
+        final expectedInput = [
           generateInsertionOrder(
               advertiserId, mediaPlanId1, ioId1, startDate, endDate, spending1),
           generateInsertionOrder(
@@ -413,88 +483,25 @@ void main() {
           generateInsertionOrder(
               advertiserId, mediaPlanId1, ioId3, startDate, endDate, spending3),
         ];
+        verify(mockExcelDart.populate(expectedInput, any));
       });
 
-      tearDown(() => clearInteractions(mockQueryService));
-
-      test('no advertiser id and no media plan id disables the populate button',
-          () async {
-        await queryComponentPO.clickPopulate();
-        verifyNever(mockQueryService.execDV3Query(any, any, any, any, any));
-      });
-
-      test('no advertiser id disables the populate button', () async {
-        await queryComponentAccordionPO.typeMediaPlanId(mediaPlanId1);
-        await queryComponentPO.clickPopulate();
-        verifyNever(mockQueryService.execDV3Query(any, any, any, any, any));
-      });
-
-      test('non-integer advertiser id disables the populate button', () async {
-        await queryComponentAccordionPO.typeAdvertiserId('wrong-format-id');
-        await queryComponentAccordionPO.typeMediaPlanId(mediaPlanId1);
-        await queryComponentPO.clickPopulate();
-        verifyNever(mockQueryService.execDV3Query(any, any, any, any, any));
-      });
-
-      test('no media plan id disables the populate button', () async {
-        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
-        await queryComponentPO.clickPopulate();
-        verifyNever(mockQueryService.execDV3Query(any, any, any, any, any));
-      });
-
-      test('non-integer media plan id disables the populate button', () async {
-        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
-        await queryComponentAccordionPO.typeMediaPlanId('wrong-format-id');
-        await queryComponentPO.clickPopulate();
-        verifyNever(mockQueryService.execDV3Query(any, any, any, any, any));
-      });
-
-      test(
-          'highlight underpacing unchecked invokes populate(multiple-IO, false)',
+      test('valid ids displays the spinner when populate() is running',
           () async {
         await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
         await queryComponentAccordionPO.typeMediaPlanId(mediaPlanId1);
         await queryComponentPO.clickPopulate();
 
-        // waits for the last operation execReportingDownload() to finish.
-        await fixture
-            .update((_) => reportCompleter.complete(generateReport(report2)));
-        verify(mockExcelDart.populate(expectedInput, false));
-      });
-
-      test('highlight underpacing checked invokes populate(multiple-IO, true)',
-          () async {
-        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
-        await queryComponentAccordionPO.typeMediaPlanId(mediaPlanId1);
-        await queryComponentPO.selectUnderpacing();
-        await queryComponentPO.clickPopulate();
-
-        // waits for the last operation execReportingDownload() to finish.
-        await fixture
-            .update((_) => reportCompleter.complete(generateReport(report2)));
-        verify(mockExcelDart.populate(expectedInput, true));
-      });
-
-      test(
-          'correct ids invokes populate() and '
-          'displays the spinner when populate() is running', () async {
-        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
-        await queryComponentAccordionPO.typeMediaPlanId(mediaPlanId1);
-        await queryComponentPO.clickPopulate();
-
-        // waits for the fixture to update, but keeps populate() hanging.
         await fixture.update();
         expect(queryComponentPO.populateButtonSpinner, isVisible);
       });
 
-      test(
-          'correct ids invokes populate() and '
-          'hides the spinner when populate() finishes running', () async {
+      test('valid ids hides the spinner when populate() finishes running',
+          () async {
         await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
         await queryComponentAccordionPO.typeMediaPlanId(mediaPlanId1);
         await queryComponentPO.clickPopulate();
 
-        // waits for the last operation execReportingDownload() to finish.
         await fixture
             .update((_) => reportCompleter.complete(generateReport(report1)));
         expect(queryComponentPO.populateButtonSpinner, notExists);
@@ -523,107 +530,87 @@ void main() {
         final singleIOJsonString =
             '${generateInsertionOrderJsonString(advertiserId, mediaPlanId1, ioId1, startDate, endDate)}';
 
-        when(mockQueryService.execDV3Query(QueryType.byInsertionOrder, '',
-                advertiserId, argThat(isNull), ioId1))
+        when(mockGoogleApiDart.request(argThat(isDV3RequestWith(
+                QueryType.byInsertionOrder, advertiserId,
+                ioId: ioId1))))
             .thenAnswer((_) => Future.value(singleIOJsonString));
-        when(mockQueryService.execReportingCreateQuery(
-                QueryType.byInsertionOrder,
-                advertiserId,
-                argThat(isNull),
-                ioId1,
-                startDate,
-                any))
+        when(mockGoogleApiDart.request(argThat(
+                isReportingCreateQueryRequestWith(
+                    QueryType.byInsertionOrder, advertiserId, ioId: ioId1))))
             .thenAnswer(
                 (_) => Future.value(reportingCreateQueryApiJsonResponse));
-        when(mockQueryService.execReportingGetQuery(queryId))
+        when(mockGoogleApiDart
+                .request(argThat(isReportingGetQueryRequestWith(queryId))))
             .thenAnswer((_) => Future.value(reportingGetQueryApiJsonResponse));
-        when(mockQueryService.execReportingDownload(downloadLink))
+        when(mockGoogleApiDart
+                .request(argThat(isReportingDownloadRequestWith(downloadLink))))
             .thenAnswer((_) => reportCompleter.future);
-
-        expectedInput = [
-          generateInsertionOrder(
-              advertiserId, mediaPlanId1, ioId1, startDate, endDate, spending1)
-        ];
       });
 
-      tearDown(() => clearInteractions(mockQueryService));
+      tearDown(() => clearInteractions(mockGoogleApiDart));
 
       test('no advertiser id and no io id disables the populate button',
           () async {
         await queryComponentPO.clickPopulate();
-        verifyNever(mockQueryService.execDV3Query(any, any, any, any, any));
+        verifyNever(mockGoogleApiDart.request(any));
       });
 
       test('no advertiser id disables the populate button', () async {
         await queryComponentAccordionPO.typeInsertionOrderId(ioId1);
         await queryComponentPO.clickPopulate();
-        verifyNever(mockQueryService.execDV3Query(any, any, any, any, any));
+        verifyNever(mockGoogleApiDart.request(any));
       });
 
       test('non-integer advertiser id disables the populate button', () async {
         await queryComponentAccordionPO.typeAdvertiserId('wrong-format-id');
         await queryComponentAccordionPO.typeInsertionOrderId(ioId1);
         await queryComponentPO.clickPopulate();
-        verifyNever(mockQueryService.execDV3Query(any, any, any, any, any));
+        verifyNever(mockGoogleApiDart.request(any));
       });
 
       test('no io id disables the populate button', () async {
         await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
         await queryComponentPO.clickPopulate();
-        verifyNever(mockQueryService.execDV3Query(any, any, any, any, any));
+        verifyNever(mockGoogleApiDart.request(any));
       });
 
       test('non-integer io id disables the populate button', () async {
         await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
         await queryComponentAccordionPO.typeInsertionOrderId('wrong-format-id');
         await queryComponentPO.clickPopulate();
-        verifyNever(mockQueryService.execDV3Query(any, any, any, any, any));
+        verifyNever(mockGoogleApiDart.request(any));
       });
 
-      test('highlighting unchecked invokes populate(single-IO, false)',
+      test('valid ids invokes populate() with correct IOs', () async {
+        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
+        await queryComponentAccordionPO.typeInsertionOrderId(ioId1);
+        await queryComponentPO.clickPopulate();
+
+        await fixture
+            .update((_) => reportCompleter.complete(generateReport(report3)));
+        final expectedInput = [
+          generateInsertionOrder(
+              advertiserId, mediaPlanId1, ioId1, startDate, endDate, spending1)
+        ];
+        verify(mockExcelDart.populate(expectedInput, any));
+      });
+
+      test('correct ids displays the spinner when populate() is running',
           () async {
         await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
         await queryComponentAccordionPO.typeInsertionOrderId(ioId1);
         await queryComponentPO.clickPopulate();
 
-        // waits for the last operation execReportingDownload() to finish.
-        await fixture
-            .update((_) => reportCompleter.complete(generateReport(report3)));
-        verify(mockExcelDart.populate(expectedInput, false));
-      });
-
-      test('highlighting checked invokes populate(single-IO, true)', () async {
-        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
-        await queryComponentAccordionPO.typeInsertionOrderId(ioId1);
-        await queryComponentPO.selectUnderpacing();
-        await queryComponentPO.clickPopulate();
-
-        // waits for the last operation execReportingDownload() to finish.
-        await fixture
-            .update((_) => reportCompleter.complete(generateReport(report3)));
-        verify(mockExcelDart.populate(expectedInput, true));
-      });
-
-      test(
-          'correct ids invokes populate() and '
-          'displays the spinner when populate() is running', () async {
-        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
-        await queryComponentAccordionPO.typeInsertionOrderId(ioId1);
-        await queryComponentPO.clickPopulate();
-
-        // waits for the fixture to update, but keeps populate() hanging.
         await fixture.update();
         expect(queryComponentPO.populateButtonSpinner, isVisible);
       });
 
-      test(
-          'correct ids invokes populate() and '
-          'hides the spinner when populate() finishes running', () async {
+      test('correct ids hides the spinner when populate() finishes running',
+          () async {
         await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
         await queryComponentAccordionPO.typeInsertionOrderId(ioId1);
         await queryComponentPO.clickPopulate();
 
-        // waits for the last operation execReportingDownload() to finish.
         await fixture
             .update((_) => reportCompleter.complete(generateReport(report1)));
         expect(queryComponentPO.populateButtonSpinner, notExists);
@@ -643,4 +630,184 @@ void main() {
       });
     });
   });
+}
+
+class isDV3RequestWith extends Matcher {
+  final QueryType _queryType;
+  final String _advertiserId;
+  final String _mediaPlanId;
+  final String _ioId;
+
+  isDV3RequestWith(this._queryType, this._advertiserId,
+      {String mediaPlanId, String ioId})
+      : _mediaPlanId = mediaPlanId,
+        _ioId = ioId;
+
+  @override
+  Description describe(Description description) {
+    description
+        .add('DV3 $_queryType with $_advertiserId, $_mediaPlanId, $_ioId');
+    return description;
+  }
+
+  @override
+  bool matches(actual, Map matchState) {
+    switch (_queryType) {
+      case QueryType.byAdvertiser:
+        final expected = (GoogleApiRequestArgsBuilder()
+              ..path = 'https://displayvideo.googleapis.com/v1/advertisers/'
+                  '$_advertiserId/insertionOrders?'
+                  'filter=entityStatus="ENTITY_STATUS_ACTIVE"&pageToken='
+              ..method = 'GET')
+            .build();
+        return actual == expected;
+
+      case QueryType.byMediaPlan:
+        final expected = (GoogleApiRequestArgsBuilder()
+              ..path = 'https://displayvideo.googleapis.com/v1/advertisers/'
+                  '$_advertiserId/insertionOrders?'
+                  'filter=entityStatus="ENTITY_STATUS_ACTIVE"&'
+                  'filter=campaignId="$_mediaPlanId"&'
+                  'pageToken='
+              ..method = 'GET')
+            .build();
+        return actual == expected;
+
+      case QueryType.byInsertionOrder:
+        final expected = (GoogleApiRequestArgsBuilder()
+              ..path = 'https://displayvideo.googleapis.com/v1/advertisers/'
+                  '$_advertiserId/insertionOrders/$_ioId'
+              ..method = 'GET')
+            .build();
+        return actual == expected;
+
+      default:
+        return false;
+    }
+  }
+}
+
+class isReportingCreateQueryRequestWith extends Matcher {
+  final QueryType _queryType;
+  final String _advertiserId;
+  final String _mediaPlanId;
+  final String _ioId;
+
+  isReportingCreateQueryRequestWith(this._queryType, this._advertiserId,
+      {String mediaPlanId, String ioId})
+      : _mediaPlanId = mediaPlanId,
+        _ioId = ioId;
+
+  @override
+  Description describe(Description description) {
+    description.add(
+        'Reporting $_queryType createQuery with $_advertiserId, $_mediaPlanId, $_ioId');
+    return description;
+  }
+
+  @override
+  bool matches(actual, Map matchState) {
+    if (actual.path !=
+            'https://www.googleapis.com/doubleclickbidmanager/v1.1/query' ||
+        actual.method != 'POST') {
+      return false;
+    }
+    final indexOfReportDataStartTimeMs =
+        actual.body.indexOf(', reportDataStartTimeMs');
+    final actualBody = actual.body
+        .substring(0, indexOfReportDataStartTimeMs)
+        .replaceAll(RegExp(r'\s+'), '');
+
+    switch (_queryType) {
+      case QueryType.byAdvertiser:
+        final expectedBody = '''
+        {
+          metadata: {title: "DV360-excel-plugin-query", 
+                    dataRange: "CUSTOM_DATES", format: "EXCEL_CSV"}, 
+          params: {
+            metrics: ["METRIC_REVENUE_USD", "METRIC_IMPRESSIONS"], 
+            groupBys: ["FILTER_INSERTION_ORDER", "FILTER_DATE"], 
+            filters: [{type: "FILTER_ADVERTISER", value: $_advertiserId}]
+         }
+        '''
+            .replaceAll(RegExp(r'\s+'), '');
+        return expectedBody == actualBody;
+
+      case QueryType.byMediaPlan:
+        final expectedBody = '''
+        {
+          metadata: {title: "DV360-excel-plugin-query", 
+                    dataRange: "CUSTOM_DATES", format: "EXCEL_CSV"}, 
+          params: {
+            metrics: ["METRIC_REVENUE_USD", "METRIC_IMPRESSIONS"], 
+            groupBys: ["FILTER_INSERTION_ORDER", "FILTER_DATE"], 
+            filters: [{type: "FILTER_ADVERTISER", value: $_advertiserId},
+                      {type: "FILTER_MEDIA_PLAN", value: $_mediaPlanId}]
+         }
+        '''
+            .replaceAll(RegExp(r'\s+'), '');
+        return expectedBody == actualBody;
+
+      case QueryType.byInsertionOrder:
+        final expectedBody = '''
+        {
+          metadata: {title: "DV360-excel-plugin-query", 
+                    dataRange: "CUSTOM_DATES", format: "EXCEL_CSV"}, 
+          params: {
+            metrics: ["METRIC_REVENUE_USD", "METRIC_IMPRESSIONS"], 
+            groupBys: ["FILTER_INSERTION_ORDER", "FILTER_DATE"], 
+            filters: [{type: "FILTER_ADVERTISER", value: $_advertiserId},
+                      {type: "FILTER_INSERTION_ORDER", value: $_ioId}]
+         }
+        '''
+            .replaceAll(RegExp(r'\s+'), '');
+        return expectedBody == actualBody;
+
+      default:
+        return false;
+    }
+  }
+}
+
+class isReportingGetQueryRequestWith extends Matcher {
+  final String _queryId;
+
+  isReportingGetQueryRequestWith(this._queryId);
+
+  @override
+  Description describe(Description description) {
+    description.add('Reporting getQuery with $_queryId');
+    return description;
+  }
+
+  @override
+  bool matches(actual, Map matchState) {
+    final expected = (GoogleApiRequestArgsBuilder()
+          ..path =
+              'https://www.googleapis.com/doubleclickbidmanager/v1.1/query/$_queryId'
+          ..method = 'GET')
+        .build();
+    return actual == expected;
+  }
+}
+
+class isReportingDownloadRequestWith extends Matcher {
+  final String _downloadPath;
+
+  isReportingDownloadRequestWith(this._downloadPath);
+
+  @override
+  Description describe(Description description) {
+    description.add('Reporting getQuery with $_downloadPath');
+    return description;
+  }
+
+  @override
+  bool matches(actual, Map matchState) {
+    final expected = (GoogleApiRequestArgsBuilder()
+          ..path = _downloadPath
+          ..method = 'GET')
+        .build();
+    return actual == expected;
+  }
 }

@@ -4,8 +4,9 @@ import 'dart:async';
 import 'package:angular/angular.dart';
 import 'package:angular_test/angular_test.dart';
 import 'package:dv360_excel_plugin/root_component.dart';
-import 'package:dv360_excel_plugin/src/credential_service.dart';
 import 'package:dv360_excel_plugin/src/excel.dart';
+import 'package:dv360_excel_plugin/src/gapi.dart';
+import 'package:intl/intl.dart';
 import 'package:mockito/mockito.dart';
 import 'package:pageloader/html.dart';
 import 'package:pageloader/testing.dart';
@@ -15,13 +16,12 @@ import 'root_component_test.template.dart' as ng;
 import 'testing/root_component_po.dart';
 
 @Injectable()
-class MockCredentialService extends Mock implements CredentialService {
-  MockCredentialService._private();
+class MockGoogleApiDart extends Mock implements GoogleApiDart {
+  MockGoogleApiDart._private();
 
-  static final MockCredentialService _singleton =
-      MockCredentialService._private();
+  static final MockGoogleApiDart _singleton = MockGoogleApiDart._private();
 
-  factory MockCredentialService() {
+  factory MockGoogleApiDart() {
     return _singleton;
   }
 }
@@ -40,8 +40,8 @@ class MockExcelDart extends Mock implements ExcelDart {
 @Directive(
   selector: '[override]',
   providers: [
-    ClassProvider(CredentialService, useClass: MockCredentialService),
-    Provider(ExcelDart, useClass: MockExcelDart)
+    ClassProvider(ExcelDart, useClass: MockExcelDart),
+    ClassProvider(GoogleApiDart, useClass: MockGoogleApiDart),
   ],
 )
 class OverrideDirective {}
@@ -58,26 +58,35 @@ class RootTestComponent {}
 
 void main() {
   group('In $RootComponent,', () {
+    const apiKey = 'API_KEY';
+    const clientId = 'CLIENT_ID';
+    const redirectUri = 'http://localhost:8080';
+    const scope = 'https://www.googleapis.com/auth/display-video '
+        'https://www.googleapis.com/auth/doubleclickbidmanager '
+        'https://www.googleapis.com/auth/devstorage.read_only';
+    const discoveryDocs = [
+      'https://displayvideo.googleapis.com/\$discovery/rest?version=v1',
+      'https://content.googleapis.com/discovery/v1/apis/doubleclickbidmanager/v1.1/rest'
+    ];
+
     NgTestBed testBed;
     NgTestFixture<RootTestComponent> fixture;
     RootComponentLandingPagePageObject rootComponentLandingPagePO;
     RootComponentMainPagePageObject rootComponentMainPagePO;
 
-    MockCredentialService mockCredential;
+    MockGoogleApiDart mockGoogleApiDart;
     MockExcelDart mockExcelDart;
 
-    Completer<bool> credentialCompleter;
+    Completer<bool> googleApiCompleter;
     Completer<bool> excelCompleter;
-    Completer<bool> buttonCompleter;
 
     setUp(() async {
       testBed = NgTestBed.forComponent<RootTestComponent>(
           ng.RootTestComponentNgFactory);
-      mockCredential = MockCredentialService();
+      mockGoogleApiDart = MockGoogleApiDart();
       mockExcelDart = MockExcelDart();
-      credentialCompleter = Completer<bool>();
+      googleApiCompleter = Completer<bool>();
       excelCompleter = Completer<bool>();
-      buttonCompleter = Completer<bool>();
     });
 
     tearDown(disposeAnyRunningTest);
@@ -87,15 +96,17 @@ void main() {
         'are invoked during init', () async {
       fixture = await testBed.create();
 
-      verify(mockCredential.handleClientLoad());
-      verify(mockCredential.initClient());
+      verify(mockGoogleApiDart.loadLibrary('client:auth2'));
+      verify(mockGoogleApiDart.initClient(
+          apiKey, clientId, discoveryDocs, scope, any));
       verify(mockExcelDart.loadOffice());
     });
 
     group('when app is not running in excel and user is not validated,', () {
       setUp(() async {
-        when(mockCredential.initClient())
-            .thenAnswer((_) => credentialCompleter.future);
+        when(mockGoogleApiDart.initClient(
+                apiKey, clientId, discoveryDocs, scope, any))
+            .thenAnswer((_) => googleApiCompleter.future);
         when(mockExcelDart.loadOffice())
             .thenAnswer((_) => excelCompleter.future);
 
@@ -109,7 +120,7 @@ void main() {
             RootComponentMainPagePageObject.create(context);
 
         await fixture.update((_) {
-          credentialCompleter.complete(false);
+          googleApiCompleter.complete(false);
           excelCompleter.complete(false);
         });
       });
@@ -137,8 +148,9 @@ void main() {
 
     group('when app is running in excel and user is not validated,', () {
       setUp(() async {
-        when(mockCredential.initClient())
-            .thenAnswer((_) => credentialCompleter.future);
+        when(mockGoogleApiDart.initClient(
+                apiKey, clientId, discoveryDocs, scope, any))
+            .thenAnswer((_) => googleApiCompleter.future);
         when(mockExcelDart.loadOffice())
             .thenAnswer((_) => excelCompleter.future);
 
@@ -152,7 +164,7 @@ void main() {
             RootComponentMainPagePageObject.create(context);
 
         await fixture.update((_) {
-          credentialCompleter.complete(false);
+          googleApiCompleter.complete(false);
           excelCompleter.complete(true);
         });
       });
@@ -180,8 +192,9 @@ void main() {
 
     group('when app is running in excel and user is validated,', () {
       setUp(() async {
-        when(mockCredential.initClient())
-            .thenAnswer((_) => credentialCompleter.future);
+        when(mockGoogleApiDart.initClient(
+                apiKey, clientId, discoveryDocs, scope, any))
+            .thenAnswer((_) => googleApiCompleter.future);
         when(mockExcelDart.loadOffice())
             .thenAnswer((_) => excelCompleter.future);
 
@@ -195,7 +208,7 @@ void main() {
             RootComponentMainPagePageObject.create(context);
 
         await fixture.update((_) {
-          credentialCompleter.complete(true);
+          googleApiCompleter.complete(true);
           excelCompleter.complete(true);
         });
       });
@@ -215,8 +228,9 @@ void main() {
 
     group('when landing page is displayed, clicking on the sign-on button', () {
       setUp(() async {
-        when(mockCredential.initClient())
-            .thenAnswer((_) => credentialCompleter.future);
+        when(mockGoogleApiDart.initClient(
+                apiKey, clientId, discoveryDocs, scope, any))
+            .thenAnswer((_) => googleApiCompleter.future);
         when(mockExcelDart.loadOffice())
             .thenAnswer((_) => excelCompleter.future);
 
@@ -230,15 +244,13 @@ void main() {
             RootComponentMainPagePageObject.create(context);
 
         await fixture.update((_) {
-          credentialCompleter.complete(false);
+          googleApiCompleter.complete(false);
           excelCompleter.complete(true);
         });
 
-        when(mockCredential.handleAuthClick())
-            .thenAnswer((_) => buttonCompleter.future);
-
+        when(mockGoogleApiDart.getSignInStatus()).thenReturn(false);
         await rootComponentLandingPagePO.clickSignOn();
-        await fixture.update((_) => buttonCompleter.complete(true));
+        await fixture.update();
       });
 
       test('hides the landing page', () async {
@@ -260,8 +272,9 @@ void main() {
 
     group('when main page is displayed, clicking on the sign-off button', () {
       setUp(() async {
-        when(mockCredential.initClient())
-            .thenAnswer((_) => credentialCompleter.future);
+        when(mockGoogleApiDart.initClient(
+                apiKey, clientId, discoveryDocs, scope, any))
+            .thenAnswer((_) => googleApiCompleter.future);
         when(mockExcelDart.loadOffice())
             .thenAnswer((_) => excelCompleter.future);
 
@@ -275,15 +288,13 @@ void main() {
             RootComponentMainPagePageObject.create(context);
 
         await fixture.update((_) {
-          credentialCompleter.complete(true);
+          googleApiCompleter.complete(true);
           excelCompleter.complete(true);
         });
 
-        when(mockCredential.handleAuthClick())
-            .thenAnswer((_) => buttonCompleter.future);
-
+        when(mockGoogleApiDart.getSignInStatus()).thenReturn(true);
         await rootComponentMainPagePO.clickSignOff();
-        await fixture.update((_) => buttonCompleter.complete(false));
+        await fixture.update();
       });
 
       test('hides the main page', () async {

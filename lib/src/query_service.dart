@@ -1,95 +1,62 @@
 import 'dart:async';
-import 'dart:js';
 
 import 'package:angular/angular.dart';
 import 'package:fixnum/fixnum.dart';
 
 import 'gapi.dart';
-import 'json_js.dart';
+import 'google_api_request_args.dart';
 import 'proto/insertion_order_query.pb.dart';
 import 'util.dart';
 
 @Injectable()
 class QueryService {
+  final GoogleApiDart _googleApiDart;
+
+  QueryService(this._googleApiDart);
+
   /// Executes the DV3 query and returns a future that will complete with
   /// a raw javascript object.
   ///
-  /// Completer is used here to convert the callback method of [execute] into
-  /// a future, so that we only proceed when the request finishes executing.
   /// Having an empty [nextPageToken] will not affect the query.
-  Future<String> execDV3Query(QueryType queryType, String nextPageToken,
-      String advertiserId, String mediaPlanId, String insertionOrderId) async {
-    final responseCompleter = Completer<String>();
-    GoogleAPI.client
-        .request(_generateDV3Query(queryType, nextPageToken, advertiserId,
-            mediaPlanId, insertionOrderId))
-        .execute(allowInterop((jsonResp, rawResp) {
-      responseCompleter.complete(JsonJS.stringify(jsonResp));
-    }));
-
-    return responseCompleter.future;
-  }
+  Future<String> execDV3Query(
+          QueryType queryType,
+          String nextPageToken,
+          String advertiserId,
+          String mediaPlanId,
+          String insertionOrderId) =>
+      _googleApiDart.request(_generateDV3Query(queryType, nextPageToken,
+          advertiserId, mediaPlanId, insertionOrderId));
 
   /// Executes DBM reporting create query and returns a future that will
   /// complete with a raw javascript object.
-  ///
-  /// Completer used to convert the callback method of [execute] into a future.
   Future<String> execReportingCreateQuery(
-      QueryType queryType,
-      String advertiserId,
-      String mediaPlanId,
-      String insertionOrderId,
-      DateTime startDate,
-      DateTime endDate) async {
-    final responseCompleter = Completer<String>();
-    GoogleAPI.client
-        .request(_generateReportingQuery(queryType, advertiserId, mediaPlanId,
-            insertionOrderId, startDate, endDate))
-        .execute(allowInterop((jsonResp, rawResp) {
-      responseCompleter.complete(JsonJS.stringify(jsonResp));
-    }));
-
-    return responseCompleter.future;
-  }
+          QueryType queryType,
+          String advertiserId,
+          String mediaPlanId,
+          String insertionOrderId,
+          DateTime startDate,
+          DateTime endDate) =>
+      _googleApiDart.request(_generateReportingQuery(queryType, advertiserId,
+          mediaPlanId, insertionOrderId, startDate, endDate));
 
   /// Executes DBM reporting getQuery and returns a future that will
   /// complete with a raw javascript object.
-  ///
-  /// Completer used to convert the callback method of [execute] into a future.
-  Future<String> execReportingGetQuery(String queryId) {
-    final requestArgs = RequestArgs(
-        path:
-            'https://www.googleapis.com/doubleclickbidmanager/v1.1/query/$queryId',
-        method: 'GET');
-
-    final responseCompleter = Completer<String>();
-    GoogleAPI.client
-        .request(requestArgs)
-        .execute(allowInterop((jsonResp, rawResp) {
-      responseCompleter.complete(JsonJS.stringify(jsonResp));
-    }));
-
-    return responseCompleter.future;
-  }
+  Future<String> execReportingGetQuery(String queryId) =>
+      _googleApiDart.request((GoogleApiRequestArgsBuilder()
+            ..path =
+                'https://www.googleapis.com/doubleclickbidmanager/v1.1/query/$queryId'
+            ..method = 'GET')
+          .build());
 
   /// Read the report from google storage location specified by [downloadPath].
-  ///
-  /// Completer used to convert the callback method of [execute] into a future.
-  Future<String> execReportingDownload(String downloadPath) {
-    final requestArgs = RequestArgs(path: downloadPath, method: 'GET');
-
-    final responseCompleter = Completer<String>();
-    GoogleAPI.client
-        .request(requestArgs)
-        .execute(allowInterop((jsonResp, rawResp) {
-      responseCompleter.complete(rawResp);
-    }));
-
-    return responseCompleter.future;
-  }
+  Future<String> execReportingDownload(String downloadPath) =>
+      _googleApiDart.request((GoogleApiRequestArgsBuilder()
+            ..path = downloadPath
+            ..method = 'GET')
+          .build());
 
   /// Generates query based on user inputs.
-  static RequestArgs _generateDV3Query(
+  static GoogleApiRequestArgs _generateDV3Query(
       QueryType queryType,
       String nextPageToken,
       String advertiserId,
@@ -100,33 +67,36 @@ class QueryService {
 
     switch (queryType) {
       case QueryType.byAdvertiser:
-        return RequestArgs(
-            path: 'https://displayvideo.googleapis.com/v1/advertisers/'
-                '$advertiserId/insertionOrders?'
-                '$entityStatusFilter&$pageTokenFilter',
-            method: 'GET');
+        return (GoogleApiRequestArgsBuilder()
+              ..path = 'https://displayvideo.googleapis.com/v1/advertisers/'
+                  '$advertiserId/insertionOrders?'
+                  '$entityStatusFilter&$pageTokenFilter'
+              ..method = 'GET')
+            .build();
 
       case QueryType.byMediaPlan:
         final mediaPlanFilter = 'filter=campaignId="$mediaPlanId"';
-        return RequestArgs(
-            path: 'https://displayvideo.googleapis.com/v1/advertisers/'
-                '$advertiserId/insertionOrders?'
-                '$entityStatusFilter&$mediaPlanFilter&$pageTokenFilter',
-            method: 'GET');
+        return (GoogleApiRequestArgsBuilder()
+              ..path = 'https://displayvideo.googleapis.com/v1/advertisers/'
+                  '$advertiserId/insertionOrders?'
+                  '$entityStatusFilter&$mediaPlanFilter&$pageTokenFilter'
+              ..method = 'GET')
+            .build();
 
       case QueryType.byInsertionOrder:
-        return RequestArgs(
-            path: 'https://displayvideo.googleapis.com/v1/advertisers/'
-                '$advertiserId/insertionOrders/$insertionOrderId',
-            method: 'GET');
+        return (GoogleApiRequestArgsBuilder()
+              ..path = 'https://displayvideo.googleapis.com/v1/advertisers/'
+                  '$advertiserId/insertionOrders/$insertionOrderId'
+              ..method = 'GET')
+            .build();
 
       default:
-        return RequestArgs();
+        return GoogleApiRequestArgsBuilder().build();
     }
   }
 
   /// Generates query based on user inputs.
-  static RequestArgs _generateReportingQuery(
+  static GoogleApiRequestArgs _generateReportingQuery(
       QueryType queryType,
       String advertiserId,
       String mediaPlanId,
@@ -166,12 +136,13 @@ class QueryService {
         break;
 
       default:
-        return RequestArgs();
+        return GoogleApiRequestArgsBuilder().build();
     }
 
-    return RequestArgs(
-        path: 'https://www.googleapis.com/doubleclickbidmanager/v1.1/query',
-        method: 'POST',
-        body: parameter.toProto3Json().toString());
+    return (GoogleApiRequestArgsBuilder()
+          ..path = 'https://www.googleapis.com/doubleclickbidmanager/v1.1/query'
+          ..method = 'POST'
+          ..body = parameter.toProto3Json().toString())
+        .build();
   }
 }
