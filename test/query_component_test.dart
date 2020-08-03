@@ -108,7 +108,6 @@ void main() {
     MockGoogleApiDart mockGoogleApiDart;
     MockExcelDart mockExcelDart;
 
-    List<InsertionOrder> expectedInput;
     Completer<String> reportCompleter;
 
     setUp(() async {
@@ -258,7 +257,6 @@ void main() {
         await queryComponentPO.selectUnderpacing();
         await queryComponentPO.clickPopulate();
 
-        // waits for the last operation execReportingDownload() to finish.
         await fixture
             .update((_) => reportCompleter.complete(generateReport(report1)));
         verify(mockExcelDart.populate(any, true));
@@ -269,7 +267,6 @@ void main() {
         await queryComponentAccordionPO.typeInsertionOrderId(ioId1);
         await queryComponentPO.clickPopulate();
 
-        // waits for the last operation execReportingDownload() to finish.
         await fixture
             .update((_) => reportCompleter.complete(generateReport(report1)));
         verify(mockExcelDart.populate(any, false));
@@ -307,17 +304,6 @@ void main() {
         when(mockGoogleApiDart
                 .request(argThat(isReportingDownloadRequestWith(downloadLink))))
             .thenAnswer((_) => reportCompleter.future);
-
-        expectedInput = [
-          generateInsertionOrder(
-              advertiserId, mediaPlanId1, ioId1, startDate, endDate, spending1),
-          generateInsertionOrder(
-              advertiserId, mediaPlanId1, ioId2, startDate, endDate, spending2),
-          generateInsertionOrder(
-              advertiserId, mediaPlanId1, ioId3, startDate, endDate, spending3),
-          generateInsertionOrder(
-              advertiserId, mediaPlanId2, ioId4, startDate, endDate, spending4),
-        ];
       });
 
       tearDown(() => clearInteractions(mockGoogleApiDart));
@@ -333,35 +319,41 @@ void main() {
         verifyNever(mockGoogleApiDart.request(any));
       });
 
-      test('highlighting unchecked invokes populate() with correct list of IOs',
+      test('valid advertiser id invokes populate() with correct IOs', () async {
+        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
+        await queryComponentPO.clickPopulate();
+
+        await fixture
+            .update((_) => reportCompleter.complete(generateReport(report1)));
+        final expectedInputs = [
+          generateInsertionOrder(
+              advertiserId, mediaPlanId1, ioId1, startDate, endDate, spending1),
+          generateInsertionOrder(
+              advertiserId, mediaPlanId1, ioId2, startDate, endDate, spending2),
+          generateInsertionOrder(
+              advertiserId, mediaPlanId1, ioId3, startDate, endDate, spending3),
+          generateInsertionOrder(
+              advertiserId, mediaPlanId2, ioId4, startDate, endDate, spending4),
+        ];
+        verify(mockExcelDart.populate(expectedInputs, any));
+      });
+
+      test(
+          'valid advertiser id displays the spinner when populate() is running',
           () async {
         await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
         await queryComponentPO.clickPopulate();
 
-        // waits for the last operation execReportingDownload() to finish.
-        await fixture
-            .update((_) => reportCompleter.complete(generateReport(report1)));
-        verify(mockExcelDart.populate(expectedInput, any));
-      });
-
-      test(
-          'correct ids invokes populate() and '
-          'displays the spinner when populate() is running', () async {
-        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
-        await queryComponentPO.clickPopulate();
-
-        // waits for the fixture to update, but keeps populate() hanging.
         await fixture.update();
         expect(queryComponentPO.populateButtonSpinner, isVisible);
       });
 
       test(
-          'correct ids invokes populate() and '
-          'hides the spinner when populate() finishes running', () async {
+          'valid advertiser id hides the spinner when populate() finishes running',
+          () async {
         await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
         await queryComponentPO.clickPopulate();
 
-        // waits for the last operation execReportingDownload() to finish.
         await fixture
             .update((_) => reportCompleter.complete(generateReport(report1)));
         expect(queryComponentPO.populateButtonSpinner, notExists);
@@ -400,15 +392,6 @@ void main() {
         when(mockGoogleApiDart
                 .request(argThat(isReportingDownloadRequestWith(downloadLink))))
             .thenAnswer((_) => reportCompleter.future);
-
-        expectedInput = [
-          generateInsertionOrder(
-              advertiserId, mediaPlanId1, ioId1, startDate, endDate, spending1),
-          generateInsertionOrder(
-              advertiserId, mediaPlanId1, ioId2, startDate, endDate, spending2),
-          generateInsertionOrder(
-              advertiserId, mediaPlanId1, ioId3, startDate, endDate, spending3),
-        ];
       });
 
       tearDown(() => clearInteractions(mockGoogleApiDart));
@@ -445,39 +428,40 @@ void main() {
         verifyNever(mockGoogleApiDart.request(any));
       });
 
-      test(
-          'highlight underpacing unchecked invokes populate() with correct list of IOs',
+      test('valid ids invokes populate() with correct IOs', () async {
+        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
+        await queryComponentAccordionPO.typeMediaPlanId(mediaPlanId1);
+        await queryComponentPO.clickPopulate();
+
+        await fixture
+            .update((_) => reportCompleter.complete(generateReport(report2)));
+        final expectedInput = [
+          generateInsertionOrder(
+              advertiserId, mediaPlanId1, ioId1, startDate, endDate, spending1),
+          generateInsertionOrder(
+              advertiserId, mediaPlanId1, ioId2, startDate, endDate, spending2),
+          generateInsertionOrder(
+              advertiserId, mediaPlanId1, ioId3, startDate, endDate, spending3),
+        ];
+        verify(mockExcelDart.populate(expectedInput, any));
+      });
+
+      test('valid ids displays the spinner when populate() is running',
           () async {
         await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
         await queryComponentAccordionPO.typeMediaPlanId(mediaPlanId1);
         await queryComponentPO.clickPopulate();
 
-        // waits for the last operation execReportingDownload() to finish.
-        await fixture
-            .update((_) => reportCompleter.complete(generateReport(report2)));
-        verify(mockExcelDart.populate(expectedInput, any));
-      });
-
-      test(
-          'correct ids invokes populate() and '
-          'displays the spinner when populate() is running', () async {
-        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
-        await queryComponentAccordionPO.typeMediaPlanId(mediaPlanId1);
-        await queryComponentPO.clickPopulate();
-
-        // waits for the fixture to update, but keeps populate() hanging.
         await fixture.update();
         expect(queryComponentPO.populateButtonSpinner, isVisible);
       });
 
-      test(
-          'correct ids invokes populate() and '
-          'hides the spinner when populate() finishes running', () async {
+      test('valid ids hides the spinner when populate() finishes running',
+          () async {
         await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
         await queryComponentAccordionPO.typeMediaPlanId(mediaPlanId1);
         await queryComponentPO.clickPopulate();
 
-        // waits for the last operation execReportingDownload() to finish.
         await fixture
             .update((_) => reportCompleter.complete(generateReport(report1)));
         expect(queryComponentPO.populateButtonSpinner, notExists);
@@ -508,11 +492,6 @@ void main() {
         when(mockGoogleApiDart
                 .request(argThat(isReportingDownloadRequestWith(downloadLink))))
             .thenAnswer((_) => reportCompleter.future);
-
-        expectedInput = [
-          generateInsertionOrder(
-              advertiserId, mediaPlanId1, ioId1, startDate, endDate, spending1)
-        ];
       });
 
       tearDown(() => clearInteractions(mockGoogleApiDart));
@@ -549,38 +528,36 @@ void main() {
         verifyNever(mockGoogleApiDart.request(any));
       });
 
-      test('highlighting unchecked invokes populate() with correct list of IOs',
+      test('valid ids invokes populate() with correct IOs', () async {
+        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
+        await queryComponentAccordionPO.typeInsertionOrderId(ioId1);
+        await queryComponentPO.clickPopulate();
+
+        await fixture
+            .update((_) => reportCompleter.complete(generateReport(report3)));
+        final expectedInput = [
+          generateInsertionOrder(
+              advertiserId, mediaPlanId1, ioId1, startDate, endDate, spending1)
+        ];
+        verify(mockExcelDart.populate(expectedInput, any));
+      });
+
+      test('correct ids displays the spinner when populate() is running',
           () async {
         await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
         await queryComponentAccordionPO.typeInsertionOrderId(ioId1);
         await queryComponentPO.clickPopulate();
 
-        // waits for the last operation execReportingDownload() to finish.
-        await fixture
-            .update((_) => reportCompleter.complete(generateReport(report3)));
-        verify(mockExcelDart.populate(expectedInput, any));
-      });
-
-      test(
-          'correct ids invokes populate() and '
-          'displays the spinner when populate() is running', () async {
-        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
-        await queryComponentAccordionPO.typeInsertionOrderId(ioId1);
-        await queryComponentPO.clickPopulate();
-
-        // waits for the fixture to update, but keeps populate() hanging.
         await fixture.update();
         expect(queryComponentPO.populateButtonSpinner, isVisible);
       });
 
-      test(
-          'correct ids invokes populate() and '
-          'hides the spinner when populate() finishes running', () async {
+      test('correct ids hides the spinner when populate() finishes running',
+          () async {
         await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
         await queryComponentAccordionPO.typeInsertionOrderId(ioId1);
         await queryComponentPO.clickPopulate();
 
-        // waits for the last operation execReportingDownload() to finish.
         await fixture
             .update((_) => reportCompleter.complete(generateReport(report1)));
         expect(queryComponentPO.populateButtonSpinner, notExists);
