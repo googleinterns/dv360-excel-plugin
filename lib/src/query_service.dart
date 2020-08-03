@@ -87,7 +87,7 @@ class QueryService {
         return (GoogleApiRequestArgsBuilder()
               ..path = 'https://displayvideo.googleapis.com/v1/advertisers/'
                   '$advertiserId/insertionOrders/$insertionOrderId'
-              ..body = 'GET')
+              ..method = 'GET')
             .build();
 
       default:

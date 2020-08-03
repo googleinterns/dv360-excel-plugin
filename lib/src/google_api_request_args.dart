@@ -8,6 +8,8 @@ abstract class GoogleApiRequestArgs
     implements Built<GoogleApiRequestArgs, GoogleApiRequestArgsBuilder> {
   String get path;
   String get method;
+
+  @nullable
   String get body;
 
   GoogleApiRequestArgs._();
