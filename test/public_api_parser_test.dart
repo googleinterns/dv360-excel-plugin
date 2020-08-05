@@ -22,7 +22,8 @@ void main() {
         ..updateTime = emptyEntry
         ..entityStatus = InsertionOrder_EntityStatus.ENTITY_STATUS_UNSPECIFIED
         ..pacing = InsertionOrder_Pacing()
-        ..budget = InsertionOrder_Budget();
+        ..budget = InsertionOrder_Budget()
+        ..spent = '0';
 
       oneStartDate = InsertionOrder_Budget_BudgetSegment_DateRange_Date()
         ..year = 2020
@@ -123,7 +124,8 @@ void main() {
           ..updateTime = '2020-06-23T17:14:58.685Z'
           ..entityStatus = InsertionOrder_EntityStatus.ENTITY_STATUS_ACTIVE
           ..pacing = expectedPacing
-          ..budget = expectedBudget;
+          ..budget = expectedBudget
+          ..spent = '0';
         expect(actual, [expected]);
       });
     });

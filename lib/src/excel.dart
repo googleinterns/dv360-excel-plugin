@@ -323,20 +323,23 @@ class ExcelDart {
     // not have negative values.
     // And the final pacing percentage is rounded to two decimal places.
     final formula = '''
-    =IF(AND(
-        NOW() - [$_startDateColumnName] > 1,
-        MROUND(NOW() - [$_startDateColumnName], 1/24) > 
-               0.1 * ([$_endDateColumnName] - [$_endDateColumnName])),
-
-        ROUND(
-        ([$_spentColumnName] / [$_budgetColumnName]) /
-        (
-          MROUND(NOW() - [$_startDateColumnName], 1/24) / 
-          ([$_endDateColumnName] - [$_startDateColumnName])
-        ), 2),
-
-        "not_enough_information"
-        )
+    =IF(AND(ISNUMBER([$_spentColumnName]), ISNUMBER([$_budgetColumnName])),
+        IF(
+            AND(
+            NOW() - [$_startDateColumnName] > 1,
+            MROUND(NOW() - [$_startDateColumnName], 1/24) > 
+                   0.1 * ([$_endDateColumnName] - [$_endDateColumnName])),
+    
+            ROUND(
+            ([$_spentColumnName] / [$_budgetColumnName]) /
+            (
+              MROUND(NOW() - [$_startDateColumnName], 1/24) / 
+              ([$_endDateColumnName] - [$_startDateColumnName])
+            ), 2),
+    
+            "not_enough_information"
+        ),
+        "not_enough_information")
     ''';
 
     return formula.replaceAll(RegExp(r'\s+'), '');
