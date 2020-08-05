@@ -16,8 +16,7 @@ class DisplayVideo360 {
   /// Changes the entity status of the line item to [status].
   ///
   /// [status] can be "ENTITY_STATUS_ACTIVE" or "ENTITY_STATUS_PAUSED".
-  /// Throws an [ApiRequestError] if API returns an error when either getting
-  /// the line item or patching it.
+  /// Throws an [ApiRequestError] if API returns an error.
   Future<void> changeLineItemStatus(
       Int64 advertiserId, Int64 lineItemId, String status) async {
     final request = LineItem()..entityStatus = status;
