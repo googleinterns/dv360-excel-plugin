@@ -223,6 +223,110 @@ void main() {
           argThat(isDV3RequestWith(QueryType.byAdvertiser, advertiserId))));
     });
 
+    group('when spending data', () {
+      setUp(() async {
+        reportCompleter = Completer<String>();
+
+        await queryComponentAccordionPO.selectByIO();
+
+        final singleIOJsonString =
+            '${generateInsertionOrderJsonString(advertiserId, mediaPlanId1, ioId1, startDate, endDate)}';
+
+        when(mockGoogleApiDart.request(argThat(isDV3RequestWith(
+                QueryType.byInsertionOrder, advertiserId,
+                ioId: ioId1))))
+            .thenAnswer((_) => Future.value(singleIOJsonString));
+        when(mockGoogleApiDart.request(argThat(
+                isReportingCreateQueryRequestWith(
+                    QueryType.byInsertionOrder, advertiserId, ioId: ioId1))))
+            .thenAnswer(
+                (_) => Future.value(reportingCreateQueryApiJsonResponse));
+        when(mockGoogleApiDart
+                .request(argThat(isReportingGetQueryRequestWith(queryId))))
+            .thenAnswer((_) => Future.value(reportingGetQueryApiJsonResponse));
+        when(mockGoogleApiDart
+                .request(argThat(isReportingDownloadRequestWith(downloadLink))))
+            .thenAnswer((_) => reportCompleter.future);
+      });
+
+      tearDown(() => clearInteractions(mockGoogleApiDart));
+
+      test('is not available for $ioId1, the spent field defaults to 0',
+          () async {
+        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
+        await queryComponentAccordionPO.typeInsertionOrderId(ioId1);
+        await queryComponentPO.clickPopulate();
+
+        final reportWithNoSpendForIo1 = '$ioId2,2020/07/10,$spending2,1000\\n';
+        await fixture.update((_) =>
+            reportCompleter.complete(generateReport(reportWithNoSpendForIo1)));
+
+        final expectedInputs = [
+          generateInsertionOrder(
+              advertiserId, mediaPlanId1, ioId1, startDate, endDate, '0'),
+        ];
+        verify(mockExcelDart.populate(expectedInputs, any));
+      });
+
+      test(
+          'is not available for $ioId1 during window [reportEarliestStart, Now],'
+          'the spent field defaults to 0', () async {
+        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
+        await queryComponentAccordionPO.typeInsertionOrderId(ioId1);
+        await queryComponentPO.clickPopulate();
+
+        final reportWithNoSpendForIo1 = '$ioId1,2000/07/10,$spending1,1000\\n';
+        await fixture.update((_) =>
+            reportCompleter.complete(generateReport(reportWithNoSpendForIo1)));
+
+        final expectedInputs = [
+          generateInsertionOrder(
+              advertiserId, mediaPlanId1, ioId1, startDate, endDate, '0'),
+        ];
+        verify(mockExcelDart.populate(expectedInputs, any));
+      });
+
+      test(
+          'is available for $ioId1 but IO has flight longer than 2 years,'
+          'the spent field displays the message', () async {
+        final ioWithLongFlight =
+            '${generateInsertionOrderJsonString(advertiserId, mediaPlanId1, ioId1, DateTime(2000, 7, 1), endDate)}';
+
+        when(mockGoogleApiDart.request(argThat(isDV3RequestWith(
+                QueryType.byInsertionOrder, advertiserId,
+                ioId: ioId1))))
+            .thenAnswer((_) => Future.value(ioWithLongFlight));
+        when(mockGoogleApiDart.request(argThat(
+                isReportingCreateQueryRequestWith(
+                    QueryType.byInsertionOrder, advertiserId, ioId: ioId1))))
+            .thenAnswer(
+                (_) => Future.value(reportingCreateQueryApiJsonResponse));
+        when(mockGoogleApiDart
+                .request(argThat(isReportingGetQueryRequestWith(queryId))))
+            .thenAnswer((_) => Future.value(reportingGetQueryApiJsonResponse));
+        when(mockGoogleApiDart
+                .request(argThat(isReportingDownloadRequestWith(downloadLink))))
+            .thenAnswer((_) => reportCompleter.future);
+
+        await queryComponentAccordionPO.typeAdvertiserId(advertiserId);
+        await queryComponentAccordionPO.typeInsertionOrderId(ioId1);
+        await queryComponentPO.clickPopulate();
+
+        await fixture
+            .update((_) => reportCompleter.complete(generateReport(report1)));
+        final expectedInputs = [
+          generateInsertionOrder(
+              advertiserId,
+              mediaPlanId1,
+              ioId1,
+              DateTime(2000, 7, 1),
+              endDate,
+              'Spend is not available, please go to the website'),
+        ];
+        verify(mockExcelDart.populate(expectedInputs, any));
+      });
+    });
+
     group('when underpacing checkbox', () {
       setUp(() async {
         reportCompleter = Completer<String>();

@@ -53,12 +53,9 @@ class QueryComponent {
   bool showAlert = false;
   String alertMessage;
 
-  // The earliest startDate that reporting API can take.
-  DateTime reportStartDate = DateTime(
+  // Reporting api has 2 years as the default max lookup window.
+  static final reportStartDate = DateTime(
       DateTime.now().year - 2, DateTime.now().month, DateTime.now().day);
-
-  // Futures used to await DV3 public and DBM reporting requests.
-  List<Future<dynamic>> apiRequestFutures = <Future<dynamic>>[];
 
   final QueryService _queryService;
   final ExcelDart _excel;
@@ -99,16 +96,20 @@ class QueryComponent {
       showSpinner = true;
       showAlert = false;
 
+      // Futures used to await DV3 public and DBM reporting requests.
+      List<Future<dynamic>> apiRequestFutures = <Future<dynamic>>[];
+
       // Uses DV360 public APIs to fetch entity data.
-      Future<List<InsertionOrder>> publicApiResponse =
+      Future<List<InsertionOrder>> publicApiParsedResponse =
           _queryAndParseInsertionOrderEntityData();
-      apiRequestFutures.add(publicApiResponse);
+      apiRequestFutures.add(publicApiParsedResponse);
 
       // Uses DBM reporting APIs to get spent (currency based or
       // impression based) within time window [reportStartDate, Now].
-      Future<Multimap<String, InsertionOrderDailySpend>> reportingApiResponse =
+      Future<Multimap<String, InsertionOrderDailySpend>>
+          reportingApiParsedResponse =
           _queryAndParseSpentData(reportStartDate, DateTime.now());
-      apiRequestFutures.add(reportingApiResponse);
+      apiRequestFutures.add(reportingApiParsedResponse);
 
       // Waits for all requests to finish.
       final responseList = await Future.wait(apiRequestFutures);
@@ -193,8 +194,9 @@ class QueryComponent {
   void _addSpentToInsertionOrders(List<InsertionOrder> insertionOrders,
       Multimap<String, InsertionOrderDailySpend> spendingMap) {
     for (final io in insertionOrders) {
-      // Continues if the spending map doesn't have spending data for this io
-      // at all.
+      // Continues if the spending map doesn't have spending data for this io.
+      // Happens when an IO has no active spending data and no historical
+      // spending data either (i.e. the IO is created recently).
       if (!spendingMap.containsKey(io.insertionOrderId)) continue;
 
       final budgetUnit = io.budget.budgetUnit;
@@ -202,6 +204,13 @@ class QueryComponent {
           io.budget.activeBudgetSegment.dateRange.startDate);
       final flightEnd = Util.convertProtoDateToDateTime(
           io.budget.activeBudgetSegment.dateRange.endDate);
+
+      // Fills in a prompt for spend when the flight is longer than reporting
+      // api max lookup window.
+      if (flightStart.isBefore(reportStartDate)) {
+        io.spent = 'Spend is not available, please go to the website';
+        continue;
+      }
 
       final activeSpent = spendingMap[io.insertionOrderId]
           .where((dailySpend) =>
@@ -213,6 +222,7 @@ class QueryComponent {
 
       // Continues if the spending map doesn't have spending data for this io
       // within [reportStartDate, now].
+      // Happens when the IO has historical spending data but no active ones.
       if (activeSpent.isEmpty) continue;
       // Sums up and updates spent if otherwise.
       io.spent =
