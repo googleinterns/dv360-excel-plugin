@@ -3,3 +3,4 @@ clientSecret: clientsecret
 
 displayVideo360:
   baseURL: https://localhost:8001/
+

@@ -40,5 +40,5 @@ class ServerConfiguration extends Configuration {
   String clientSecret;
   APIConfiguration displayVideo360;
 
-  ServerConfiguration(String path): super.fromFile(File(path));
+  ServerConfiguration(String path) : super.fromFile(File(path));
 }
