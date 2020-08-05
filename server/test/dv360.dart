@@ -76,5 +76,14 @@ void main() {
 
       expect(queryParameters['updateMask'], equals('entityStatus'));
     });
+
+    test('On API error, throws an ApiRequestError', () async {
+      mockDisplayVideo360.queueResponse(Response.notFound());
+
+      final actual = () async => await displayVideo360.changeLineItemStatus(
+          advertiserId, lineItemId, status);
+
+      expect(actual, throwsA(TypeMatcher<ApiRequestError>()));
+    });
   });
 }
