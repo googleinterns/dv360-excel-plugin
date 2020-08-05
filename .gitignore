@@ -36,4 +36,5 @@ server/**/*.js.map
 server/workspace.xml
 server/Dart_Packages.xml
 server/**/*.aqueduct.pid
+server/lib/proto
 
