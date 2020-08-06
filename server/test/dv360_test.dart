@@ -34,7 +34,7 @@ void main() {
     mockDisplayVideo360Server.clear();
   });
 
-  group('Happy path: changeLineItemStatus()', () {
+  group('Success case: changeLineItemStatus()', () {
     setUp(() async {
       mockDisplayVideo360Server.queueResponse(Response.ok({}));
 
@@ -67,7 +67,7 @@ void main() {
     });
   });
 
-  group('Sad path: changeLineItemStatus()', () {
+  group('Failure case: changeLineItemStatus()', () {
     test('throws an ApiRequestError when there is an API error', () async {
       mockDisplayVideo360Server.queueResponse(Response.notFound());
 
