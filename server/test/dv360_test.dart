@@ -17,13 +17,13 @@ void main() {
   final lineItemId = Int64(6789);
 
   final client = http.Client();
-  DisplayVideo360 displayVideo360;
+  DisplayVideo360Client displayVideo360;
 
   Request request;
 
   setUpAll(() async {
     await mockDisplayVideo360Server.open();
-    displayVideo360 = DisplayVideo360(client, url);
+    displayVideo360 = DisplayVideo360Client(client, url);
   });
 
   tearDownAll(() async {

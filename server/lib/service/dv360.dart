@@ -5,12 +5,12 @@ import 'package:googleapis/displayvideo/v1.dart';
 import 'package:http/http.dart';
 
 /// A class that wraps around Display & Video 360.
-class DisplayVideo360 {
+class DisplayVideo360Client {
   /// The DV360 API.
   final DisplayvideoApi _api;
 
-  /// Creates an instance of [DisplayVideo360].
-  DisplayVideo360(Client client, String baseUrl)
+  /// Creates an instance of [DisplayVideo360Client].
+  DisplayVideo360Client(Client client, String baseUrl)
       : _api = DisplayvideoApi(client, rootUrl: baseUrl);
 
   /// Changes the entity status of the line item to [status].
