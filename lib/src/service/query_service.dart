@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:angular/angular.dart';
 import 'package:fixnum/fixnum.dart';
 
-import 'gapi.dart';
-import 'google_api_request_args.dart';
-import 'proto/insertion_order_query.pb.dart';
-import 'util.dart';
+import '../data_model/google_api_request_args.dart';
+import '../data_model/insertion_order_query.pb.dart';
+import '../javascript_api/google_api.dart';
+import '../util.dart';
 
 @Injectable()
 class QueryService {

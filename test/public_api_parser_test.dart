@@ -1,6 +1,6 @@
 import 'package:angular_test/angular_test.dart';
 import 'package:dv360_excel_plugin/src/public_api_parser.dart';
-import 'package:dv360_excel_plugin/src/proto/insertion_order_query.pb.dart';
+import 'package:dv360_excel_plugin/src/data_model/insertion_order_query.pb.dart';
 import 'package:test/test.dart';
 
 void main() {

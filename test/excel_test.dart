@@ -22,3 +22,5 @@
 ///   highlighted in red.
 /// * If highlight underpacing is checked, modifying the underpacing threshold value
 ///   should change which rows are highlight.
+
+void main() {}

@@ -1,5 +1,5 @@
 import 'package:angular_test/angular_test.dart';
-import 'package:dv360_excel_plugin/src/insertion_order_daily_spend.dart';
+import 'package:dv360_excel_plugin/src/data_model/insertion_order_daily_spend.dart';
 import 'package:dv360_excel_plugin/src/reporting_api_parser.dart';
 import 'package:quiver/collection.dart';
 import 'package:test/test.dart';

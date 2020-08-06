@@ -4,10 +4,10 @@ import 'dart:async';
 
 import 'package:angular/angular.dart';
 import 'package:angular_test/angular_test.dart';
-import 'package:dv360_excel_plugin/src/excel.dart';
-import 'package:dv360_excel_plugin/src/gapi.dart';
-import 'package:dv360_excel_plugin/src/google_api_request_args.dart';
-import 'package:dv360_excel_plugin/src/proto/insertion_order_query.pb.dart';
+import 'package:dv360_excel_plugin/src/javascript_api/excel_api.dart';
+import 'package:dv360_excel_plugin/src/javascript_api/google_api.dart';
+import 'package:dv360_excel_plugin/src/data_model/google_api_request_args.dart';
+import 'package:dv360_excel_plugin/src/data_model/insertion_order_query.pb.dart';
 import 'package:dv360_excel_plugin/src/query_component.dart';
 import 'package:dv360_excel_plugin/src/util.dart';
 import 'package:mockito/mockito.dart';

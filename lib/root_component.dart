@@ -1,9 +1,9 @@
 import 'package:angular/angular.dart';
-import 'package:dv360_excel_plugin/src/gapi.dart';
+import 'package:dv360_excel_plugin/src/javascript_api/google_api.dart';
 import 'package:ng_bootstrap/ng_bootstrap.dart';
 
-import 'src/credential_service.dart';
-import 'src/excel.dart';
+import 'src/service/credential_service.dart';
+import 'src/javascript_api/excel_api.dart';
 import 'src/query_component.dart';
 
 @Component(

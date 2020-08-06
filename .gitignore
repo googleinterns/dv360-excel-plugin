@@ -13,8 +13,8 @@ doc/api/
 lib/src/private_keys.dart
 
 # Generated code
-lib/src/proto/
-lib/src/*.g.dart
+lib/src/data_model/insertion_order_query.pb*.dart
+lib/src/data_model/*.g.dart
 test/testing/*.g.dart
 
 # IntelliJ

@@ -1,15 +1,15 @@
 import 'package:angular/angular.dart';
 import 'package:angular_forms/angular_forms.dart';
-import 'package:dv360_excel_plugin/src/gapi.dart';
+import 'package:dv360_excel_plugin/src/javascript_api/google_api.dart';
 import 'package:ng_bootstrap/ng_bootstrap.dart';
 import 'package:quiver/collection.dart';
 
-import 'excel.dart';
-import 'insertion_order_daily_spend.dart';
-import 'proto/insertion_order_query.pb.dart';
+import 'data_model/insertion_order_daily_spend.dart';
+import 'data_model/insertion_order_query.pb.dart';
+import 'javascript_api/excel_api.dart';
 import 'public_api_parser.dart';
-import 'query_service.dart';
 import 'reporting_api_parser.dart';
+import 'service/query_service.dart';
 import 'util.dart';
 
 @Component(

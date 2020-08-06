@@ -3,8 +3,8 @@ import 'dart:js';
 
 import 'package:angular/angular.dart';
 
-import 'gapi.dart';
-import 'private_keys.dart' as key_store;
+import '../javascript_api/google_api.dart';
+import '../private_keys.dart' as key_store;
 
 @Injectable()
 class CredentialService {
