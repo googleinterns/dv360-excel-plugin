@@ -6,8 +6,8 @@ import 'dart:async';
 import 'package:angular/angular.dart';
 import 'package:js/js.dart';
 
-import 'google_api_request_args.dart';
-import 'json_js.dart';
+import 'json_api.dart';
+import '../data_model/google_api_request_args.dart';
 
 /// Below are wrapper functions for gapi APIs.
 /// Type definitions can be found at

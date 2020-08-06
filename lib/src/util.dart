@@ -2,7 +2,7 @@ import 'package:decimal/decimal.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:intl/intl.dart';
 
-import 'proto/insertion_order_query.pb.dart';
+import 'data_model/insertion_order_query.pb.dart';
 
 enum QueryType { byAdvertiser, byMediaPlan, byInsertionOrder }
 

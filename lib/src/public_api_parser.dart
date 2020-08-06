@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:dv360_excel_plugin/src/util.dart';
 
-import 'proto/insertion_order_query.pb.dart';
+import 'data_model/insertion_order_query.pb.dart';
 
 class PublicApiParser {
   static const _emptyEntry = '';

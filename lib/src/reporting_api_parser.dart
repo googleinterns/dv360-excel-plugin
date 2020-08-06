@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:csv/csv.dart';
 import 'package:quiver/collection.dart';
 
+import 'data_model/insertion_order_daily_spend.dart';
 import 'util.dart';
-import 'insertion_order_daily_spend.dart';
 
 class ReportingQueryParser {
   /// Parse queryId from a json string.

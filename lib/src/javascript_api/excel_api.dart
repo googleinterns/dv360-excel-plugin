@@ -7,9 +7,9 @@ import 'package:angular/angular.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:js/js.dart';
 
-import 'office_js.dart';
-import 'proto/insertion_order_query.pb.dart';
-import 'util.dart';
+import 'office_api.dart';
+import '../data_model/insertion_order_query.pb.dart';
+import '../util.dart';
 
 /// Service class that provides dart functions to interact with Excel.
 @Injectable()
