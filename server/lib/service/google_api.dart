@@ -13,10 +13,8 @@ class GoogleApi {
     'https://www.googleapis.com/auth/datastore',
   ];
 
-  /// The scopes the user account client needs to access the ID token and
-  /// DV360 API.
+  /// The scopes the user account client needs to access the DV360 API.
   static const List<String> userAccountScope = [
-    'openid email',
     'https://www.googleapis.com/auth/display-video',
   ];
 
@@ -36,6 +34,7 @@ class GoogleApi {
   /// gcloud auth application-default login
   /// ```
   /// On AppEngine, the service account is used.
+  /// We will use this client to interact with Cloud Scheduler and Firestore.
   Future<AutoRefreshingAuthClient> getServiceAccountClient() async {
     return clientViaApplicationDefaultCredentials(scopes: serviceAccountScope);
   }
@@ -45,19 +44,22 @@ class GoogleApi {
   ///
   /// This method creates a temporary expired [AccessCredentials] to force the
   /// [AutoRefreshingAuthClient] to refresh during it's next operation.
+  /// We will use this client to interact with DV360 on the user's behalf.
   Future<AutoRefreshingAuthClient> getUserAccountClient(
       String refreshToken) async {
     final baseClient = http.Client();
 
-    // Create expired [AccessCredentials] so that it will be refreshed.
-    final credentials = _getCredentialsFromRefreshToken(refreshToken);
+    // Create expired [AccessCredentials] so that it will be refreshed when the
+    // client does the next operation.
+    final expiredCredentials =
+        _expiredCredentialsFromRefreshToken(refreshToken);
 
     return autoRefreshingClient(
-        ClientId(_clientId, _clientSecret), credentials, baseClient);
+        ClientId(_clientId, _clientSecret), expiredCredentials, baseClient);
   }
 
-  AccessCredentials _getCredentialsFromRefreshToken(String refreshToken) {
-    // Create an [AccessToken] that expired on the Unix epoch
+  AccessCredentials _expiredCredentialsFromRefreshToken(String refreshToken) {
+    // Create an [AccessToken] that expired on the Unix epoch.
     final expiredToken = AccessToken(
         'Bearer', '', DateTime.fromMicrosecondsSinceEpoch(0, isUtc: true));
 
