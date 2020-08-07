@@ -53,7 +53,8 @@ void main() {
     });
 
     test(
-        'makes a request with a body that contains a line item with the correct entityStatus',
+        'makes a request with a body that contains a line item '
+            'with the correct entityStatus',
         () async {
       final lineItem = LineItem.fromJson(await request.body.decode());
 
@@ -71,7 +72,7 @@ void main() {
     test('throws an ApiRequestError when there is an API error', () async {
       mockDisplayVideo360Server.queueResponse(Response.notFound());
 
-      final actual = () async => await displayVideo360.changeLineItemStatus(
+      Future<void> actual() async => await displayVideo360.changeLineItemStatus(
           advertiserId, lineItemId, status);
 
       expect(actual, throwsA(const TypeMatcher<ApiRequestError>()));
