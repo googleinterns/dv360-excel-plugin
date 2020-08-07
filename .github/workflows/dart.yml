@@ -35,7 +35,7 @@ jobs:
     - name: Generate protobufs for rules builder
       run: |
         mkdir -p lib/proto
-        protoc --dart_out=server/lib/proto/ rule.proto
+        PATH="$PATH:$HOME/.pub-cache/bin" protoc --dart_out=server/lib/proto/ rule.proto
       if: always()
     - name: Run tests for rules builder
       run: PATH="$PATH:/usr/lib/dart/bin" pub run test test/*
