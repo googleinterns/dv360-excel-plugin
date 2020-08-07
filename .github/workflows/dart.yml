@@ -19,9 +19,15 @@ jobs:
         sudo sh -c 'wget -qO- https://storage.googleapis.com/download.dartlang.org/linux/debian/dart_stable.list > /etc/apt/sources.list.d/dart_stable.list'
         sudo apt-get update
         sudo apt-get install dart
+    - name: Install Protoc
+      run: |
+        sudo apt-get install protobuf-compiler
+        PATH="$PATH:/usr/lib/dart/bin" pub global activate protoc_plugin
     - uses: actions/checkout@v2
     - name: Install dependencies
       run: PATH="$PATH:/usr/lib/dart/bin" pub get
+    - name: Generate protobufs for query builder
+      run: protoc --dart_out=. lib/src/data_model/insertion_order_query.proto
     - name: Run tests
       run: PATH="$PATH:/usr/lib/dart/bin" pub run build_runner test -- -p chrome
     - name: Install dependencies for rules builder
