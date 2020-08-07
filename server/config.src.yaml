@@ -1,6 +1,11 @@
 clientId: clientid
 clientSecret: clientsecret
+projectId: projectId
+databaseId: (default)
 
 displayVideo360:
   baseURL: https://localhost:8001/
+
+firestore:
+  baseURL: https://localhost:8002/
 
