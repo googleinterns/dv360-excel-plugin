@@ -6,10 +6,12 @@ environment:
   sdk: ">=2.0.0 <3.0.0"
 
 dependencies:
-  aqueduct: 3.3.0+1
+  aqueduct: ^3.3.0+1
+  googleapis: ^0.55.0
+  googleapis_auth: ^0.2.12
+  fixnum: ^0.10.11
 
 dev_dependencies:
   test: ^1.0.0
   aqueduct_test: ^1.0.0
   pedantic: ^1.9.0
-
