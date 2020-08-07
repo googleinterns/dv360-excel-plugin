@@ -34,7 +34,7 @@ jobs:
       if: always()
     - name: Generate protobufs for rules builder
       run: |
-        mkdir -p lib/proto
+        mkdir -p server/lib/proto
         PATH="$PATH:$HOME/.pub-cache/bin" protoc --dart_out=server/lib/proto/ rule.proto
       if: always()
     - name: Run tests for rules builder
