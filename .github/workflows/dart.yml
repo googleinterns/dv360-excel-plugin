@@ -27,7 +27,7 @@ jobs:
     - name: Install dependencies
       run: PATH="$PATH:/usr/lib/dart/bin" pub get
     - name: Generate protobufs for query builder
-      run: protoc --dart_out=. lib/src/data_model/insertion_order_query.proto
+      run: PATH="$PATH:$HOME/.pub-cache/bin" protoc --dart_out=. lib/src/data_model/insertion_order_query.proto
     - name: Run tests
       run: PATH="$PATH:/usr/lib/dart/bin" pub run build_runner test -- -p chrome
     - name: Install dependencies for rules builder
