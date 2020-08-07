@@ -25,7 +25,11 @@ jobs:
     - name: Run tests
       run: PATH="$PATH:/usr/lib/dart/bin" pub run build_runner test -- -p chrome
     - name: Install dependencies for rules builder
-      run: PATH="$PATH:/usr/lib/dart/bin" pub get 
+      uses: arduino/setup-protoc@v1
+      run: |
+        mkdir -p lib/proto
+        protoc --dart_out=lib/proto/ --proto_path=../ rule.proto
+        PATH="$PATH:/usr/lib/dart/bin" pub get
       working-directory: ./server
       if: always()
     - name: Run tests for rules builder
