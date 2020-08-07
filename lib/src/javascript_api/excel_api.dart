@@ -45,8 +45,8 @@ class ExcelDart {
   /// Column addresses calculated based on [_tableHeader].
   static final _currentPacingColumnAddress =
       '\$${_getExcelColumnReference(_tableHeader.indexOf(_currentPacingColumnName))}'
-      '${_resultTableRowStartAddress}';
-  static final _budgetUnitColumnAddress =
+      '${_resultTableRowStartAddress + 1}';
+  static final _budgetUnitColumnHeaderAddress =
       '\$${_getExcelColumnReference(_tableHeader.indexOf(_budgetUnitColumnName))}'
       '${_resultTableRowStartAddress}';
 
@@ -217,7 +217,7 @@ class ExcelDart {
       final budgetFormat = budgetRange.conditionalFormats.add('Custom');
       final spentFormat = spentRange.conditionalFormats.add('Custom');
 
-      final formula = '$_budgetUnitColumnAddress = '
+      final formula = '$_budgetUnitColumnHeaderAddress = '
           '"${InsertionOrder_Budget_BudgetUnit.BUDGET_UNIT_CURRENCY}"';
 
       budgetFormat.custom.rule.formula = formula;
