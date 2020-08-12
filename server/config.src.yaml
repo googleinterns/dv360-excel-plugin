@@ -1,7 +1,9 @@
 clientId: clientid
 clientSecret: clientsecret
-projectId: projectId
+projectId: projectid
 databaseId: (default)
+locationId: us-central1
+appEngineService: rules-server
 
 displayVideo360:
   baseURL: https://localhost:8001/
@@ -9,3 +11,5 @@ displayVideo360:
 firestore:
   baseURL: https://localhost:8002/
 
+scheduler:
+  baseURL: https://localhost:8003/
