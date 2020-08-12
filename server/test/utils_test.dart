@@ -51,11 +51,10 @@ void main() {
 
   group('Rule-Document Conversion:', () {
     test('toDocument() converts a Rule to an equivalent Document', () async {
-      final ruleAsDocument = rule.toDocument();
+      final ruleDocument = rule.toDocument();
 
-      // I haven't overridden [Document.equals()] yet, so currently just
-      // comparing JSONs
-      expect(ruleAsDocument.toJson(), equals(document.toJson()));
+      // TODO(@thu5): Override [Document.equals()] instead of comparing JSONs.
+      expect(ruleDocument.toJson(), equals(document.toJson()));
     });
 
     test('toProto() converts a Document to an equivalent Rule', () async {

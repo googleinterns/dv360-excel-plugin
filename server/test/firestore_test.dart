@@ -21,10 +21,10 @@ void main() {
   const userId = '1234567890';
   const parent = 'projects/$projectId/databases/$databaseId/documents';
   const ruleResourceName =
-      '$parent/${FirestoreClient.usersCollectionName}/$userId/'
-      '${FirestoreClient.rulesCollectionName}';
+      '$parent/${FirestoreClient.usersName}/$userId/'
+      '${FirestoreClient.rulesName}';
   const userCollectionResourceName =
-      '$parent/${FirestoreClient.usersCollectionName}';
+      '$parent/${FirestoreClient.usersName}';
   const encryptedRefreshToken = 'abc123';
 
   final rule = Rule()

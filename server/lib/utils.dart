@@ -14,12 +14,11 @@ extension DocumentConversion on Rule {
   /// [Value] is a union type. See:
   /// https://pub.dev/documentation/googleapis/latest/googleapis.firestore.v1/Value-class.html
   ///
-  /// We will first convert the protobuf [Rule] to a JSON format before
-  /// converting to [Document]. In this way, we can minimize coupling
-  /// between the proto schema and how we construct the document
-  /// (and vice versa).
+  /// We will first convert [Rule] to a JSON format before converting to
+  /// [Document]. In this way, we can minimize coupling between the proto schema
+  /// and how we construct the document (and vice versa).
   Document toDocument() {
-    // First, transform the Rule into a standard JSON string.
+    // First, transform the [Rule] into a standard JSON string.
     // [toProto3Json()] is used to convert to the proto3 JSON format instead of
     // [writeToJson()] because the representation is much more readable.
     final jsonString = jsonEncode(toProto3Json());
