@@ -10,6 +10,7 @@ dependencies:
   googleapis: ^0.55.0
   googleapis_auth: ^0.2.12
   fixnum: ^0.10.11
+  protobuf: ^1.0.1
 
 dev_dependencies:
   test: ^1.0.0
