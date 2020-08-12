@@ -8,7 +8,7 @@ message Rule {
   optional string name = 1;
 
   // The id that uniquely identified each rule.
-  optional int32 id = 2;
+  optional string id = 2;
 
   // required
   optional Action action = 3;
@@ -79,4 +79,8 @@ message Schedule {
   oneof params {
     RepeatingParams repeating_params = 2;
   }
+
+  // required
+  // The timezone name of the scheduled job from the tz database.
+  optional string timezone = 3;
 }

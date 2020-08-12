@@ -38,7 +38,14 @@ class ServerChannel extends ApplicationChannel {
 class ServerConfiguration extends Configuration {
   String clientId;
   String clientSecret;
+  String projectId;
+  String databaseId;
+  String locationId;
+  String appEngineService;
+
   APIConfiguration displayVideo360;
+  APIConfiguration firestore;
+  APIConfiguration scheduler;
 
   ServerConfiguration(String path) : super.fromFile(File(path));
 }

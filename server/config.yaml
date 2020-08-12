@@ -1,5 +1,15 @@
 clientId: $CLIENT_ID
 clientSecret: $CLIENT_SECRET
+projectId: $PROJECT_ID
+databaseId: (default)
+locationId: us-central1
+appEngineService: rules-server
 
 displayVideo360:
   baseURL: https://displayvideo.googleapis.com/
+
+firestore:
+  baseURL: https://firestore.googleapis.com/
+
+scheduler:
+  baseURL: https://cloudscheduler.googleapis.com/
