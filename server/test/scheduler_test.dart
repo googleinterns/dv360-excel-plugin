@@ -4,7 +4,7 @@ import 'package:googleapis/cloudscheduler/v1.dart';
 import 'package:http/http.dart' as http;
 import 'package:test/test.dart';
 
-import 'package:server/proto/communication.pb.dart';
+import 'package:server/proto/scheduled_rule.pb.dart';
 import 'package:server/proto/rule.pb.dart';
 import 'package:server/server.dart';
 import 'package:server/service/scheduler.dart';

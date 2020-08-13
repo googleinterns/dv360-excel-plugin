@@ -1,7 +1,7 @@
 import 'package:googleapis/cloudscheduler/v1.dart';
 import 'package:http/http.dart';
 
-import '../proto/communication.pb.dart';
+import '../proto/scheduled_rule.pb.dart';
 import '../proto/rule.pb.dart';
 
 /// A class that wraps around Google Cloud Scheduler.
