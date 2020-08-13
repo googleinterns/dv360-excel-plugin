@@ -32,19 +32,19 @@ abstract class Action {
 /// The line item(s) can be activated or paused.
 class ChangeLineItemStatusAction implements Action {
   /// A list of target line item IDs for this action.
-  List<Int64> lineItemIds = [];
+  final List<Int64> _lineItemIds = [];
 
   /// The advertiser ID for which the line items belong to.
-  Int64 advertiserId;
+  Int64 _advertiserId;
 
   /// The integer value of the target line item status.
-  int statusValue;
+  int _statusValue;
 
   /// Creates a [ChangeLineItemStatusAction] instance from a [proto.Action].
   ChangeLineItemStatusAction.fromProto(proto.Action action) {
-    lineItemIds.addAll(action.changeLineItemStatusParams.lineItemIds);
-    advertiserId = action.changeLineItemStatusParams.advertiserId;
-    statusValue = action.changeLineItemStatusParams.status.value;
+    _lineItemIds.addAll(action.changeLineItemStatusParams.lineItemIds);
+    _advertiserId = action.changeLineItemStatusParams.advertiserId;
+    _statusValue = action.changeLineItemStatusParams.status.value;
   }
 
   /// Creates a [proto.Action] with Change line Item Status parameters.
@@ -53,20 +53,20 @@ class ChangeLineItemStatusAction implements Action {
     return proto.Action()
       ..type = proto.Action_Type.CHANGE_LINE_ITEM_STATUS
       ..changeLineItemStatusParams = (proto.ChangeLineItemStatusParams()
-        ..lineItemIds.addAll(lineItemIds)
-        ..advertiserId = advertiserId
+        ..lineItemIds.addAll(_lineItemIds)
+        ..advertiserId = _advertiserId
         ..status =
-            proto.ChangeLineItemStatusParams_Status.valueOf(statusValue));
+            proto.ChangeLineItemStatusParams_Status.valueOf(_statusValue));
   }
 
   /// Changes the status of the line item(s) using the DV360 client.
   @override
   Future<void> run(DisplayVideo360Client client) async {
     final status = 'ENTITY_STATUS_'
-        '${proto.ChangeLineItemStatusParams_Status.valueOf(statusValue).name}';
+        '${proto.ChangeLineItemStatusParams_Status.valueOf(_statusValue).name}';
 
-    for (var lineItemId in lineItemIds) {
-      await client.changeLineItemStatus(advertiserId, lineItemId, status);
+    for (var lineItemId in _lineItemIds) {
+      await client.changeLineItemStatus(_advertiserId, lineItemId, status);
     }
   }
 }
