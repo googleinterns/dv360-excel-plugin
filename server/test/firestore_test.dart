@@ -18,6 +18,7 @@ void main() {
   const projectId = 'spreadsheet-dv360-plugin';
   const databaseId = '(default)';
   const ruleName = 'testRule';
+  const documentName = 'testDocument';
   const userId = '1234567890';
   const parent = 'projects/$projectId/databases/$databaseId/documents';
   const ruleResourceName =
@@ -63,7 +64,7 @@ void main() {
   group('Success case: createRule()', () {
     setUp(() async {
       final ruleAsDocument = rule.toDocument();
-      ruleAsDocument.name = ruleName;
+      ruleAsDocument.name = documentName;
 
       mockFirestoreServer.queueResponse(Response.ok(ruleAsDocument.toJson()));
 
@@ -87,8 +88,8 @@ void main() {
       expect(document.toJson(), equals(rule.toDocument().toJson()));
     });
 
-    test('returns the correct rule name', () async {
-      expect(returnedString, equals(ruleName));
+    test('returns the correct document name', () async {
+      expect(returnedString, equals(documentName));
     });
   });
 

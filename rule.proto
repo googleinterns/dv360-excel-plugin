@@ -82,5 +82,6 @@ message Schedule {
 
   // required
   // The timezone name of the scheduled job from the tz database.
+  // See: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
   optional string timezone = 3;
 }
