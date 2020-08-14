@@ -6,7 +6,7 @@ import '../proto/rule.pb.dart';
 
 /// A class that wraps around Google Cloud Scheduler.
 class SchedulerClient {
-  /// The target HTTP endpoint for each job.
+  /// The targeted HTTP endpoint for each job.
   static const path = '/run_rule';
 
   /// The number of times the job will retry, using exponential back-off.
@@ -50,6 +50,8 @@ class SchedulerClient {
       final schedule = rule.schedule.repeatingParams.cronExpression;
       await _createJob(jobName, _appEngineService, path, schedule, method,
           headers, ruleDetails.writeToBuffer(), timezone);
+    } else {
+      throw UnimplementedError('${rule.schedule.type} is not implemented.');
     }
   }
 
