@@ -24,7 +24,7 @@ void main() {
   Request request;
   Job job;
 
-  final rule = Rule()
+  final lineItemStatusRule = Rule()
     ..name = 'My new rule'
     ..id = '123'
     ..action = (Action()
@@ -38,6 +38,11 @@ void main() {
       ..timezone = 'America/Los_Angeles'
       ..repeatingParams =
           (Schedule_RepeatingParams()..cronExpression = '* * * * *'));
+
+  final unspecifiedRule = Rule()
+    ..name = 'My new rule'
+    ..id = '123'
+    ..action = (Action()..type = Action_Type.UNSPECIFIED_TYPE);
 
   setUpAll(() async {
     await mockSchedulerServer.open();
@@ -57,7 +62,7 @@ void main() {
     setUp(() async {
       mockSchedulerServer.queueResponse(Response.ok({}));
 
-      await scheduler.scheduleRule(userId, rule);
+      await scheduler.scheduleRule(userId, lineItemStatusRule);
       request = await mockSchedulerServer.next();
 
       job = Job.fromJson(await request.body.decode());
@@ -73,8 +78,8 @@ void main() {
     });
 
     test('makes a request to create a job with the correct job name', () async {
-      final jobName =
-          'projects/$projectId/locations/$locationId/jobs/${userId}_${rule.id}';
+      final jobName = 'projects/$projectId/locations/$locationId'
+          '/jobs/${userId}_${lineItemStatusRule.id}';
 
       expect(job.name, equals(jobName));
     });
@@ -91,7 +96,7 @@ void main() {
     });
 
     test('makes a request to create a job with the correct timezone', () async {
-      expect(job.timeZone, equals(rule.schedule.timezone));
+      expect(job.timeZone, equals(lineItemStatusRule.schedule.timezone));
     });
 
     test('makes a request to create a job with the correct method', () async {
@@ -108,7 +113,7 @@ void main() {
 
     test('makes a request to create a job with the correct body', () async {
       final ruleDetails = ScheduledRule()
-        ..ruleId = rule.id
+        ..ruleId = lineItemStatusRule.id
         ..userId = userId;
 
       expect(job.appEngineHttpTarget.bodyAsBytes,
@@ -117,8 +122,8 @@ void main() {
 
     test('makes a request to create a job with the correct repeating schedule',
         () async {
-      expect(
-          job.schedule, equals(rule.schedule.repeatingParams.cronExpression));
+      expect(job.schedule,
+          equals(lineItemStatusRule.schedule.repeatingParams.cronExpression));
     });
   });
 
@@ -126,9 +131,18 @@ void main() {
     test('throws an ApiRequestError when there is an API error', () async {
       mockSchedulerServer.queueResponse(Response.notFound());
 
-      Future<void> actual() async => await scheduler.scheduleRule(userId, rule);
+      Future<void> actual() async =>
+          await scheduler.scheduleRule(userId, lineItemStatusRule);
 
       expect(actual, throwsA(const TypeMatcher<ApiRequestError>()));
+    });
+
+    test('throws an UnimplementedError when schedule type is unimplemented',
+        () async {
+      Future<void> actual() async =>
+          await scheduler.scheduleRule(userId, unspecifiedRule);
+
+      expect(actual, throwsA(const TypeMatcher<UnimplementedError>()));
     });
   });
 }
