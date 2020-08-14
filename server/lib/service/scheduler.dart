@@ -32,7 +32,8 @@ class SchedulerClient {
 
   /// Schedules a rule using Cloud Scheduler.
   ///
-  /// Throws an [ApiRequestError] if Scheduler API returns an error.
+  /// Throws an [ApiRequestError] if Scheduler API returns an error. Throws an
+  /// [UnimplementedError] if the rule's schedule type is not implemented.
   Future<void> scheduleRule(String userId, Rule rule) async {
     final jobName = '${userId}_${rule.id}';
     final timezone = rule.schedule.timezone;
