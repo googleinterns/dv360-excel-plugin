@@ -44,6 +44,9 @@ class FirestoreClient {
 
   /// Adds a user to the Firestore database with the encrypted refresh token.
   ///
+  /// The [userId] is the `sub` claim of the user's Google ID token.
+  /// See: https://developers.google.com/identity/protocols/oauth2/openid-connect#an-id-tokens-payload
+  ///
   /// Throws an [ApiRequestError] if Firestore API returns an error.
   Future<void> createUser(String userId, String encryptedRefreshToken) async {
     final document = Document()
