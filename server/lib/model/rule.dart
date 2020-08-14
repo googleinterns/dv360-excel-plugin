@@ -11,7 +11,7 @@ class Rule {
 
   /// Creates a [Rule] from a [proto.Rule].
   Rule.fromProto(proto.Rule protoRule)
-      : _action = Action.fromProto(protoRule.action);
+      : _action = getActionFromProto(protoRule.action);
 
   /// Runs the rule using the [DisplayVideo360Client] client.
   Future<void> run(DisplayVideo360Client client) async {
