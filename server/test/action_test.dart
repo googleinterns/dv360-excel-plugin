@@ -23,13 +23,13 @@ void main() {
 
   group('Action\'s factory constructor', () {
     test('correctly creates a ChangeLineItemStatusAction instance', () {
-      final actionModel = getActionFromProto(validActionProto);
+      final actionModel = Action.getActionFromProto(validActionProto);
 
       expect(actionModel.runtimeType, equals(ChangeLineItemStatusAction));
     });
 
     test('throws an error if the action is unspecified', () {
-      void actual() => getActionFromProto(unspecifiedActionProto);
+      void actual() => Action.getActionFromProto(unspecifiedActionProto);
 
       expect(actual, throwsA(const TypeMatcher<UnsupportedError>()));
     });
@@ -37,7 +37,7 @@ void main() {
 
   group('ChangeLineItemStatusAction\'s method', () {
     test('toProto() produces an equivalent action proto', () async {
-      final actionProto = getActionFromProto(validActionProto).toProto();
+      final actionProto = Action.getActionFromProto(validActionProto).toProto();
 
       expect(actionProto, equals(validActionProto));
     });
@@ -49,7 +49,7 @@ void main() {
           validActionProto.changeLineItemStatusParams.lineItemIds[0];
       final status = 'ENTITY_STATUS_'
           '${validActionProto.changeLineItemStatusParams.status.name}';
-      final action = getActionFromProto(validActionProto);
+      final action = Action.getActionFromProto(validActionProto);
 
       await action.run(mockClient);
 
