@@ -5,21 +5,21 @@ import 'package:fixnum/fixnum.dart';
 import '../proto/rule.pb.dart' as proto;
 import '../service/dv360.dart';
 
-/// Creates an instance of a class that implements [Action], from a proto.
-///
-/// Throws an [UnsupportedError] if the proto's action type is unspecified.
-Action getActionFromProto(proto.Action action) {
-  switch (action.type) {
-    case proto.Action_Type.CHANGE_LINE_ITEM_STATUS:
-      return ChangeLineItemStatusAction(action);
-    default:
-      throw UnsupportedError(
-          '${action.type} is not a supported action type.');
-  }
-}
-
 /// An interface that represents an action to manipulate DV360 entities.
 abstract class Action {
+  /// Creates an instance of a class that implements [Action], from a proto.
+  ///
+  /// Throws an [UnsupportedError] if the proto's action type is unspecified.
+  static Action getActionFromProto(proto.Action action) {
+    switch (action.type) {
+      case proto.Action_Type.CHANGE_LINE_ITEM_STATUS:
+        return ChangeLineItemStatusAction(action);
+      default:
+        throw UnsupportedError(
+            '${action.type} is not a supported action type.');
+    }
+  }
+
   /// Creates a proto that represents the [Action].
   proto.Action toProto();
 
