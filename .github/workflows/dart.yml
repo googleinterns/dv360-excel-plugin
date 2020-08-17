@@ -31,8 +31,13 @@ jobs:
     - name: Run tests
       run: PATH="$PATH:/usr/lib/dart/bin" pub run build_runner test -- -p chrome
     - name: Install dependencies for rules builder
-      run: PATH="$PATH:/usr/lib/dart/bin" pub get 
+      run: PATH="$PATH:/usr/lib/dart/bin" pub get
       working-directory: ./server
+      if: always()
+    - name: Generate protobufs for rules builder
+      run: |
+        mkdir -p server/lib/proto
+        PATH="$PATH:$HOME/.pub-cache/bin" protoc --dart_out=server/lib/proto/ rule.proto
       if: always()
     - name: Run tests for rules builder
       run: PATH="$PATH:/usr/lib/dart/bin" pub run test test/*
