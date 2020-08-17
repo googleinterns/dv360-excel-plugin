@@ -3,15 +3,15 @@ description: a server to manage and run scheduled rules for DV360 entities
 version: 0.0.1
 
 environment:
-  sdk: ">=2.0.0 <3.0.0"
+  sdk: ">=2.7.0 <3.0.0"
 
 dependencies:
   aqueduct: ^3.3.0+1
   googleapis: ^0.55.0
   googleapis_auth: ^0.2.12
   fixnum: ^0.10.11
-  protobuf: 1.0.1
-  mockito: 4.1.1
+  protobuf: ^1.0.1
+  mockito: ^4.1.1
 
 dev_dependencies:
   test: ^1.0.0
