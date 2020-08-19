@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:fixnum/fixnum.dart';
 import 'package:googleapis/firestore/v1.dart';
+import 'package:jose/jose.dart';
 
 import 'proto/rule.pb.dart';
 
@@ -111,4 +112,10 @@ Object unpackValue(Value packedValue) {
   });
 
   return newMap;
+}
+
+/// Gets the obfuscated Gaia id of the user from [idToken].
+String getUserId(String idToken) {
+  final jwt = JsonWebToken.unverified(idToken);
+  return jwt.claims.subject;
 }
