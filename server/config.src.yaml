@@ -4,6 +4,7 @@ projectId: projectid
 databaseId: (default)
 locationId: us-central1
 appEngineService: rules-server
+refreshTokenKey: arefreshtokenkey
 
 displayVideo360:
   baseURL: https://localhost:8001/

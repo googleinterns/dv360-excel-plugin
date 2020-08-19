@@ -3,6 +3,7 @@ import 'service/google_api.dart';
 
 /// A subclass of [ApplicationChannel] that is created for each isolate.
 class ServerChannel extends ApplicationChannel {
+
   /// The [GoogleApi] instance that provides authenticated clients to access
   /// Google APIs.
   GoogleApi googleApi;
@@ -42,6 +43,7 @@ class ServerConfiguration extends Configuration {
   String databaseId;
   String locationId;
   String appEngineService;
+  String refreshTokenKey;
 
   APIConfiguration displayVideo360;
   APIConfiguration firestore;
