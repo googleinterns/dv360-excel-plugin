@@ -8,7 +8,7 @@ import 'package:test/test.dart';
 
 void main() {
   final rule = Rule()
-    ..name = "My new rule"
+    ..name = 'My new rule'
     ..action = (Action()
       ..type = Action_Type.CHANGE_LINE_ITEM_STATUS
       ..changeLineItemStatusParams = (ChangeLineItemStatusParams()
@@ -69,7 +69,7 @@ void main() {
   group('Encrypt/decrypt refresh token:', () {
     test('encryptRefreshToken() ', () async {
       final refreshTokenKey = Key.fromSecureRandom(32).base64;
-      final testRefreshToken = 'test12345';
+      const testRefreshToken = 'test12345';
 
       final encrypted = encryptRefreshToken(testRefreshToken, refreshTokenKey);
       final decrypted = decryptRefreshToken(encrypted, refreshTokenKey);
@@ -80,7 +80,7 @@ void main() {
 
   group('Get user ID from ID token', () {
     test('encryptRefreshToken() ', () async {
-      final userId = '123';
+      const userId = '123';
 
       // Creates a random JWK to generate a valid ID token.
       final jsonWebKey = JsonWebKey.generate('RS256');
