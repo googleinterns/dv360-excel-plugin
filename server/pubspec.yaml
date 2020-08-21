@@ -12,6 +12,7 @@ dependencies:
   fixnum: ^0.10.11
   protobuf: ^1.0.1
   mockito: ^4.1.1
+  csv: ^4.0.3
 
 dev_dependencies:
   test: ^1.0.0
