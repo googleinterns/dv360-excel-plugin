@@ -5,7 +5,7 @@ import 'package:fixnum/fixnum.dart';
 import 'package:googleapis/doubleclickbidmanager/v1_1.dart';
 import 'package:http/http.dart';
 
-/// A class to get the metric values of DV360 line items.
+/// A class to interact with the DV360 reporting API.
 class ReportingClient {
   /// A map from the metric name to the name of the column name in the report.
   ///

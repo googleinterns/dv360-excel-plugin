@@ -110,7 +110,7 @@ void main() {
       expect(body, equals(expected));
     });
 
-    test('makes a POST request after to get the query', () async {
+    test('makes a GET request after to get the query', () async {
       expect(getQueryRequest.method, equals('GET'));
     });
 
