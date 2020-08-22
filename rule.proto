@@ -107,10 +107,10 @@ message Condition {
   }
 
   // required
-  // The relation with which the CPM will be compared.
+  // The relation used for comparison.
   optional Relation relation = 2;
 
   // required
-  // The value which the CPA, CPC, CPA or spending will be compared against.
+  // The value which the metric will be compared against.
   optional int32 value = 3;
 }
