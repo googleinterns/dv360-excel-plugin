@@ -4,6 +4,7 @@ projectId: $PROJECT_ID
 databaseId: (default)
 locationId: us-central1
 appEngineService: rules-server
+googleKeysUrl: https://www.googleapis.com/oauth2/v3/certs
 
 displayVideo360:
   baseURL: https://displayvideo.googleapis.com/
