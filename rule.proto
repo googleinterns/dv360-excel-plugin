@@ -15,6 +15,9 @@ message Rule {
 
   // required
   optional Schedule schedule = 4;
+
+  // optional
+  optional Condition condition = 5;
 }
 
 // A message representing the action applied to a DV360 entity.
@@ -84,4 +87,30 @@ message Schedule {
   // The timezone name of the scheduled job from the tz database.
   // See: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
   optional string timezone = 3;
+}
+
+// A message representing the condition for a rule.
+message Condition {
+  enum Type {
+    UNSPECIFIED_TYPE = 0;
+    CPM = 1;
+  }
+
+  // required
+  // The type of condition.
+  optional Type type = 1;
+
+  enum Relation {
+    UNSPECIFIED_RELATION = 0;
+    LESSER_EQUAL = 1;
+    GREATER = 2;
+  }
+
+  // required
+  // The relation used for comparison.
+  optional Relation relation = 2;
+
+  // required
+  // The value which the metric will be compared against.
+  optional int32 value = 3;
 }
