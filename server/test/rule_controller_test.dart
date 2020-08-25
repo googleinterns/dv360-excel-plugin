@@ -63,20 +63,12 @@ Future<void> main() async {
       ruleWithId = rule.clone()..id = ruleId;
     });
 
-    test('calls FirestoreClient.createRule() with user ID', () async {
-      verify(mockFirestoreClient.createRule(userId, any));
+    test('calls FirestoreClient.createRule() with correct arguments', () async {
+      verify(mockFirestoreClient.createRule(userId, ruleWithId));
     });
 
-    test('calls FirestoreClient.createRule() with rule proto', () async {
-      verify(mockFirestoreClient.createRule(any, ruleWithId));
-    });
-
-    test('calls schedulerClient.scheduleRule() with user ID', () async {
-      verify(mockSchedulerClient.scheduleRule(userId, any));
-    });
-
-    test('calls schedulerClient.scheduleRule() with rule proto', () async {
-      verify(mockSchedulerClient.scheduleRule(any, ruleWithId));
+    test('calls schedulerClient.scheduleRule() with correct arguments', () async {
+      verify(mockSchedulerClient.scheduleRule(userId, ruleWithId));
     });
 
     test('returns with an OK 200 upon success', () async {
