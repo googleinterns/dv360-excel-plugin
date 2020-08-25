@@ -79,7 +79,7 @@ void main() {
   });
 
   group('Get user ID from ID token', () {
-    test('encryptRefreshToken() ', () async {
+    test('getUserId() ', () async {
       const userId = '123';
 
       // Creates a random JWK to generate a valid ID token.

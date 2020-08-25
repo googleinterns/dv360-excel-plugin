@@ -29,6 +29,7 @@ class UserController extends ResourceController {
   /// Throws an [ArgumentError] if the request does not contain an Authorization
   /// header. Throws an [ApiRequestError] if the Firestore API returns an error.
   /// Returns a 200 OK [Response] upon success.
+  /// TODO(@thu5): Return resource created, and bind body to CreateUserRequest
   @Operation.post()
   Future<Response> createUser(@Bind.body() List<int> body) async {
     final message = CreateUserRequest.fromBuffer(body);
