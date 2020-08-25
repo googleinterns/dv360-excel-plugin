@@ -1,12 +1,14 @@
+import 'package:encrypt/encrypt.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:googleapis/firestore/v1.dart';
+import 'package:jose/jose.dart';
 import 'package:server/proto/rule.pb.dart';
 import 'package:server/utils.dart';
 import 'package:test/test.dart';
 
 void main() {
   final rule = Rule()
-    ..name = "My new rule"
+    ..name = 'My new rule'
     ..action = (Action()
       ..type = Action_Type.CHANGE_LINE_ITEM_STATUS
       ..changeLineItemStatusParams = (ChangeLineItemStatusParams()
@@ -61,6 +63,34 @@ void main() {
       final documentAsRule = document.toProto();
 
       expect(documentAsRule, equals(rule));
+    });
+  });
+
+  group('Encrypt/decrypt refresh token:', () {
+    test('encryptRefreshToken() ', () async {
+      final refreshTokenKey = Key.fromSecureRandom(32).base64;
+      const testRefreshToken = 'test12345';
+
+      final encrypted = encryptRefreshToken(testRefreshToken, refreshTokenKey);
+      final decrypted = decryptRefreshToken(encrypted, refreshTokenKey);
+
+      expect(decrypted, equals(testRefreshToken));
+    });
+  });
+
+  group('Get user ID from ID token', () {
+    test('getUserId() ', () async {
+      const userId = '123';
+
+      // Creates a random JWK to generate a valid ID token.
+      final jsonWebKey = JsonWebKey.generate('RS256');
+      final jwsBuilder = JsonWebSignatureBuilder();
+      jwsBuilder.jsonContent =
+          JsonWebTokenClaims.fromJson({'sub': userId}).toJson();
+      jwsBuilder.addRecipient(jsonWebKey);
+      final idToken = jwsBuilder.build().toCompactSerialization();
+
+      expect(getUserId(idToken), equals(userId));
     });
   });
 }

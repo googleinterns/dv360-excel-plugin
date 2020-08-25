@@ -4,6 +4,7 @@ projectId: projectid
 databaseId: (default)
 locationId: us-central1
 appEngineService: rules-server
+refreshTokenKey: refresh-token-key
 googleKeysUrl: https://www.googleapis.com/oauth2/v3/certs
 
 displayVideo360:
