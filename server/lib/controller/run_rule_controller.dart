@@ -2,10 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:aqueduct/aqueduct.dart';
-import 'package:meta/meta.dart';
 
 import '../model/rule.dart';
-import '../proto/rule.pb.dart' as proto;
 import '../proto/scheduled_rule.pb.dart';
 import '../service/dv360.dart';
 import '../service/firestore.dart';
@@ -48,7 +46,7 @@ class RunRuleController extends ResourceController {
 
     // Looks up the rule in Firestore using (userId, ruleId) and creates model.
     final ruleProto = await _firestoreClient.getRule(userId, ruleId);
-    final rule = getRule(ruleProto);
+    final rule = Rule.fromProto(ruleProto);
 
     // Retrieves and decrypts the user's refresh token from Firestore.
     final encryptedToken =
@@ -62,14 +60,8 @@ class RunRuleController extends ResourceController {
     final dv360 = DisplayVideo360Client(userClient, _dv360BaseUrl);
 
     // Runs the rule using the DV360 client.
-    await rule.run(dv360);
+    await dv360.run(rule);
 
     return Response.ok({});
-  }
-
-  /// Returns the [Rule] model form of the rule proto.
-  @visibleForTesting
-  Rule getRule(proto.Rule ruleProto) {
-    return Rule.fromProto(ruleProto);
   }
 }

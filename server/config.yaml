@@ -4,6 +4,7 @@ projectId: $PROJECT_ID
 databaseId: (default)
 locationId: us-central1
 appEngineService: rules-server
+refreshTokenKey: refresh-token-key
 
 displayVideo360:
   baseURL: https://displayvideo.googleapis.com/
