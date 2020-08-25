@@ -58,8 +58,8 @@ class ReportingClient {
     final url = await _getReportUrl(queryId);
 
     try {
-      // Downloads the report and converts it into a map.
-      final reportMap = await _reportToMap(url);
+      // Retrieves the report and converts it into a map.
+      final reportMap = await _retrieveReport(url);
 
       return reportMap[metricToReportColumnName[metric]];
     } on ArgumentError {
@@ -105,10 +105,20 @@ class ReportingClient {
     return query.metadata.googleCloudStoragePathForLatestReport;
   }
 
-  /// Extract the values in the report from [reportUrl] into a map.
+  /// Retrieves the report from [reportUrl] and converts the data into a map.
   ///
   /// Throws an ArgumentError if report is not found or any data is missing.
-  Future<Map<String, String>> _reportToMap(String reportUrl) async {
+  ///
+  /// For example:
+  /// ```
+  /// {
+  /// 'Line Item ID': '12345',
+  /// 'Date': '2001/01/01',
+  /// 'Advertiser Currency': 'USD',
+  /// 'Revenue eCPM (Adv Currency)': '123.45',
+  /// }
+  ///  ```
+  Future<Map<String, String>> _retrieveReport(String reportUrl) async {
     // Sends an HTTP GET request to the [reportUrl].
     final response = await get(reportUrl);
 

@@ -49,6 +49,9 @@ void main() {
           ..value = lineItemId.toString())
       ]);
 
+  // Responses from the reporting server are in the form of [Query]s.
+  // [Query] is a class from the googleapis package. See:
+  // https://pub.dev/documentation/googleapis/latest/googleapis.doubleclickbidmanager.v1_1/Query-class.html
   final createQueryResponse = reporting.Query()..queryId = queryId;
   final getQueryResponse = reporting.Query()
     ..metadata = (reporting.QueryMetadata()
@@ -74,7 +77,7 @@ void main() {
 
   group('Success case: getLineItemCpm()', () {
     setUp(() async {
-      // Responds to the create query request with a [Query] containing the id.
+      // Responds to the create query request with a response containing the id.
       mockReportingServer
           .queueResponse(Response.ok(createQueryResponse.toJson()));
 
@@ -95,7 +98,7 @@ void main() {
     });
 
     test('makes a POST request to create the query', () async {
-      expect(createQueryRequest.method, equals('POST'));
+      expect(createQueryRequest.method, 'POST');
     });
 
     test('makes a request to the correct path to create the query', () async {
@@ -107,11 +110,11 @@ void main() {
       final body = json.encode(await createQueryRequest.body.decode());
       final expected = json.encode(createRequestBody);
 
-      expect(body, equals(expected));
+      expect(body, expected);
     });
 
     test('makes a GET request after to get the query', () async {
-      expect(getQueryRequest.method, equals('GET'));
+      expect(getQueryRequest.method, 'GET');
     });
 
     test('makes a request to the correct path to get the query', () async {
@@ -126,7 +129,7 @@ void main() {
     });
 
     test('makes a GET request after to get the report', () async {
-      expect(getReportRequest.method, equals('GET'));
+      expect(getReportRequest.method, 'GET');
     });
 
     test('makes a request to the correct path to get the query', () async {
@@ -134,12 +137,12 @@ void main() {
     });
 
     test('returns the correct CPM value', () async {
-      expect(returnValue, equals(cpm));
+      expect(returnValue, cpm);
     });
   });
 
   group('Failure case: getLineItemCpm()', () {
-    test('throws an ApiRequestError if error creating the query', () async {
+    test('throws an ApiRequestError if it fails to create the query', () async {
       mockReportingServer.queueResponse(Response.serverError());
 
       Future<void> actual() async =>
@@ -148,7 +151,7 @@ void main() {
       expect(actual, throwsA(const TypeMatcher<reporting.ApiRequestError>()));
     });
 
-    test('throws an ApiRequestError if error getting the query', () async {
+    test('throws an ApiRequestError if it fails to create the query', () async {
       mockReportingServer
           .queueResponse(Response.ok(createQueryResponse.toJson()));
       mockReportingServer.queueResponse(Response.serverError());
@@ -171,7 +174,7 @@ void main() {
       expect(actual, throwsA(const TypeMatcher<ArgumentError>()));
     });
 
-    test('throws an ArgumentError when there report is missing data', () async {
+    test('throws an ArgumentError when the report is missing data', () async {
       mockReportingServer
           .queueResponse(Response.ok(createQueryResponse.toJson()));
       mockReportingServer.queueResponse(Response.ok(getQueryResponse.toJson()));
