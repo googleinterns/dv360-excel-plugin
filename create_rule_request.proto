@@ -1,0 +1,11 @@
+syntax = "proto2";
+package dv360_excel_plugin;
+
+import 'rule.proto';
+
+// A message that represents a request to the server to create a new rule.
+message CreateRuleRequest {
+  // required
+  // The rule to be created.
+  optional Rule rule = 1;
+}

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:encrypt/encrypt.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:googleapis/firestore/v1.dart';
+import 'package:jose/jose.dart';
 
 import 'proto/rule.pb.dart';
 
@@ -140,4 +141,10 @@ String decryptRefreshToken(String encrypted, String aesKey) {
   final iv = IV.fromLength(16);
   final encrypter = Encrypter(AES(key));
   return encrypter.decrypt(Encrypted.fromBase64(encrypted), iv: iv);
+}
+
+/// Gets the obfuscated Gaia id of the user from [idToken].
+String getUserId(String idToken) {
+  final jwt = JsonWebToken.unverified(idToken);
+  return jwt.claims.subject;
 }

@@ -5,6 +5,7 @@ databaseId: (default)
 locationId: us-central1
 appEngineService: rules-server
 refreshTokenKey: $REFRESH_TOKEN_KEY
+googleKeysUrl: https://www.googleapis.com/oauth2/v3/certs
 
 displayVideo360:
   baseURL: https://displayvideo.googleapis.com/
