@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:fixnum/fixnum.dart';
 import 'package:googleapis/displayvideo/v1.dart';
 import 'package:http/http.dart';
-import 'package:server/service/firestore.dart';
 
 import '../model/rule.dart';
+import '../service/firestore.dart';
 
 /// A class that wraps around Display & Video 360.
 class DisplayVideo360Client {
@@ -37,13 +37,11 @@ class DisplayVideo360Client {
       await rule.action.run(this);
     } on ApiRequestError catch (e) {
       // If there is an API error, return the message returned by the API.
-      await _firestoreClient.addRun(userId, ruleId,
+      return await _firestoreClient.addRun(userId, ruleId,
           isSuccess: false, message: e.message);
-      return;
     } catch (e) {
       // If there is another kind of exception, do not include the message.
-      await _firestoreClient.addRun(userId, ruleId, isSuccess: false);
-      return;
+      return await _firestoreClient.addRun(userId, ruleId, isSuccess: false);
     }
     // Logs the successful run of the rule.
     await _firestoreClient.addRun(userId, ruleId, isSuccess: true);
