@@ -3,9 +3,13 @@ import 'package:googleapis/displayvideo/v1.dart';
 import 'package:test/test.dart';
 import 'package:aqueduct_test/aqueduct_test.dart';
 import 'package:http/http.dart' as http;
+import 'package:mockito/mockito.dart';
 
 import 'package:server/server.dart';
 import 'package:server/service/dv360.dart';
+import 'package:server/service/firestore.dart';
+
+class MockFirestoreClient extends Mock implements FirestoreClient {}
 
 void main() {
   const mockServerPort = 8001;
@@ -18,12 +22,13 @@ void main() {
 
   final client = http.Client();
   DisplayVideo360Client displayVideo360;
+  final mockFirestoreClient = MockFirestoreClient();
 
   Request request;
 
   setUpAll(() async {
     await mockDisplayVideo360Server.open();
-    displayVideo360 = DisplayVideo360Client(client, url);
+    displayVideo360 = DisplayVideo360Client(client, mockFirestoreClient, url);
   });
 
   tearDownAll(() async {
@@ -54,8 +59,7 @@ void main() {
 
     test(
         'makes a request with a body that contains a line item '
-            'with the correct entityStatus',
-        () async {
+        'with the correct entityStatus', () async {
       final lineItem = LineItem.fromJson(await request.body.decode());
 
       expect(lineItem.entityStatus, equals(status));
