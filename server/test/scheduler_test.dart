@@ -35,7 +35,7 @@ void main() {
       ..type = proto.Schedule_Type.REPEATING
       ..timezone = 'America/Los_Angeles'
       ..repeatingParams =
-      (proto.Schedule_RepeatingParams()..cronExpression = '* * * * *'))
+          (proto.Schedule_RepeatingParams()..cronExpression = '* * * * *'))
     ..scope = (proto.Scope()
       ..type = proto.Scope_Type.LINE_ITEM_TYPE
       ..lineItemScopeParams = (proto.LineItemScopeParams()
