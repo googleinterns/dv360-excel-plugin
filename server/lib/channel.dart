@@ -42,6 +42,8 @@ class ServerConfiguration extends Configuration {
   String databaseId;
   String locationId;
   String appEngineService;
+  String refreshTokenKey;
+  String googleKeysUrl;
 
   APIConfiguration displayVideo360;
   APIConfiguration firestore;

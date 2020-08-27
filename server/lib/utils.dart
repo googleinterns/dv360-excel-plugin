@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:encrypt/encrypt.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:googleapis/firestore/v1.dart';
 import 'package:jose/jose.dart';
@@ -112,6 +113,34 @@ Object unpackValue(Value packedValue) {
   });
 
   return newMap;
+}
+
+/// Encrypts the [unencrypted] string using the AES key.
+///
+/// To generate a random key:
+/// ```
+/// pub global activate encrypt
+/// secure-random
+/// ```
+///
+/// See here:
+/// https://pub.dev/packages/encrypt
+String encryptRefreshToken(String unencrypted, String aesKey) {
+  final key = Key.fromBase64(aesKey);
+  final iv = IV.fromLength(16);
+  final encrypter = Encrypter(AES(key));
+  return encrypter.encrypt(unencrypted, iv: iv).base64;
+}
+
+/// Decrypts the [encrypted] string using the AES key.
+///
+/// See here:
+/// https://pub.dev/packages/encrypt
+String decryptRefreshToken(String encrypted, String aesKey) {
+  final key = Key.fromBase64(aesKey);
+  final iv = IV.fromLength(16);
+  final encrypter = Encrypter(AES(key));
+  return encrypter.decrypt(Encrypted.fromBase64(encrypted), iv: iv);
 }
 
 /// Gets the obfuscated Gaia id of the user from [idToken].
