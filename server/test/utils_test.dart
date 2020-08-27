@@ -2,24 +2,27 @@ import 'package:encrypt/encrypt.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:googleapis/firestore/v1.dart';
 import 'package:jose/jose.dart';
-import 'package:server/proto/rule.pb.dart';
+import 'package:server/proto/rule.pb.dart' as proto;
 import 'package:server/utils.dart';
 import 'package:test/test.dart';
 
 void main() {
-  final rule = Rule()
+  final rule = proto.Rule()
     ..name = 'My new rule'
-    ..action = (Action()
-      ..type = Action_Type.CHANGE_LINE_ITEM_STATUS
-      ..changeLineItemStatusParams = (ChangeLineItemStatusParams()
-        ..lineItemIds.add(Int64(12345))
-        ..advertiserId = Int64(67890)
-        ..status = ChangeLineItemStatusParams_Status.PAUSED))
-    ..schedule = (Schedule()
-      ..type = Schedule_Type.REPEATING
+    ..action = (proto.Action()
+      ..type = proto.Action_Type.CHANGE_LINE_ITEM_STATUS
+      ..changeLineItemStatusParams = (proto.ChangeLineItemStatusParams()
+        ..status = proto.ChangeLineItemStatusParams_Status.PAUSED))
+    ..schedule = (proto.Schedule()
+      ..type = proto.Schedule_Type.REPEATING
       ..timezone = 'America/Los_Angeles'
       ..repeatingParams =
-          (Schedule_RepeatingParams()..cronExpression = '* * * * *'));
+          (proto.Schedule_RepeatingParams()..cronExpression = '* * * * *'))
+    ..scope = (proto.Scope()
+      ..type = proto.Scope_Type.LINE_ITEM_TYPE
+      ..lineItemScopeParams = (proto.LineItemScopeParams()
+        ..lineItemIds.add(Int64(12345))
+        ..advertiserId = Int64(67890)));
 
   final document = Document()
     ..fields = {
@@ -31,10 +34,6 @@ void main() {
             'changeLineItemStatusParams': (Value()
               ..mapValue = (MapValue()
                 ..fields = {
-                  'lineItemIds': (Value()
-                    ..arrayValue = (ArrayValue()
-                      ..values = [Value()..stringValue = '12345'])),
-                  'advertiserId': (Value()..stringValue = '67890'),
                   'status': (Value()..stringValue = 'PAUSED'),
                 }))
           })),
@@ -47,6 +46,19 @@ void main() {
               ..mapValue = (MapValue()
                 ..fields = {
                   'cronExpression': Value()..stringValue = '* * * * *',
+                }))
+          })),
+      'scope': (Value()
+        ..mapValue = (MapValue()
+          ..fields = {
+            'type': (Value()..stringValue = 'LINE_ITEM_TYPE'),
+            'lineItemScopeParams': (Value()
+              ..mapValue = (MapValue()
+                ..fields = {
+                  'lineItemIds': (Value()
+                    ..arrayValue = (ArrayValue()
+                      ..values = [Value()..stringValue = '12345'])),
+                  'advertiserId': (Value()..stringValue = '67890'),
                 }))
           }))
     };
