@@ -14,7 +14,7 @@ class FirestoreClient {
   static const rulesName = 'rules';
 
   /// The name of the collection of the run history in Firestore.
-  static const runHistoryName = 'runs';
+  static const runHistoryName = 'runHistory';
 
   /// The name of the encrypted refresh token field in Firestore.
   static const encryptedRefreshTokenFieldName = 'encryptedRefreshToken';
@@ -73,8 +73,8 @@ class FirestoreClient {
   /// See: https://developers.google.com/identity/protocols/oauth2/openid-connect#an-id-tokens-payload
   ///
   /// Throws an [ApiRequestError] if Firestore API returns an error.
-  Future<void> addRun(String userId, String ruleId,
-      {@required bool isSuccess, String message = ''}) async {
+  Future<void> logRunHistory(String userId, String ruleId, bool isSuccess,
+      {String message = ''}) async {
     final document = Document()
       ..fields = {
         'timestamp': Value()

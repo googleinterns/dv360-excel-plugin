@@ -37,13 +37,13 @@ class DisplayVideo360Client {
       await rule.action.run(this);
     } on ApiRequestError catch (e) {
       // If there is an API error, return the message returned by the API.
-      return await _firestoreClient.addRun(userId, ruleId,
-          isSuccess: false, message: e.message);
+      return await _firestoreClient.logRunHistory(userId, ruleId, false,
+          message: e.message);
     } catch (e) {
       // If there is another kind of exception, do not include the message.
-      return await _firestoreClient.addRun(userId, ruleId, isSuccess: false);
+      return await _firestoreClient.logRunHistory(userId, ruleId, false);
     }
     // Logs the successful run of the rule.
-    await _firestoreClient.addRun(userId, ruleId, isSuccess: true);
+    await _firestoreClient.logRunHistory(userId, ruleId, true);
   }
 }
