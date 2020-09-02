@@ -1,0 +1,169 @@
+<div *ngIf="isAlertVisible && isSuccess" class="alert alert-success alert-dismissible fade show" role="alert">
+    Rule successfully created!
+    <button type="button" (click)="isAlertVisible=false" class="close" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+<div *ngIf="isAlertVisible && !isSuccess" style="font-size: 14px" class="alert alert-danger alert-dismissible fade show" role="alert">
+    Rule creation unsuccessful!
+    <button type="button" (click)="isAlertVisible=false" class="close" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+
+<form (ngSubmit)="onSubmit()" #form="ngForm">
+    <bs-accordion>
+        <bs-accordion-panel heading="Rule Details" [isOpen]='firstPanelOpen'>
+            <div class="form-group">
+                <bs-input class="is-valid"
+                          label="Name"
+                          [(ngModel)]="name"
+                          [minlength]="1"
+                          [maxlength]="25"
+                          pattern="[\w ]+"
+                          patternMessage="Field should only contain alphanumeric characters, space, and underscore">
+                </bs-input>
+            </div>
+            <div class="form-group">
+                <label class="parameter-name">Action Type</label>
+                <select class="form-control" #field="ngForm" [(ngModel)]="actionType" ngControl="actionType" required>
+                    <option *ngFor="let t of actionTypes.keys" [value]="t">{{t}}</option>
+                </select>
+            </div>
+        </bs-accordion-panel>
+
+        <bs-accordion-panel heading="Action Parameters" (click)="firstPanelOpen = false">
+            <!--                Display fields based on type of action-->
+            <div  [ngSwitch]="actionType">
+                <div *ngSwitchCase="'Change line item status'">
+                    <div class="form-group">
+                        <bs-input class="is-valid"
+                                  label="Line Item IDs"
+                                  [(ngModel)]="lineItemIds"
+                                  [minlength]="1"
+                                  pattern="(\d+)(,\s*\d+)*"
+                                  patternMessage="Field should only contain comma-separated line item IDs">
+                        </bs-input>
+                    </div>
+                    <div class="form-group">
+                        <bs-input class="is-valid"
+                                  label="Advertiser ID"
+                                  [(ngModel)]="advertiserId"
+                                  [minlength]="1"
+                                  pattern="\d+"
+                                  patternMessage="Field should only contain an advertiser ID">
+                        </bs-input>
+                    </div>
+                    <div class="form-group">
+                        <label class="parameter-name">Status</label>
+                        <select class="form-control" [(ngModel)]="status" ngControl="type" required>
+                            <option *ngFor="let t of statusTypes.keys" [value]="t">{{t}}</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </bs-accordion-panel>
+
+        <bs-accordion-panel heading="Schedule Parameters" (click)="firstPanelOpen = false">
+            <div>
+                <div class="form-group">
+                    <label class="parameter-name">Timezone</label>
+                    <select class="form-control" #field="ngForm" [(ngModel)]="timezone" ngControl="timezone" required>
+                        <option *ngFor="let t of timezones" [value]="t">{{t}}</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="parameter-name">Schedule Type</label>
+                    <select class="form-control" #field="ngForm" [(ngModel)]="scheduleType" ngControl="scheduleType" required>
+                        <option *ngFor="let t of scheduleTypes.keys" [value]="freqTypes[t]">{{t}}</option>
+                    </select>
+                </div>
+                <div  [ngSwitch]="scheduleType">
+                    <div *ngSwitchCase="'Repeating'">
+                        <div class="form-group">
+                            <label class="parameter-name">Type</label>
+                            <select class="form-control" #field="ngForm" [(ngModel)]="freq" ngControl="freq" required>
+                                <option *ngFor="let t of freqTypes.keys" [value]="t">{{t}}</option>
+                            </select>
+                        </div>
+                        <div *ngIf="freq != null &&
+                        freqTypes[freq] <= freqTypes['Every year']">
+                            <div class="form-group">
+                                <bs-input class="is-valid"
+                                          label="Month"
+                                          [(ngModel)]="month"
+                                          pattern="^([1-9]|1[0-2])$"
+                                          patternMessage="Field should contain a valid month (1-12)">
+                                </bs-input>
+                            </div>
+                        </div>
+                        <div *ngIf="freq != null &&
+                        freqTypes[freq] <= freqTypes['Every month']">
+                            <div class="form-group">
+                                <bs-input class="is-valid"
+                                          label="Day"
+                                          [(ngModel)]="day"
+                                          pattern="^([1-9]|[12][0-9]|3[01])$"
+                                          patternMessage="Field should contain a valid day (1-31)">
+                                </bs-input>
+                            </div>
+                        </div>
+                        <div *ngIf="freq != null &&
+                        freqTypes[freq] <= freqTypes['Every day']">
+                            <div class="form-group">
+                                <bs-input class="is-valid"
+                                          label="Hour"
+                                          [(ngModel)]="hour"
+                                          pattern="^([1-9]|[1][0-9]|2[0-3])$"
+                                          patternMessage="Field should contain a valid hour (0-23)">
+                                </bs-input>
+                            </div>
+                        </div>
+                            <div *ngIf="freq != null &&
+                        freqTypes[freq] <= freqTypes['Every hour']">
+                            <div class="form-group">
+                                <bs-input class="is-valid"
+                                          label="Minute"
+                                          [(ngModel)]="minute"
+                                          pattern="^[0-5]?[0-9]$"
+                                          patternMessage="Field should contain a valid minute (0-59)">
+                                </bs-input>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </bs-accordion-panel>
+
+        <bs-accordion-panel heading="Condition Parameters (Optional)" (click)="firstPanelOpen = false">
+            <div class="form-group">
+                <label class="parameter-name">Condition Type</label>
+                <select class="form-control" #field="ngForm" [(ngModel)]="conditionType" ngControl="conditionType" required>
+                    <option *ngFor="let t of conditionTypes.keys" [value]="t">{{t}}</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="parameter-name">Relation</label>
+                <select class="form-control" #field="ngForm" [(ngModel)]="relation" ngControl="relation" required>
+                    <option *ngFor="let t of relationTypes.keys" [value]="t">{{t}}</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <bs-input class="is-valid"
+                          label="Value"
+                          [(ngModel)]="value"
+                          pattern="^(?:[1-9]\d*|0)?(?:\.\d+)?$"
+                          patternMessage="Field should only contain a double">
+                </bs-input>
+            </div>
+        </bs-accordion-panel>
+    </bs-accordion>
+
+    <div *ngIf="hasIdToken" class="row my-3">
+        <div class="col"><button type="submit" class="btn btn-success">Create Rule</button></div>
+    </div>
+</form>
+
+<div *ngIf="!hasIdToken" class="row my-3">
+    <div class="col"><button class="btn btn-primary" (click)="createUser()">Grant Offline Access</button></div>
+</div>

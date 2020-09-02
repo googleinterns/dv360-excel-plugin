@@ -61,7 +61,16 @@
 
         <!-- rules builder-->
         <bs-tabx header="{{rulesBuilderTabName}}">
-            <p>Coming soon</p>
+            <div class="jumbotron d-flex align-items-center">
+                <div class="container-fluid">
+                    <!-- rule component-->
+                    <rule-creator></rule-creator>
+                    <!-- sign off button-->
+                    <div class="d-flex justify-content-end">
+                        <small><a debugId="sign-off-btn" (click)="onClick()" href="#">{{signOutButtonName}}</a></small>
+                    </div>
+                </div>
+            </div>
         </bs-tabx>
     </bs-tabsx>
 </div>
