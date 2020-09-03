@@ -12,8 +12,14 @@ class FirestoreClient {
   /// The name of the collection of rules in Firestore.
   static const rulesName = 'rules';
 
+  /// The name of the collection of the run history in Firestore.
+  static const runHistoryName = 'runHistory';
+
   /// The name of the encrypted refresh token field in Firestore.
   static const encryptedRefreshTokenFieldName = 'encryptedRefreshToken';
+
+  /// The maximum number of rules per user.
+  static const maximumNumberOfRules = 50;
 
   /// The Firestore API.
   final FirestoreApi _api;
@@ -31,9 +37,17 @@ class FirestoreClient {
 
   /// Adds a protobuf generated [Rule] to the Firestore database.
   ///
-  /// Throws an [ApiRequestError] if Firestore API returns an error.
+  /// Throws an [ApiRequestError] if Firestore API returns an error. Throws a
+  /// [StateError] if the maximum number of rules has been reached.
   Future<String> createRule(String userId, Rule rule) async {
     final document = rule.toDocument();
+
+    final currentNumberOfRules = (await getUserRules(userId)).length;
+
+    if (currentNumberOfRules >= maximumNumberOfRules) {
+      throw StateError(
+          'The maximum number of rules ($maximumNumberOfRules) has been reached.');
+    }
 
     return await _addDocument(
       '/$usersName/$userId',
@@ -63,6 +77,29 @@ class FirestoreClient {
     );
   }
 
+  /// Logs [isSuccess] and optional [message] of a performed rule with [ruleId].
+  ///
+  /// The [userId] is the `sub` claim of the user's Google ID token.
+  /// See: https://developers.google.com/identity/protocols/oauth2/openid-connect#an-id-tokens-payload
+  ///
+  /// Throws an [ApiRequestError] if Firestore API returns an error.
+  Future<void> logRunHistory(String userId, String ruleId, bool isSuccess,
+      {String message = ''}) async {
+    final document = Document()
+      ..fields = {
+        'timestamp': Value()
+          ..timestampValue = DateTime.now().toUtc().toIso8601String(),
+        'success': Value()..booleanValue = isSuccess,
+        'message': Value()..stringValue = message
+      };
+
+    await _addDocument(
+      '/$usersName/$userId/$rulesName/$ruleId',
+      runHistoryName,
+      document,
+    );
+  }
+
   /// Gets the user's encrypted refresh token given the [userId].
   ///
   /// Throws an [ApiRequestError] if Firestore API returns an error.
@@ -83,6 +120,16 @@ class FirestoreClient {
     return ruleDocument.toProto();
   }
 
+  /// Gets the [Rule] uniquely identified by its [userId] and [ruleId].
+  ///
+  /// Throws an [ApiRequestError] if Firestore API returns an error.
+  Future<List<Rule>> getUserRules(String userId) async {
+    final response = await _listDocuments('/$usersName/$userId', rulesName,
+        pageSize: maximumNumberOfRules);
+    final rules = response.documents?.map((e) => e.toProto())?.toList() ?? [];
+    return rules;
+  }
+
   /// Gets a [Document] located at [path] from Firestore.
   ///
   /// Throws an [ApiRequestError] if Firestore API returns an error.
@@ -91,6 +138,24 @@ class FirestoreClient {
         .get('projects/$_projectId/databases/$_databaseId/documents$path');
 
     return document;
+  }
+
+  /// Gets a list of [Document]s in [collection] from Firestore.
+  ///
+  /// The [pageSize] is the maximum number of documents to return. The
+  /// [pageToken] is the token used to retrieve the next page.
+  ///
+  /// Throws an [ApiRequestError] if Firestore API returns an error.
+  Future<ListDocumentsResponse> _listDocuments(String parent, String collection,
+      {int pageSize, String pageToken}) async {
+    final documents = await _api.projects.databases.documents.list(
+      'projects/$_projectId/databases/$_databaseId/documents$parent',
+      collection,
+      pageSize: pageSize,
+      pageToken: pageToken,
+    );
+
+    return documents;
   }
 
   /// Adds a document to the Firestore database.

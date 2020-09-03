@@ -1,15 +1,21 @@
 import 'package:angular/angular.dart';
-import 'package:dv360_excel_plugin/src/javascript_api/google_api.dart';
 import 'package:ng_bootstrap/ng_bootstrap.dart';
 
-import 'src/service/credential_service.dart';
 import 'src/javascript_api/excel_api.dart';
+import 'src/javascript_api/google_api.dart';
 import 'src/query_component.dart';
+import 'src/rule_component.dart';
+import 'src/service/credential_service.dart';
 
 @Component(
   selector: 'application-root',
   templateUrl: 'root_component.html',
-  directives: [bsTabsxDirectives, coreDirectives, QueryComponent],
+  directives: [
+    bsTabsxDirectives,
+    coreDirectives,
+    QueryComponent,
+    RuleComponent,
+  ],
   providers: [
     ClassProvider(CredentialService),
     ClassProvider(ExcelDart),

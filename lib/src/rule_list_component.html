@@ -1,0 +1,9 @@
+<div class="w-auto overflow-auto" style="max-height: 60vh">
+    <a *ngFor="let t of rules" href="#" class="list-group-item list-group-item-action flex-column align-items-start">
+        <h6 class="mb-2">{{t.name}}</h6>
+        <div class="parameter-name text-muted list-secondary">
+            {{actionTypes[t.action.type]}}<br>
+            {{scheduleParser.scheduleToString(t.schedule)}}
+        </div>
+    </a>
+</div>
