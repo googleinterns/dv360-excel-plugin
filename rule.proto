@@ -18,6 +18,9 @@ message Rule {
 
   // optional
   optional Condition condition = 5;
+
+  // required
+  optional Scope scope = 6;
 }
 
 // A message representing the action applied to a DV360 entity.
@@ -40,14 +43,6 @@ message Action {
 
 // The action parameters to change line items' status.
 message ChangeLineItemStatusParams {
-  // required
-  // The ID of line items to which the action applies.
-  repeated int64 line_item_ids = 1;
-
-  // required
-  // The ID of advertiser to which the line items belong to.
-  optional int64 advertiser_id = 2;
-
   enum Status {
     UNSPECIFIED_STATUS = 0;
     ACTIVE = 1;
@@ -112,5 +107,34 @@ message Condition {
 
   // required
   // The value which the metric will be compared against.
-  optional int32 value = 3;
+  optional double value = 3;
+}
+
+// A message that represents the target entities for a rule.
+message Scope {
+  enum Type {
+    UNSPECIFIED_TYPE = 0;
+    LINE_ITEM_TYPE = 1;
+  }
+
+  // required
+  // The type of scope.
+  optional Type type = 1;
+
+  // required
+  // The parameters used for each type of scope.
+  oneof params {
+    LineItemScopeParams line_item_scope_params = 2;
+  }
+}
+
+// A message representing the parameters for line item scopes.
+message LineItemScopeParams {
+  // required
+  // The ID of line items.
+  repeated int64 line_item_ids = 1;
+
+  // required
+  // The ID of advertiser to which the line items belong to.
+  optional int64 advertiser_id = 2;
 }

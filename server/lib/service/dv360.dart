@@ -29,6 +29,8 @@ class DisplayVideo360Client {
 
   /// Runs the rule to manipulate DV360 line items.
   Future<void> run(Rule rule) async {
-    await rule.action.run(this);
+    for (final target in rule.scope.targets) {
+      await rule.action.run(this, target);
+    }
   }
 }

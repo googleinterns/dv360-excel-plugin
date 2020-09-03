@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:test/test.dart';
 
 import 'package:server/proto/scheduled_rule.pb.dart';
-import 'package:server/proto/rule.pb.dart';
+import 'package:server/proto/rule.pb.dart' as proto;
 import 'package:server/server.dart';
 import 'package:server/service/scheduler.dart';
 
@@ -24,25 +24,28 @@ void main() {
   Request request;
   Job job;
 
-  final lineItemStatusRule = Rule()
+  final lineItemStatusRule = proto.Rule()
     ..name = 'My new rule'
     ..id = '123'
-    ..action = (Action()
-      ..type = Action_Type.CHANGE_LINE_ITEM_STATUS
-      ..changeLineItemStatusParams = (ChangeLineItemStatusParams()
-        ..lineItemIds.add(Int64(12345))
-        ..advertiserId = Int64(67890)
-        ..status = ChangeLineItemStatusParams_Status.PAUSED))
-    ..schedule = (Schedule()
-      ..type = Schedule_Type.REPEATING
+    ..action = (proto.Action()
+      ..type = proto.Action_Type.CHANGE_LINE_ITEM_STATUS
+      ..changeLineItemStatusParams = (proto.ChangeLineItemStatusParams()
+        ..status = proto.ChangeLineItemStatusParams_Status.PAUSED))
+    ..schedule = (proto.Schedule()
+      ..type = proto.Schedule_Type.REPEATING
       ..timezone = 'America/Los_Angeles'
       ..repeatingParams =
-          (Schedule_RepeatingParams()..cronExpression = '* * * * *'));
+          (proto.Schedule_RepeatingParams()..cronExpression = '* * * * *'))
+    ..scope = (proto.Scope()
+      ..type = proto.Scope_Type.LINE_ITEM_TYPE
+      ..lineItemScopeParams = (proto.LineItemScopeParams()
+        ..lineItemIds.add(Int64(12345))
+        ..advertiserId = Int64(67890)));
 
-  final unspecifiedRule = Rule()
+  final unspecifiedRule = proto.Rule()
     ..name = 'My new rule'
     ..id = '123'
-    ..action = (Action()..type = Action_Type.UNSPECIFIED_TYPE);
+    ..action = (proto.Action()..type = proto.Action_Type.UNSPECIFIED_TYPE);
 
   setUpAll(() async {
     await mockSchedulerServer.open();

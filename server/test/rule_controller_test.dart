@@ -7,7 +7,7 @@ import 'package:test/test.dart';
 
 import 'package:server/controller/rule_controller.dart';
 import 'package:server/proto/create_rule_request.pb.dart';
-import 'package:server/proto/rule.pb.dart';
+import 'package:server/proto/rule.pb.dart' as proto;
 import 'package:server/service/firestore.dart';
 import 'package:server/service/scheduler.dart';
 
@@ -19,21 +19,24 @@ Future<void> main() async {
   const userId = '123abc';
   const ruleId = 'abc123';
   Response response;
-  Rule ruleWithId;
+  proto.Rule ruleWithId;
 
-  final rule = Rule()
+  final rule = proto.Rule()
     ..name = 'My new rule'
-    ..action = (Action()
-      ..type = Action_Type.CHANGE_LINE_ITEM_STATUS
-      ..changeLineItemStatusParams = (ChangeLineItemStatusParams()
-        ..lineItemIds.add(Int64(12345))
-        ..advertiserId = Int64(67890)
-        ..status = ChangeLineItemStatusParams_Status.PAUSED))
-    ..schedule = (Schedule()
-      ..type = Schedule_Type.REPEATING
+    ..action = (proto.Action()
+      ..type = proto.Action_Type.CHANGE_LINE_ITEM_STATUS
+      ..changeLineItemStatusParams = (proto.ChangeLineItemStatusParams()
+        ..status = proto.ChangeLineItemStatusParams_Status.PAUSED))
+    ..schedule = (proto.Schedule()
+      ..type = proto.Schedule_Type.REPEATING
       ..timezone = 'America/Los_Angeles'
       ..repeatingParams =
-          (Schedule_RepeatingParams()..cronExpression = '* * * * *'));
+          (proto.Schedule_RepeatingParams()..cronExpression = '* * * * *'))
+    ..scope = (proto.Scope()
+      ..type = proto.Scope_Type.LINE_ITEM_TYPE
+      ..lineItemScopeParams = (proto.LineItemScopeParams()
+        ..lineItemIds.add(Int64(12345))
+        ..advertiserId = Int64(67890)));
   final createRuleRequest = CreateRuleRequest()..rule = rule;
 
   // Sets up the mock Firestore client, Scheduler client and rule controller.
@@ -67,7 +70,8 @@ Future<void> main() async {
       verify(mockFirestoreClient.createRule(userId, ruleWithId));
     });
 
-    test('calls schedulerClient.scheduleRule() with correct arguments', () async {
+    test('calls schedulerClient.scheduleRule() with correct arguments',
+        () async {
       verify(mockSchedulerClient.scheduleRule(userId, ruleWithId));
     });
 
