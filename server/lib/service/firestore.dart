@@ -1,5 +1,6 @@
 import 'package:googleapis/firestore/v1.dart';
 import 'package:http/http.dart';
+import 'package:meta/meta.dart';
 
 import '../proto/rule.pb.dart';
 import '../utils.dart';
@@ -11,6 +12,9 @@ class FirestoreClient {
 
   /// The name of the collection of rules in Firestore.
   static const rulesName = 'rules';
+
+  /// The name of the collection of the run history in Firestore.
+  static const runHistoryName = 'runHistory';
 
   /// The name of the encrypted refresh token field in Firestore.
   static const encryptedRefreshTokenFieldName = 'encryptedRefreshToken';
@@ -60,6 +64,29 @@ class FirestoreClient {
       usersName,
       document,
       documentId: userId,
+    );
+  }
+
+  /// Logs [isSuccess] and optional [message] of a performed rule with [ruleId].
+  ///
+  /// The [userId] is the `sub` claim of the user's Google ID token.
+  /// See: https://developers.google.com/identity/protocols/oauth2/openid-connect#an-id-tokens-payload
+  ///
+  /// Throws an [ApiRequestError] if Firestore API returns an error.
+  Future<void> logRunHistory(String userId, String ruleId, bool isSuccess,
+      {String message = ''}) async {
+    final document = Document()
+      ..fields = {
+        'timestamp': Value()
+          ..timestampValue = DateTime.now().toUtc().toIso8601String(),
+        'success': Value()..booleanValue = isSuccess,
+        'message': Value()..stringValue = message
+      };
+
+    await _addDocument(
+      '/$usersName/$userId/$rulesName/$ruleId',
+      runHistoryName,
+      document,
     );
   }
 
