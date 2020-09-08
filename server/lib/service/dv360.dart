@@ -33,6 +33,12 @@ class DisplayVideo360Client {
 
   /// Runs the rule to manipulate DV360 line items and logs the result.
   Future<void> run(Rule rule, String userId, String ruleId) async {
+    // If the rule is one-time and the year doesn't match, do not run the rule.
+    // Cloud Scheduler uses cron expressions that do not specify the year.
+    if (!rule.isRepeating && rule.year != DateTime.now().year) {
+      return;
+    }
+
     for (final target in rule.scope.targets) {
       try {
         await rule.action.run(this, target);
@@ -46,13 +52,12 @@ class DisplayVideo360Client {
         // The messages we log should be user-friendly, actionable and
         // understandable. We can expect this for DV360 API error messages, but
         // probably not for lower level exception messages. Also, there might be
-        // security issues if we just directly report the raw exception messages.
+        // security issues if we directly report the raw exception messages.
         return await _firestoreClient.logRunHistory(userId, ruleId, false,
             message: 'Internal error encountered');
       }
       // Logs the successful run of the rule.
       await _firestoreClient.logRunHistory(userId, ruleId, true);
-      }
     }
-  } 
+  }
 }
