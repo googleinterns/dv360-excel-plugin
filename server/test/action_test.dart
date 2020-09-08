@@ -3,17 +3,20 @@ import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
 import 'package:server/model/action.dart';
+import 'package:server/model/scope.dart';
 import 'package:server/proto/rule.pb.dart' as proto;
 import 'package:server/service/dv360.dart';
 
 class MockDisplayVideo360Client extends Mock implements DisplayVideo360Client {}
 
 void main() {
+  final lineItemId = Int64(12345);
+  final advertiserId = Int64(67890);
+  final target = LineItemTarget(lineItemId, advertiserId);
+
   final validActionProto = proto.Action()
     ..type = proto.Action_Type.CHANGE_LINE_ITEM_STATUS
     ..changeLineItemStatusParams = (proto.ChangeLineItemStatusParams()
-      ..lineItemIds.add(Int64(34787229))
-      ..advertiserId = Int64(3849739)
       ..status = proto.ChangeLineItemStatusParams_Status.PAUSED);
 
   final unspecifiedActionProto = proto.Action()
@@ -43,15 +46,11 @@ void main() {
     });
 
     test('run() changes the line item status using the client', () async {
-      final advertiserId =
-          validActionProto.changeLineItemStatusParams.advertiserId;
-      final lineItemId =
-          validActionProto.changeLineItemStatusParams.lineItemIds[0];
       final status = 'ENTITY_STATUS_'
           '${validActionProto.changeLineItemStatusParams.status.name}';
       final action = Action.getActionFromProto(validActionProto);
 
-      await action.run(mockClient);
+      await action.run(mockClient, target);
 
       verify(mockClient.changeLineItemStatus(advertiserId, lineItemId, status));
     });
