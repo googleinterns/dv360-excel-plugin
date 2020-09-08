@@ -37,4 +37,7 @@ server/workspace.xml
 server/Dart_Packages.xml
 server/**/*.aqueduct.pid
 server/lib/proto
-
+server/.gcloudignore 
+server/Dockerfile
+server/app.yaml
+server/env_variables.yaml
