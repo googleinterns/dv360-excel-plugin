@@ -125,7 +125,7 @@ class FirestoreClient {
   /// Throws an [ApiRequestError] if Firestore API returns an error.
   Future<List<Rule>> getUserRules(String userId) async {
     final response = await _listDocuments('/$usersName/$userId', rulesName,
-        pageSize: maximumNumberOfRules);
+        maxPageSize: maximumNumberOfRules);
     final rules = response.documents?.map((e) => e.toProto())?.toList() ?? [];
     return rules;
   }
@@ -142,16 +142,16 @@ class FirestoreClient {
 
   /// Gets a list of [Document]s in [collection] from Firestore.
   ///
-  /// The [pageSize] is the maximum number of documents to return. The
+  /// The [maxPageSize] is the maximum number of documents to return. The
   /// [pageToken] is the token used to retrieve the next page.
   ///
   /// Throws an [ApiRequestError] if Firestore API returns an error.
   Future<ListDocumentsResponse> _listDocuments(String parent, String collection,
-      {int pageSize, String pageToken}) async {
+      {int maxPageSize, String pageToken}) async {
     final documents = await _api.projects.databases.documents.list(
       'projects/$_projectId/databases/$_databaseId/documents$parent',
       collection,
-      pageSize: pageSize,
+      pageSize: maxPageSize,
       pageToken: pageToken,
     );
 

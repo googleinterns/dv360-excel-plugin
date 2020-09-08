@@ -54,8 +54,8 @@ class RuleController extends ResourceController {
 
   /// Retrieves the user's rules from Firestore.
   ///
-  /// Throws [ArgumentError] if request doesn't contain an Authorization header.
-  /// Throws an [ApiRequestError] if Firestore API returns an API error.
+  /// Throws an [ArgumentError] if request doesn't contain an Authorization
+  /// header. Throws an [ApiRequestError] if Firestore API returns an API error.
   /// Returns an OK 200 response upon success.
   @Operation.get()
   Future<Response> getRules() async {
