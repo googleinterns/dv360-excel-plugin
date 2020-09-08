@@ -31,11 +31,15 @@ class RuleService {
   }
 
   /// Creates a rule using the user's ID token and rule proto.
-  Future<void> createRule(String idToken, Rule rule) async {
+  ///
+  /// Returns the status code of the response.
+  Future<int> createRule(String idToken, Rule rule) async {
     final headers = {
       'Content-Type': 'application/x-protobuf',
       'Authorization': 'Bearer $idToken'
     };
-    await post(rulesEndpoint, body: rule.writeToBuffer(), headers: headers);
+    final response =
+        await post(rulesEndpoint, body: rule.writeToBuffer(), headers: headers);
+    return response.statusCode;
   }
 }

@@ -67,4 +67,9 @@ class CredentialService {
 
     return isSignedIn && isAuthorized;
   }
+
+  Future<Map<String, String>> obtainTokens() async {
+    return await _googleAPIDart.obtainTokens(
+        key_store.clientID, key_store.clientSecret, _redirectURI);
+  }
 }
