@@ -25,7 +25,7 @@ enum RepeatingScheduleType {
   selector: 'rule-creator',
   templateUrl: 'rule_creator_component.html',
   directives: [coreDirectives, formDirectives, BsInput, bsAccordionDirectives],
-  providers: [ClassProvider(RuleService)],
+  providers: [ClassProvider(RuleService), ClassProvider(CredentialService)],
 )
 class RuleCreatorComponent {
   final RuleService _ruleService;
