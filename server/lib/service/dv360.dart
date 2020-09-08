@@ -41,7 +41,13 @@ class DisplayVideo360Client {
           message: e.message);
     } catch (e) {
       // If there is another kind of exception, do not include the message.
-      return await _firestoreClient.logRunHistory(userId, ruleId, false);
+      //
+      // The messages we log should be user-friendly, actionable and
+      // understandable. We can expect this for DV360 API error messages, but
+      // probably not for lower level exception messages. Also, there might be
+      // security issues if we just directly report the raw exception messages.
+      return await _firestoreClient.logRunHistory(userId, ruleId, false,
+          message: 'Internal error encountered');
     }
     // Logs the successful run of the rule.
     await _firestoreClient.logRunHistory(userId, ruleId, true);
