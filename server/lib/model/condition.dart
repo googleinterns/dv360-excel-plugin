@@ -37,9 +37,8 @@ class LineItemCpmCondition implements Condition {
         _relation = condition.relation.name,
         _value = condition.value;
 
-  @override
-
   /// Checks the condition using the [ReportingClient].
+  @override
   Future<bool> isTrue(Target target, {@required ReportingClient client}) async {
     final lineItemTarget = target as LineItemTarget;
 
