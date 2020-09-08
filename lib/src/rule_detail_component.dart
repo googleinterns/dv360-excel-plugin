@@ -47,7 +47,7 @@ class RuleDetailComponent implements AfterChanges {
   final ScheduleParser scheduleParser;
   final RuleService _ruleService;
   final List<Rule> rules = [];
-  final List<Run> runHistory = [];
+  final List<RunEntry> runHistory = [];
 
   RuleDetailComponent(this.scheduleParser, this._ruleService);
 
