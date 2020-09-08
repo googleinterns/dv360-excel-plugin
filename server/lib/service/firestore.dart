@@ -75,6 +75,14 @@ class FirestoreClient {
     return encryptedRefreshToken;
   }
 
+  /// Gets the [Rule] uniquely identified by its [userId] and [ruleId].
+  ///
+  /// Throws an [ApiRequestError] if Firestore API returns an error.
+  Future<Rule> getRule(String userId, String ruleId) async {
+    final ruleDocument = await _getDocument('/users/$userId/rules/$ruleId');
+    return ruleDocument.toProto();
+  }
+
   /// Gets a [Document] located at [path] from Firestore.
   ///
   /// Throws an [ApiRequestError] if Firestore API returns an error.
@@ -90,8 +98,8 @@ class FirestoreClient {
   /// The [parent] is the parent resource. This can be
   /// `projects/$projectId/databases/$databaseId/documents` or any sub-document.
   ///
-  /// The [collectionName] is the name of the collection relative to [parent] where
-  /// the new document will be added.
+  /// The [collectionName] is the name of the collection relative to [parent]
+  /// where the new document will be added.
   ///
   /// The [documentId] optionally allows a custom name for the document.
   ///

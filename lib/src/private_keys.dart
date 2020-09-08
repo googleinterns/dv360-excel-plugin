@@ -3,3 +3,4 @@
 
 var apiKey = 'API_KEY';
 var clientID = 'CLIENT_ID';
+var clientSecret = 'CLIENT_SECRET';

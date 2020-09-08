@@ -4,6 +4,8 @@ import 'package:fixnum/fixnum.dart';
 import 'package:googleapis/displayvideo/v1.dart';
 import 'package:http/http.dart';
 
+import '../model/rule.dart';
+
 /// A class that wraps around Display & Video 360.
 class DisplayVideo360Client {
   /// The DV360 API.
@@ -23,5 +25,12 @@ class DisplayVideo360Client {
     await _api.advertisers.lineItems.patch(
         request, advertiserId.toString(), lineItemId.toString(),
         updateMask: 'entityStatus');
+  }
+
+  /// Runs the rule to manipulate DV360 line items.
+  Future<void> run(Rule rule) async {
+    for (final target in rule.scope.targets) {
+      await rule.action.run(this, target);
+    }
   }
 }

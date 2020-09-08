@@ -2,8 +2,10 @@
 library gapi;
 
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:angular/angular.dart';
+import 'package:http/http.dart';
 import 'package:js/js.dart';
 
 import 'json_api.dart';
@@ -92,6 +94,40 @@ class GoogleApiDart {
       } else {
         return completer.complete(JsonJS.stringify(jsonResp));
       }
+    }));
+    return completer.future;
+  }
+
+  /// Obtains the refresh token and identity token by obtaining permission for
+  /// offline access.
+  ///
+  /// Uses [Completer] to convert callback of [JsPromise] to [Future].
+  Future<Map<String, String>> obtainTokens(
+      String clientId, String clientSecret, String redirectUri) async {
+    final completer = Completer<Map<String, String>>();
+    final googleAuth = GoogleAPI.auth2.getAuthInstance();
+
+    // Completes with an object containing the authorization code.
+    googleAuth.grantOfflineAccess().then(allowInterop((ret) async {
+      const tokenEndpoint = 'https://oauth2.googleapis.com/token';
+      final body = {
+        'client_id': clientId,
+        'client_secret': clientSecret,
+        'code': ret.code,
+        'redirect_uri': redirectUri,
+        'grant_type': 'authorization_code',
+      };
+
+      // Exchanges the authorization code for the tokens.
+      final response = await post(tokenEndpoint, body: body);
+      final fields = json.decode(response.body);
+
+      final tokens = {
+        'refresh_token': fields['refresh_token'],
+        'id_token': fields['id_token']
+      }.cast<String, String>();
+
+      completer.complete(tokens);
     }));
     return completer.future;
   }
@@ -214,6 +250,10 @@ class GoogleAuth {
 
   /// Revokes all of the scopes that the user granted.
   external void disconnect();
+
+  /// Obtains access to scopes offline and returns an object containing the
+  /// Authorization code.
+  external JsPromise grantOfflineAccess();
 
   /// Calls the onInit function when the GoogleAuth object is fully initialized.
   external void then(Function onInit, [Function onError]);
