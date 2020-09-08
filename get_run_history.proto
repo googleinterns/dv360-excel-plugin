@@ -5,11 +5,11 @@ package dv360_excel_plugin;
 message GetRunHistoryResponse {
   // required
   // The list of run histories.
-  repeated Run history = 1;
+  repeated RunEntry history = 1;
 }
 
 // A message that represents a single execution of a rule.
-message Run {
+message RunEntry {
   // required
   // The success status of the run.
   optional bool success = 1;

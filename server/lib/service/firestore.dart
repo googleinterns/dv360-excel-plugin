@@ -1,7 +1,7 @@
 import 'package:googleapis/firestore/v1.dart';
 import 'package:http/http.dart';
 
-import '../proto/get_run_history_response.pb.dart';
+import '../proto/get_run_history.pb.dart';
 import '../proto/rule.pb.dart';
 import '../utils.dart';
 
@@ -110,14 +110,15 @@ class FirestoreClient {
   /// See: https://developers.google.com/identity/protocols/oauth2/openid-connect#an-id-tokens-payload
   ///
   /// Throws an [ApiRequestError] if Firestore API returns an error.
-  Future<GetRunHistoryResponse> getRunHistory(String userId, String ruleId) async {
+  Future<GetRunHistoryResponse> getRunHistory(
+      String userId, String ruleId) async {
     final documentList = await _listDocuments(
         '/$usersName/$userId/$rulesName/$ruleId', runHistoryName,
         pageSize: maxHistoryEntries, orderBy: 'timestamp desc');
 
     final response = GetRunHistoryResponse();
     documentList.documents?.forEach((document) {
-      response.history.add(Run()
+      response.history.add(RunEntry()
         ..success = document.fields['success'].booleanValue
         ..message = document.fields['message'].stringValue
         ..timestamp = document.fields['timestamp'].timestampValue);
