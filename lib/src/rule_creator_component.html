@@ -61,6 +61,56 @@
                         </select>
                     </div>
                 </div>
+                <div *ngSwitchCase="'Change line item bidding strategy'">
+                    <div class="form-group">
+                        <bs-input class="is-valid"
+                                  label="Line Item IDs"
+                                  [(ngModel)]="lineItemIds"
+                                  [minlength]="1"
+                                  pattern="(\d+)(,\s*\d+)*"
+                                  patternMessage="Field should only contain comma-separated line item IDs">
+                        </bs-input>
+                    </div>
+                    <div class="form-group">
+                        <bs-input class="is-valid"
+                                  label="Advertiser ID"
+                                  [(ngModel)]="advertiserId"
+                                  [minlength]="1"
+                                  pattern="\d+"
+                                  patternMessage="Field should only contain an advertiser ID">
+                        </bs-input>
+                    </div>
+                    <div class="form-group">
+                        <label class="parameter-name">Strategy</label>
+                        <select class="form-control" [(ngModel)]="biddingStrategy" ngControl="biddingStrategy" required>
+                            <option *ngFor="let strategy of strategyTypes.keys" [value]="strategy">{{strategy}}</option>
+                        </select>
+                    </div>
+                    <div *ngIf="biddingStrategy == 'Fixed'" class="form-group">
+                        <bs-input class="is-valid"
+                                  label="Bid Amount"
+                                  [(ngModel)]="bidAmount"
+                                  [minlength]="1"
+                                  pattern="\d+(\.\d{1,6})?"
+                                  patternMessage="Field should only contain a monetary value">
+                        </bs-input>
+                    </div>
+                    <div *ngIf="biddingStrategy == 'Maximize spend' || biddingStrategy == 'Performance goal'" class="form-group">
+                        <label class="parameter-name">Performance Goal</label>
+                        <select class="form-control" [(ngModel)]="performanceGoal" ngControl="performanceGoal" required>
+                            <option *ngFor="let goal of performanceGoalTypes.keys" [value]="goal">{{goal}}</option>
+                        </select>
+                    </div>
+                    <div *ngIf="biddingStrategy == 'Performance goal'" class="form-group">
+                        <bs-input class="is-valid"
+                                  label="Goal Amount"
+                                  [(ngModel)]="goalAmount"
+                                  [minlength]="1"
+                                  pattern="\d+(\.\d{1,6})?"
+                                  patternMessage="Field should only contain a monetary value">
+                        </bs-input>
+                    </div>
+                </div>
             </div>
         </bs-accordion-panel>
 

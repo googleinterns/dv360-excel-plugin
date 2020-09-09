@@ -31,6 +31,36 @@ class DisplayVideo360Client {
         updateMask: 'entityStatus');
   }
 
+  /// Changes the bidding strategy of the line item to [strategy].
+  ///
+  /// Throws an [ApiRequestError] if API returns an error.
+  Future<void> changeLineItemBiddingStrategy(
+      Int64 advertiserId, Int64 lineItemId, String strategy,
+      {Int64 bidAmount, String goal, Int64 goalAmount}) async {
+    final request = LineItem()..bidStrategy = BiddingStrategy();
+    switch (strategy) {
+      case 'FIXED':
+        request.bidStrategy.fixedBid =
+            (FixedBidStrategy()..bidAmountMicros = bidAmount.toString());
+        break;
+      case 'MAXIMIZE_SPEND':
+        request.bidStrategy.maximizeSpendAutoBid =
+            (MaximizeSpendBidStrategy()..performanceGoalType = goal);
+        break;
+      case 'PERFORMANCE_GOAL':
+        request.bidStrategy.performanceGoalAutoBid =
+            (PerformanceGoalBidStrategy()
+              ..performanceGoalType = goal
+              ..performanceGoalAmountMicros = goalAmount.toString());
+        break;
+      default:
+        throw UnimplementedError('$strategy is not a supported strategy.');
+    }
+    await _api.advertisers.lineItems.patch(
+        request, advertiserId.toString(), lineItemId.toString(),
+        updateMask: 'bidStrategy');
+  }
+
   /// Runs the rule to manipulate DV360 line items and logs the result.
   Future<void> run(Rule rule, String userId, String ruleId) async {
     for (final target in rule.scope.targets) {
@@ -46,13 +76,13 @@ class DisplayVideo360Client {
         // The messages we log should be user-friendly, actionable and
         // understandable. We can expect this for DV360 API error messages, but
         // probably not for lower level exception messages. Also, there might be
-        // security issues if we just directly report the raw exception messages.
+        // security issues if we just directly report raw exception messages.
         return await _firestoreClient.logRunHistory(userId, ruleId, false,
             message: 'Internal error encountered');
       }
       // Logs the successful run of the rule.
       await _firestoreClient.logRunHistory(userId, ruleId, true);
-      }
     }
-  } 
+  }
 }
+

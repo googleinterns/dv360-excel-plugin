@@ -28,6 +28,7 @@ message Action {
   enum Type {
     UNSPECIFIED_TYPE = 0;
     CHANGE_LINE_ITEM_STATUS = 1;
+    CHANGE_LINE_ITEM_BIDDING_STRATEGY = 2;
   }
 
   // required
@@ -38,6 +39,7 @@ message Action {
   // The parameters used for each type of action.
   oneof params {
     ChangeLineItemStatusParams change_line_item_status_params = 2;
+    ChangeLineItemBiddingStrategyParams change_line_item_bidding_strategy_params = 3;
   }
 }
 
@@ -52,6 +54,60 @@ message ChangeLineItemStatusParams {
   // required
   // The status of which the line item will be changed to.
   optional Status status = 3;
+}
+
+// The action parameters to change line items' bidding strategy.
+message ChangeLineItemBiddingStrategyParams {
+  enum BiddingStrategy {
+    UNSPECIFIED_STRATEGY = 0;
+    FIXED = 1;
+    MAXIMIZE_SPEND = 2;
+    PERFORMANCE_GOAL = 3;
+  }
+
+  // required
+  // The bidding strategy to change to.
+  optional BiddingStrategy bidding_strategy = 1;
+
+  // required
+  // The parameters used for each type of bidding strategy.
+  oneof params {
+    FixedBidStrategyParams fixed_bid_strategy_params = 2;
+    MaximizeSpendBidStrategyParams maximize_spend_bid_strategy_params = 3;
+    PerformanceGoalBidStrategyParams performance_goal_bid_strategy_params = 4;
+  }
+}
+
+// A message representing the parameters for fixed bid strategy.
+message FixedBidStrategyParams {
+  // required
+  // The fixed bid amount (micros) in the advertiser's currency.
+  optional int64 bid_amount_micros = 1;
+}
+
+enum BiddingStrategyPerformanceGoalType {
+  UNSPECIFIED_GOAL= 0;
+  CPA = 1;
+  CPC = 2;
+  VIEWABLE_IMPRESSIONS = 3;
+}
+
+// A message representing the parameters for maximize spend bid strategy.
+message MaximizeSpendBidStrategyParams {
+  // required
+  // The performance goal that will be minimized while spending the full budget.
+  optional BiddingStrategyPerformanceGoalType type = 1;
+}
+
+// A message representing the parameters for performance goal bid strategy.
+message PerformanceGoalBidStrategyParams {
+  // required
+  // The performance goal that will be met or beat.
+  optional BiddingStrategyPerformanceGoalType type = 1;
+
+  // required
+  // The performance goal amount (micros) in the advertiser's currency.
+  optional int64 performance_goal_amount_micros = 2;
 }
 
 // A message representing the schedule the rule will be run.

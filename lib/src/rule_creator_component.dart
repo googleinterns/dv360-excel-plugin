@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:html';
+import 'dart:math';
 
 import 'package:angular/angular.dart';
 import 'package:angular_forms/angular_forms.dart';
@@ -46,6 +47,12 @@ class RuleCreatorComponent {
   // Line item status change input.
   String status;
 
+  // Line item bidding strategy change input.
+  String biddingStrategy;
+  String bidAmount;
+  String performanceGoal;
+  String goalAmount;
+
   // Schedule input.
   String timezone;
   String scheduleType;
@@ -70,6 +77,19 @@ class RuleCreatorComponent {
   Map<String, ChangeLineItemStatusParams_Status> statusTypes = {
     for (var element in ChangeLineItemStatusParams_Status.values.sublist(1))
       element.name.sentenceCase: element
+  };
+  Map<String, ChangeLineItemBiddingStrategyParams_BiddingStrategy>
+      strategyTypes = {
+    for (var element in ChangeLineItemBiddingStrategyParams_BiddingStrategy
+        .values
+        .sublist(1))
+      element.name.sentenceCase: element
+  };
+  Map<String, BiddingStrategyPerformanceGoalType> performanceGoalTypes = {
+    'CPA': BiddingStrategyPerformanceGoalType.CPA,
+    'CPC': BiddingStrategyPerformanceGoalType.CPC,
+    'Viewable impressions':
+        BiddingStrategyPerformanceGoalType.VIEWABLE_IMPRESSIONS,
   };
   Map<String, Schedule_Type> scheduleTypes = {
     for (var element in Schedule_Type.values.sublist(1))
@@ -114,10 +134,57 @@ class RuleCreatorComponent {
           ..changeLineItemStatusParams =
               (ChangeLineItemStatusParams()..status = statusTypes[status]));
         rule.scope = Scope()
+          ..type = Scope_Type.LINE_ITEM_TYPE
           ..lineItemScopeParams = (LineItemScopeParams()
             ..lineItemIds.addAll(
                 lineItemIds.replaceAll(' ', '').split(',').map(Int64.parseInt))
             ..advertiserId = Int64.parseInt(advertiserId));
+        break;
+      case Action_Type.CHANGE_LINE_ITEM_BIDDING_STRATEGY:
+        rule.action = (Action()..type = actionTypes[actionType]);
+        rule.scope = Scope()
+          ..type = Scope_Type.LINE_ITEM_TYPE
+          ..lineItemScopeParams = (LineItemScopeParams()
+            ..lineItemIds.addAll(
+                lineItemIds.replaceAll(' ', '').split(',').map(Int64.parseInt))
+            ..advertiserId = Int64.parseInt(advertiserId));
+        switch (strategyTypes[biddingStrategy]) {
+          case ChangeLineItemBiddingStrategyParams_BiddingStrategy.FIXED:
+            rule.action.changeLineItemBiddingStrategyParams =
+                ChangeLineItemBiddingStrategyParams()
+                  ..biddingStrategy =
+                      ChangeLineItemBiddingStrategyParams_BiddingStrategy.FIXED
+                  ..fixedBidStrategyParams = (FixedBidStrategyParams()
+                    ..bidAmountMicros = Int64(
+                        ((double.parse(bidAmount) * pow(10, 6)).toInt())));
+            break;
+          case ChangeLineItemBiddingStrategyParams_BiddingStrategy
+              .MAXIMIZE_SPEND:
+            rule.action.changeLineItemBiddingStrategyParams =
+                ChangeLineItemBiddingStrategyParams()
+                  ..biddingStrategy =
+                      ChangeLineItemBiddingStrategyParams_BiddingStrategy
+                          .MAXIMIZE_SPEND
+                  ..maximizeSpendBidStrategyParams =
+                      (MaximizeSpendBidStrategyParams()
+                        ..type = performanceGoalTypes[performanceGoal]);
+            break;
+          case ChangeLineItemBiddingStrategyParams_BiddingStrategy
+              .PERFORMANCE_GOAL:
+            rule.action.changeLineItemBiddingStrategyParams =
+                ChangeLineItemBiddingStrategyParams()
+                  ..biddingStrategy =
+                      ChangeLineItemBiddingStrategyParams_BiddingStrategy
+                          .PERFORMANCE_GOAL
+                  ..performanceGoalBidStrategyParams =
+                      (PerformanceGoalBidStrategyParams()
+                        ..type = performanceGoalTypes[performanceGoal]
+                        ..performanceGoalAmountMicros = Int64(
+                            (double.parse(goalAmount) * pow(10, 6)).toInt()));
+            break;
+          default:
+            throw Exception('Not a valid bidding strategy type');
+        }
         break;
       default:
         throw Exception('Not a valid action type');
@@ -164,6 +231,7 @@ class RuleCreatorComponent {
     isAlertVisible = true;
     name = actionType = lineItemIds = advertiserId = null;
     status = null;
+    biddingStrategy = bidAmount = performanceGoal = goalAmount = null;
     timezone = scheduleType = freq = year = month = day = hour = minute = null;
     relation = value = conditionType = null;
   }
