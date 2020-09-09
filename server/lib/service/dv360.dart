@@ -85,4 +85,3 @@ class DisplayVideo360Client {
     }
   }
 }
-

@@ -105,7 +105,7 @@ class ChangeLineItemBiddingStrategyAction implements Action {
       default:
         throw UnsupportedError(
             '${action.changeLineItemBiddingStrategyParams.biddingStrategy} '
-                'is not a supported stategy type.');
+            'is not a supported stategy type.');
     }
   }
 
@@ -208,8 +208,8 @@ class ChangeLineItemBiddingStrategyAction implements Action {
       }
     }
 
-    await client.changeLineItemBiddingStrategy(lineItemTarget.advertiserId,
-        lineItemTarget.lineItemId, strategy,
+    await client.changeLineItemBiddingStrategy(
+        lineItemTarget.advertiserId, lineItemTarget.lineItemId, strategy,
         bidAmount: _bidAmount, goal: goal, goalAmount: _goalAmount);
   }
 }
