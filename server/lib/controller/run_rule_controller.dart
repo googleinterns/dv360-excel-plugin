@@ -57,10 +57,11 @@ class RunRuleController extends ResourceController {
     final userClient = await _googleApi.getUserAccountClient(refreshToken);
 
     // Creates a DV360 client using the user's authenticated client.
-    final dv360 = DisplayVideo360Client(userClient, _dv360BaseUrl);
+    final dv360 =
+        DisplayVideo360Client(userClient, _firestoreClient, _dv360BaseUrl);
 
     // Runs the rule using the DV360 client.
-    await dv360.run(rule);
+    await dv360.run(rule, userId, ruleId);
 
     return Response.ok({});
   }

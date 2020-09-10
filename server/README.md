@@ -1,21 +1,32 @@
-# server
+# Rules Builder Server 
 
-## Running the Application Locally
+## Running Locally 
 
-Run `aqueduct serve` from this directory to run the application. For running within an IDE, run `bin/main.dart`. By default, a configuration file named `config.yaml` will be used.
+Use `aqueduct serve` to run the application locally.
 
-To generate a SwaggerUI client, run `aqueduct document client`.
+## Running Tests 
 
-## Running Application Tests
+Use `pub run test` to run all the tests.
 
-To run all tests for this application, run the following in this directory:
+## Setting Up
+
+1. In `Dockerfile`, add the Google Cloud project name where indicated.
+2. In `app.yaml`, add the App Engine service name where indicated.
+3. In `env_variables.yaml`, add the client ID, client, secret, refresh token encryption key, and project ID where indicated.
+
+## Securing the Server
+To use Google Cloud Identity-Aware Proxy, set it up for your application.
+
+Then, allow [CORS preflight](https://cloud.google.com/iap/docs/customizing#allowing_http_options_requests_cors_preflight): 
 
 ```
-pub run test
+gcloud iap settings set cors.json --project=spreadsheet-dv360-plugin --resource-type=app-engine
+```
+cors.json:
+```
+{"access_settings":{"cors_settings":{"allow_http_options":{"value": true}}}}
 ```
 
-The default configuration file used when testing is `config.src.yaml`. This file should be checked into version control. It also the template for configuration files used in deployment.
+# Deploying to App Engine
 
-## Deploying an Application
-
-See the documentation for [Deployment](https://aqueduct.io/docs/deploy/).
+Use `gcloud app deploy` to deploy to App Engine.

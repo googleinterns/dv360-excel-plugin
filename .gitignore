@@ -14,6 +14,8 @@ lib/src/private_keys.dart
 
 # Generated code
 lib/src/data_model/insertion_order_query.pb*.dart
+lib/src/data_model/create_user_request.pb*.dart
+lib/src/data_model/rule.pb*.dart
 lib/src/data_model/*.g.dart
 test/testing/*.g.dart
 
@@ -37,4 +39,7 @@ server/workspace.xml
 server/Dart_Packages.xml
 server/**/*.aqueduct.pid
 server/lib/proto
-
+server/.gcloudignore 
+server/Dockerfile
+server/app.yaml
+server/env_variables.yaml

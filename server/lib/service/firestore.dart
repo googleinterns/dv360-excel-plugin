@@ -1,6 +1,8 @@
 import 'package:googleapis/firestore/v1.dart';
 import 'package:http/http.dart';
+import 'package:meta/meta.dart';
 
+import '../proto/get_run_history.pb.dart';
 import '../proto/rule.pb.dart';
 import '../utils.dart';
 
@@ -19,7 +21,10 @@ class FirestoreClient {
   static const encryptedRefreshTokenFieldName = 'encryptedRefreshToken';
 
   /// The maximum number of rules per user.
-  static const maximumNumberOfRules = 50;
+  static const maxRules = 50;
+
+  /// The maximum number of run history entries per rule.
+  static const maxHistoryEntries = 50;
 
   /// The Firestore API.
   final FirestoreApi _api;
@@ -44,9 +49,9 @@ class FirestoreClient {
 
     final currentNumberOfRules = (await getUserRules(userId)).length;
 
-    if (currentNumberOfRules >= maximumNumberOfRules) {
+    if (currentNumberOfRules >= maxRules) {
       throw StateError(
-          'The maximum number of rules ($maximumNumberOfRules) has been reached.');
+          'The maximum number of rules ($maxRules) has been reached.');
     }
 
     return await _addDocument(
@@ -100,6 +105,29 @@ class FirestoreClient {
     );
   }
 
+  /// Gets the run history associated with a rule with [ruleId].
+  ///
+  /// The [userId] is the `sub` claim of the user's Google ID token.
+  /// See: https://developers.google.com/identity/protocols/oauth2/openid-connect#an-id-tokens-payload
+  ///
+  /// Throws an [ApiRequestError] if Firestore API returns an error.
+  Future<GetRunHistoryResponse> getRunHistory(
+      String userId, String ruleId) async {
+    final documentList = await _listDocuments(
+        '/$usersName/$userId/$rulesName/$ruleId', runHistoryName,
+        pageSize: maxHistoryEntries, orderBy: 'timestamp desc');
+
+    final response = GetRunHistoryResponse();
+    documentList.documents?.forEach((document) {
+      response.history.add(RunEntry()
+        ..success = document.fields['success'].booleanValue
+        ..message = document.fields['message'].stringValue
+        ..timestamp = document.fields['timestamp'].timestampValue);
+    });
+
+    return response;
+  }
+
   /// Gets the user's encrypted refresh token given the [userId].
   ///
   /// Throws an [ApiRequestError] if Firestore API returns an error.
@@ -125,7 +153,9 @@ class FirestoreClient {
   /// Throws an [ApiRequestError] if Firestore API returns an error.
   Future<List<Rule>> getUserRules(String userId) async {
     final response = await _listDocuments('/$usersName/$userId', rulesName,
-        maxPageSize: maximumNumberOfRules);
+        pageSize: maxRules);
+    response.documents?.forEach((Document element) => element.fields['id'] =
+        Value()..stringValue = element.name.split('/').last);
     final rules = response.documents?.map((e) => e.toProto())?.toList() ?? [];
     return rules;
   }
