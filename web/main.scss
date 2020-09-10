@@ -104,3 +104,8 @@ bs-tabsx .tab-content {
   text-transform: uppercase;
   font-size: 12px;
 }
+
+.form-control-label {
+  color: $secondary-font-color;
+  font: 14px $parameter-font;
+}

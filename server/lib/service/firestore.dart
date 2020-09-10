@@ -1,5 +1,6 @@
 import 'package:googleapis/firestore/v1.dart';
 import 'package:http/http.dart';
+import 'package:meta/meta.dart';
 
 import '../proto/get_run_history.pb.dart';
 import '../proto/rule.pb.dart';
