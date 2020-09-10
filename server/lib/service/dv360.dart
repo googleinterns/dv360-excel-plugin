@@ -80,7 +80,7 @@ class DisplayVideo360Client {
             await runStatusAction(rule.action, target);
             break;
           case DuplicateLineItemAction:
-            await runDuplicateRule(rule.action, target);
+            await runDuplicateAction(rule.action, target);
             break;
           default:
             throw UnsupportedError(
