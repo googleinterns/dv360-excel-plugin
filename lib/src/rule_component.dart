@@ -3,6 +3,7 @@ import 'package:angular/angular.dart';
 import 'data_model/rule.pb.dart';
 import 'rule_creator_component.dart';
 import 'rule_detail_component.dart';
+import 'rule_creator_component.dart';
 import 'rule_list_component.dart';
 
 enum View {

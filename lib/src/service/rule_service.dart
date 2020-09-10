@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:angular/angular.dart';
 import 'package:http/http.dart';
 
 import '../data_model/create_user_request.pb.dart';
@@ -8,6 +9,7 @@ import '../data_model/get_run_history.pb.dart';
 import '../data_model/rule.pb.dart';
 
 /// A class to interact with the Rules Builder server.
+@Injectable()
 class RuleService {
   /// The base URL of the Rules Builder server.
   static const serverUrl =
