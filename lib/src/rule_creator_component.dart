@@ -130,7 +130,16 @@ class RuleCreatorComponent {
           ..type = scheduleTypes[scheduleType]
           ..timezone = timezone
           ..repeatingParams = (Schedule_RepeatingParams()
-            ..cronExpression = _cronExpression(month, day, hour, minute));
+            ..cronExpression =
+                _repeatingCronExpression(month, day, hour, minute));
+        break;
+      case Schedule_Type.ONE_TIME:
+        rule.schedule = Schedule()
+          ..type = scheduleTypes[scheduleType]
+          ..timezone = timezone
+          ..oneTimeParams = (Schedule_OneTimeParams()
+            ..cronExpression = '$minute $hour $day $month *'
+            ..year = int.parse(year));
         break;
       default:
         throw Exception('Not a valid schedule type');
@@ -149,7 +158,8 @@ class RuleCreatorComponent {
     _clearForm();
   }
 
-  String _cronExpression(String month, String day, String hour, String minute) {
+  String _repeatingCronExpression(
+      String month, String day, String hour, String minute) {
     final expression = <String>[];
     expression.add(freqTypes[freq] <= freqTypes['Every hour'] ? minute : '*');
     expression.add(freqTypes[freq] <= freqTypes['Every day'] ? hour : '*');
