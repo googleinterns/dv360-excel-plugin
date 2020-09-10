@@ -31,6 +31,41 @@ class DisplayVideo360Client {
         updateMask: 'entityStatus');
   }
 
+  /// Duplicates the line item to destination.
+  ///
+  /// Throws an [ApiRequestError] if API returns an error.
+  Future<void> duplicateLineItem(Int64 advertiserId, Int64 lineItemId,
+      Int64 advertiserIdDestination, Int64 insertionOrderIdDestination) async {
+    final source = await _api.advertisers.lineItems
+        .get(advertiserId.toString(), lineItemId.toString());
+
+    // Stores the current entity status because only ENTITY_STATUS_DRAFT is
+    // allowed at creation.
+    final currentStatus = source.entityStatus;
+
+    // Sets the correct fields for line item creation.
+    // Inherits flight dates from the destination parent insertion order.
+    source
+      ..insertionOrderId = insertionOrderIdDestination.toString()
+      ..entityStatus = 'ENTITY_STATUS_DRAFT'
+      ..advertiserId = null
+      ..campaignId = null
+      ..lineItemId = null
+      ..updateTime = null
+      ..partnerCosts = null
+      ..name = null
+      ..flight.dateRange = null
+      ..flight.flightDateType = 'LINE_ITEM_FLIGHT_DATE_TYPE_INHERITED';
+
+    // Duplicates the line item.
+    final duplicate = await _api.advertisers.lineItems
+        .create(source, advertiserIdDestination.toString());
+
+    // Matches the new line item's current status to the old status.
+    await changeLineItemStatus(Int64.parseInt(duplicate.advertiserId),
+        Int64.parseInt(duplicate.lineItemId), currentStatus);
+  }
+
   /// Runs the rule to manipulate DV360 line items and logs the result.
   Future<void> run(Rule rule, String userId, String ruleId) async {
     for (final target in rule.scope.targets) {
@@ -52,7 +87,6 @@ class DisplayVideo360Client {
       }
       // Logs the successful run of the rule.
       await _firestoreClient.logRunHistory(userId, ruleId, true);
-      }
     }
-  } 
+  }
 }

@@ -61,6 +61,44 @@
                         </select>
                     </div>
                 </div>
+                <div *ngSwitchCase="'Duplicate line item'">
+                    <div class="form-group">
+                        <bs-input class="is-valid"
+                                  label="Line Item IDs"
+                                  [(ngModel)]="lineItemIds"
+                                  [minlength]="1"
+                                  pattern="(\d+)(,\s*\d+)*"
+                                  patternMessage="Field should only contain comma-separated line item IDs">
+                        </bs-input>
+                    </div>
+                    <div class="form-group">
+                        <bs-input class="is-valid"
+                                  label="Advertiser ID"
+                                  [(ngModel)]="advertiserId"
+                                  [minlength]="1"
+                                  pattern="\d+"
+                                  patternMessage="Field should only contain an advertiser ID">
+                        </bs-input>
+                    </div>
+                    <div class="form-group">
+                        <bs-input class="is-valid"
+                                  label="Insertion Order ID Destination"
+                                  [(ngModel)]="insertionOrderIdDestination"
+                                  [minlength]="1"
+                                  pattern="\d+"
+                                  patternMessage="Field should only contain an insertion order ID">
+                        </bs-input>
+                    </div>
+                    <div class="form-group">
+                        <bs-input class="is-valid"
+                                  label="Advertiser ID Destination"
+                                  [(ngModel)]="advertiserIdDestination"
+                                  [minlength]="1"
+                                  pattern="\d+"
+                                  patternMessage="Field should only contain an advertiser ID">
+                        </bs-input>
+                    </div>
+                </div>
             </div>
         </bs-accordion-panel>
 
