@@ -4,6 +4,7 @@ import 'package:angular/angular.dart';
 import 'package:http/http.dart';
 
 import '../data_model/create_user_request.pb.dart';
+import '../data_model/get_rules_response.pb.dart';
 import '../data_model/rule.pb.dart';
 
 /// A class to interact with the Rules Builder server.
@@ -41,5 +42,15 @@ class RuleService {
     final response =
         await post(rulesEndpoint, body: rule.writeToBuffer(), headers: headers);
     return response.statusCode;
+  }
+
+  /// Gets the rules of a user given their [idToken].
+  Future<List<Rule>> getRules(String idToken) async {
+    final headers = {
+      'Content-Type': 'application/x-protobuf',
+      'Authorization': 'Bearer $idToken'
+    };
+    final response = await get(rulesEndpoint, headers: headers);
+    return GetRulesResponse.fromBuffer(response.bodyBytes).rules;
   }
 }

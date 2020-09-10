@@ -1,0 +1,10 @@
+<div class="mb-3" *ngIf="view == View.listView">
+    <div class="flex-column">
+        <button type="button" (click)="toCreateView()" class="mb-3 btn btn-success">Create Rule</button>
+        <rule-list class="mb-2"></rule-list>
+    </div>
+</div>
+<div *ngIf="view == View.createView">
+    <rule-creator></rule-creator>
+    <button type="button" (click)="toListView()" class="btn btn-secondary">Back</button>
+</div>

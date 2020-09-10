@@ -96,6 +96,11 @@ bs-tabsx .tab-content {
   font-size: 12px;
 }
 
+.btn.btn-secondary {
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
 .btn.btn-success:disabled {
   opacity: 0.50;
 }
@@ -108,4 +113,9 @@ bs-tabsx .tab-content {
 .form-control-label {
   color: $secondary-font-color;
   font: 14px $parameter-font;
+}
+
+.list-secondary {
+  font-size: 11px;
+  line-height: 1.5;
 }
