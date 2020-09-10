@@ -4,7 +4,10 @@ import 'package:fixnum/fixnum.dart';
 import 'package:googleapis/displayvideo/v1.dart';
 import 'package:http/http.dart';
 
+import '../model/action.dart';
 import '../model/rule.dart';
+import '../model/scope.dart';
+import '../proto/rule.pb.dart' as proto;
 import '../service/firestore.dart';
 
 /// A class that wraps around Display & Video 360.
@@ -72,7 +75,17 @@ class DisplayVideo360Client {
   Future<void> run(Rule rule, String userId, String ruleId) async {
     for (final target in rule.scope.targets) {
       try {
-        await rule.action.run(this, target);
+        switch (rule.action.runtimeType) {
+          case ChangeLineItemStatusAction:
+            await runStatusAction(rule.action, target);
+            break;
+          case DuplicateLineItemAction:
+            await runDuplicateRule(rule.action, target);
+            break;
+          default:
+            throw UnsupportedError(
+                '${rule.action.runtimeType} is an invalid action runtime type.');
+        }
       } on ApiRequestError catch (e) {
         // If there is an API error, return the message returned by the API.
         return await _firestoreClient.logRunHistory(userId, ruleId, false,
@@ -90,5 +103,30 @@ class DisplayVideo360Client {
       // Logs the successful run of the rule.
       await _firestoreClient.logRunHistory(userId, ruleId, true);
     }
+  }
+
+  /// Changes the status of the line item.
+  Future<void> runStatusAction(Action action, Target target) async {
+    final lineItemTarget = target as LineItemTarget;
+    final changeStatusAction = action as ChangeLineItemStatusAction;
+
+    final shortStatusName = proto.ChangeLineItemStatusParams_Status.valueOf(
+        changeStatusAction.statusValue);
+    final status = 'ENTITY_STATUS_${shortStatusName.name}';
+
+    await changeLineItemStatus(
+        lineItemTarget.advertiserId, lineItemTarget.lineItemId, status);
+  }
+
+  /// Duplicates the line items using the DV360 client.
+  Future<void> runDuplicateAction(Action action, Target target) async {
+    final lineItemTarget = target as LineItemTarget;
+    final duplicateAction = action as DuplicateLineItemAction;
+
+    await duplicateLineItem(
+        lineItemTarget.advertiserId,
+        lineItemTarget.lineItemId,
+        duplicateAction.advertiserId,
+        duplicateAction.insertionOrderId);
   }
 }
