@@ -12,11 +12,10 @@ external String toString(String obj);
 @Injectable()
 class ScheduleParser {
   String scheduleToString(Schedule schedule) {
-    switch (schedule.type) {
-      case Schedule_Type.REPEATING:
-        return toString(schedule.repeatingParams.cronExpression);
-      default:
-        return '';
+    if (schedule.type == Schedule_Type.REPEATING) {
+      return toString(schedule.repeatingParams.cronExpression);
+    } else {
+      return '';
     }
   }
 }

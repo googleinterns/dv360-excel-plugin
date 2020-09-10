@@ -1,0 +1,25 @@
+<div class="w-auto overflow-auto mb-3" style="max-height: 60vh">
+    <div class="list-group-item list-group-item-action flex-column align-items-start">
+        <h6 class="mb-2">{{rule.name}}</h6>
+        <div class="parameter-name text-muted list-secondary">
+            {{actionTypes[rule.action.type]}}<br>
+            {{getActionParameterString(rule.action)}}<br>
+            <div *ngFor="let info of getScopeParameterStrings(rule.scope)">{{info}}</div>
+            {{scheduleParser.scheduleToString(rule.schedule)}}<br>
+            {{getConditionParameterString(rule.condition)}}<br>
+        </div>
+    </div>
+</div>
+
+<div *ngIf="runHistory.length > 0">
+    <div class="w-auto overflow-auto mb-3" style="max-height: 32vh">
+        <a *ngFor="let t of runHistory" class="list-group-item list-group-item-action flex-column align-items-start">
+            <div class="d-flex justify-content-between">
+                <span class="parameter-name text-muted list-secondary">{{getFormattedTimestamp(t.timestamp)}}</span>
+                <span *ngIf="t.success" class="badge badge-success">Success</span>
+                <span *ngIf="!t.success" class="badge badge-danger">Failure</span>
+            </div>
+            <span class="parameter-name text-muted list-secondary">{{t.message}}</span>
+        </a>
+    </div>
+</div>

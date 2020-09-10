@@ -5,6 +5,7 @@ import 'package:http/http.dart';
 
 import '../data_model/create_user_request.pb.dart';
 import '../data_model/get_rules_response.pb.dart';
+import '../data_model/get_run_history.pb.dart';
 import '../data_model/rule.pb.dart';
 
 /// A class to interact with the Rules Builder server.
@@ -20,12 +21,20 @@ class RuleService {
   /// The endpoint for operations on rules.
   static const rulesEndpoint = '$serverUrl/rules';
 
-  /// Creates a user using the user's ID token and refresh token.
-  Future<void> createUser(String idToken, String refreshToken) async {
-    final headers = {
+  /// The endpoint for run history.
+  static const runHistoryEndpoint = '$serverUrl/run_history';
+
+  /// Returns the headers for an authorized request using the [idToken].
+  static Map<String, String> getHeaders(String idToken) {
+    return {
       'Content-Type': 'application/x-protobuf',
       'Authorization': 'Bearer $idToken'
     };
+  }
+
+  /// Creates a user using the user's ID token and refresh token.
+  Future<void> createUser(String idToken, String refreshToken) async {
+    final headers = getHeaders(idToken);
     final createUserRequest = CreateUserRequest()..refreshToken = refreshToken;
     await post(usersEndpoint,
         body: createUserRequest.writeToBuffer(), headers: headers);
@@ -35,10 +44,7 @@ class RuleService {
   ///
   /// Returns the status code of the response.
   Future<int> createRule(String idToken, Rule rule) async {
-    final headers = {
-      'Content-Type': 'application/x-protobuf',
-      'Authorization': 'Bearer $idToken'
-    };
+    final headers = getHeaders(idToken);
     final response =
         await post(rulesEndpoint, body: rule.writeToBuffer(), headers: headers);
     return response.statusCode;
@@ -46,11 +52,17 @@ class RuleService {
 
   /// Gets the rules of a user given their [idToken].
   Future<List<Rule>> getRules(String idToken) async {
-    final headers = {
-      'Content-Type': 'application/x-protobuf',
-      'Authorization': 'Bearer $idToken'
-    };
+    final headers = getHeaders(idToken);
     final response = await get(rulesEndpoint, headers: headers);
     return GetRulesResponse.fromBuffer(response.bodyBytes).rules;
+  }
+
+  Future<GetRunHistoryResponse> getRunHistory(
+      String idToken, String ruleId) async {
+    final headers = getHeaders(idToken);
+    final url = Uri.parse(runHistoryEndpoint)
+        .replace(queryParameters: {'ruleId': ruleId});
+    final response = await get(url.toString(), headers: headers);
+    return GetRunHistoryResponse.fromBuffer(response.bodyBytes);
   }
 }
