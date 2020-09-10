@@ -129,9 +129,11 @@ class DisplayVideo360Client {
         strategy = 'PERFORMANCE_GOAL';
         break;
       default:
+        final biddingStrategyName =
+            proto.ChangeLineItemBiddingStrategyParams_BiddingStrategy.valueOf(
+                changeStrategyAction.biddingStrategy);
         throw UnsupportedError(
-            '$changeStrategyAction.biddingStrategy is an invalid value '
-            'for a bidding strategy.');
+            '$biddingStrategyName is an invalid bidding strategy.');
     }
 
     if (changeStrategyAction.biddingStrategy != 1) {
@@ -158,9 +160,11 @@ class DisplayVideo360Client {
           }
           break;
         default:
+          final performanceGoalName =
+              proto.BiddingStrategyPerformanceGoalType.valueOf(
+                  changeStrategyAction.performanceGoal);
           throw UnsupportedError(
-              '${changeStrategyAction.performanceGoal} is an invalid value '
-              'for a performance goal.');
+              '$performanceGoalName is an invalid performance goal.');
       }
     }
 

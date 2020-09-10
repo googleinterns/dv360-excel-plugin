@@ -131,8 +131,11 @@ class ChangeLineItemBiddingStrategyAction implements Action {
                     ..performanceGoalAmountMicros = goalAmount);
         break;
       default:
+        final biddingStrategyName =
+            proto.ChangeLineItemBiddingStrategyParams_BiddingStrategy.valueOf(
+                biddingStrategy);
         throw UnsupportedError(
-            '$biddingStrategy is an invalid value for a bidding strategy.');
+            '$biddingStrategyName is an invalid value for a bidding strategy.');
     }
     return action;
   }
