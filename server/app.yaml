@@ -1,0 +1,11 @@
+runtime: custom
+env: flex
+service: INSERT_APP_ENGINE_SERVICE_NAME_HERE
+
+includes:
+  - env_variables.yaml
+
+resources:
+  cpu: 1
+  memory_gb: 4
+  disk_size_gb: 10
