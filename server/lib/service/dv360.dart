@@ -35,7 +35,9 @@ class DisplayVideo360Client {
   Future<void> run(Rule rule, String userId, String ruleId) async {
     for (final target in rule.scope.targets) {
       try {
-        await rule.action.run(this, target);
+        if (await rule.condition.isTrue(target)) {
+          await rule.action.run(this, target);
+        }
       } on ApiRequestError catch (e) {
         // If there is an API error, return the message returned by the API.
         return await _firestoreClient.logRunHistory(userId, ruleId, false,
