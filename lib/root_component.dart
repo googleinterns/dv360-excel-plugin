@@ -4,7 +4,7 @@ import 'package:ng_bootstrap/ng_bootstrap.dart';
 import 'src/javascript_api/excel_api.dart';
 import 'src/javascript_api/google_api.dart';
 import 'src/query_component.dart';
-import 'src/rule_creator_component.dart';
+import 'src/rule_component.dart';
 import 'src/service/credential_service.dart';
 
 @Component(
@@ -14,7 +14,7 @@ import 'src/service/credential_service.dart';
     bsTabsxDirectives,
     coreDirectives,
     QueryComponent,
-    RuleCreatorComponent
+    RuleComponent,
   ],
   providers: [
     ClassProvider(CredentialService),
