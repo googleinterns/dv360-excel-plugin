@@ -79,7 +79,7 @@ class DuplicateLineItemAction implements Action {
       : _advertiserId = action.duplicateLineItemParams.advertiserId,
         _insertionOrderId = action.duplicateLineItemParams.insertionOrderId;
 
-  /// Creates a [proto.Action] with Change line Item Status parameters.
+  /// Creates a [proto.Action] with Duplicate Line Item parameters.
   @override
   proto.Action toProto() {
     return proto.Action()
@@ -90,7 +90,6 @@ class DuplicateLineItemAction implements Action {
   }
 
   /// Duplicates the line items using the DV360 client.
-  /// TODO(@thu5): Record the return status and implement run history.
   @override
   Future<void> run(DisplayVideo360Client client, Target target) async {
     final lineItemTarget = target as LineItemTarget;

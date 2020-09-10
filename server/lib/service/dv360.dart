@@ -31,7 +31,9 @@ class DisplayVideo360Client {
         updateMask: 'entityStatus');
   }
 
-  /// Duplicates the line item to destination.
+  /// Duplicates the line item to [insertionOrderIdDestination].
+  ///
+  /// The [advertiserIdDestination] is the ID of the destination advertiser.
   ///
   /// Throws an [ApiRequestError] if API returns an error.
   Future<void> duplicateLineItem(Int64 advertiserId, Int64 lineItemId,
@@ -57,7 +59,7 @@ class DisplayVideo360Client {
       ..flight.dateRange = null
       ..flight.flightDateType = 'LINE_ITEM_FLIGHT_DATE_TYPE_INHERITED';
 
-    // Duplicates the line item.
+    // Creates a duplicate of the line item at destination.
     final duplicate = await _api.advertisers.lineItems
         .create(source, advertiserIdDestination.toString());
 
