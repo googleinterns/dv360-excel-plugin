@@ -58,9 +58,7 @@ class DisplayVideo360Client {
       ..lineItemId = null
       ..updateTime = null
       ..partnerCosts = null
-      ..name = null
-      ..flight.dateRange = null
-      ..flight.flightDateType = 'LINE_ITEM_FLIGHT_DATE_TYPE_INHERITED';
+      ..name = null;
 
     // Creates a duplicate of the line item at destination.
     final duplicate = await _api.advertisers.lineItems
