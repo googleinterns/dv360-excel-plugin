@@ -5,6 +5,8 @@ import 'package:googleapis/displayvideo/v1.dart';
 import 'package:http/http.dart';
 
 import '../model/action.dart';
+import '../model/change_line_item_bidding_strategy_action.dart';
+import '../model/change_line_item_status_action.dart';
 import '../model/rule.dart';
 import '../model/scope.dart';
 import '../proto/rule.pb.dart' as proto;
@@ -104,7 +106,7 @@ class DisplayVideo360Client {
     final changeStatusAction = action as ChangeLineItemStatusAction;
 
     final shortStatusName = proto.ChangeLineItemStatusParams_Status.valueOf(
-        changeStatusAction.statusValue);
+        changeStatusAction.statusValue.index);
     final status = 'ENTITY_STATUS_${shortStatusName.name}';
 
     await changeLineItemStatus(
@@ -119,52 +121,45 @@ class DisplayVideo360Client {
     String strategy;
 
     switch (changeStrategyAction.biddingStrategy) {
-      case 1:
+      case BidStrategyType.fixed:
         strategy = 'FIXED';
         break;
-      case 2:
+      case BidStrategyType.maximizeSpend:
         strategy = 'MAXIMIZE_SPEND';
         break;
-      case 3:
+      case BidStrategyType.performanceGoal:
         strategy = 'PERFORMANCE_GOAL';
         break;
       default:
-        final biddingStrategyName =
-            proto.ChangeLineItemBiddingStrategyParams_BiddingStrategy.valueOf(
-                changeStrategyAction.biddingStrategy);
         throw UnsupportedError(
-            '$biddingStrategyName is an invalid bidding strategy.');
+            '${changeStrategyAction.biddingStrategy} is an '
+                'invalid bidding strategy.');
     }
 
-    if (changeStrategyAction.biddingStrategy != 1) {
+    if (changeStrategyAction.biddingStrategy != BidStrategyType.fixed) {
       // If the bidding strategy is maximize spend, performance goal, or
       // unspecified.
       switch (changeStrategyAction.performanceGoal) {
-        case 1:
-          // CPA goal.
+        case PerformanceGoalType.cpa:
           goal = 'BIDDING_STRATEGY_PERFORMANCE_GOAL_TYPE_CPA';
           break;
-        case 2:
-          // CPC goal.
+        case PerformanceGoalType.cpc:
           goal = 'BIDDING_STRATEGY_PERFORMANCE_GOAL_TYPE_CPC';
           break;
-        case 3:
-          // Viewable impressions goal.
-          if (changeStrategyAction.biddingStrategy == 2) {
-            // If maximize spend strategy:
+        case PerformanceGoalType.viewableImpressions:
+          if (changeStrategyAction.biddingStrategy ==
+              BidStrategyType.maximizeSpend) {
             goal = 'BIDDING_STRATEGY_PERFORMANCE_GOAL_TYPE_AV_VIEWED';
           }
-          if (changeStrategyAction.biddingStrategy == 3) {
-            // If performance goal strategy
+          if (changeStrategyAction.biddingStrategy ==
+              BidStrategyType.performanceGoal) {
             goal = 'BIDDING_STRATEGY_PERFORMANCE_GOAL_TYPE_VIEWABLE_CPM';
           }
           break;
         default:
-          final performanceGoalName =
-              proto.BiddingStrategyPerformanceGoalType.valueOf(
-                  changeStrategyAction.performanceGoal);
           throw UnsupportedError(
-              '$performanceGoalName is an invalid performance goal.');
+              '${changeStrategyAction.performanceGoal} is an '
+                  'invalid performance goal.');
       }
     }
 
