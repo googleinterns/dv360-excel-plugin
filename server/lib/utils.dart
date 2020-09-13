@@ -147,7 +147,7 @@ String decryptRefreshToken(String encrypted, String aesKey) {
 /// Gets the obfuscated Gaia id of the user from [idToken].
 String getUserId(String idToken) {
   final jwt = JsonWebToken.unverified(idToken);
-  return jwt.claims.subject;
+  return jwt.claims.subject.split(':').last;
 }
 
 /// Gets the encoded ID token from either the 'Authorization' header or
