@@ -2,6 +2,7 @@ import 'package:http/http.dart' as http;
 
 import 'controller/id_token_validator.dart';
 import 'controller/rule_controller.dart';
+import 'controller/run_history_controller.dart';
 import 'controller/run_rule_controller.dart';
 import 'controller/user_controller.dart';
 import 'server.dart';
@@ -76,6 +77,11 @@ class ServerChannel extends ApplicationChannel {
         .route('/rules')
         .link(() => IdTokenValidator())
         .link(() => RuleController(firestoreClient, schedulerClient));
+
+    router
+        .route('/run_history')
+        .link(() => IdTokenValidator())
+        .link(() => RunHistoryController(firestoreClient));
 
     router.route('/run_rule').link(() => RunRuleController(googleApi,
         firestoreClient, aesKey, configuration.displayVideo360.baseURL));

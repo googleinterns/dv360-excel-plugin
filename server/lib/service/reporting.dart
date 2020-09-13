@@ -18,7 +18,8 @@ class ReportingClient {
   final DoubleclickbidmanagerApi _api;
 
   /// Creates an instance of [ReportingClient].
-  ReportingClient(Client client, String baseUrl)
+  ReportingClient(Client client,
+      [String baseUrl = 'https://www.googleapis.com/'])
       : _api = DoubleclickbidmanagerApi(client, rootUrl: baseUrl);
 
   /// Gets the CPM of the line item with [advertiserId] and [lineItemId].
@@ -128,7 +129,7 @@ class ReportingClient {
 
     // Converts the list into a map of keys and values.
     final map =
-    Map.fromIterables(rows[0].cast<String>(), rows[1].cast<String>());
+        Map.fromIterables(rows[0].cast<String>(), rows[1].cast<String>());
 
     return map;
   }

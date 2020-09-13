@@ -115,6 +115,7 @@ message Schedule {
   enum Type {
     UNSPECIFIED_SCHEDULE = 0;
     REPEATING = 1;
+    ONE_TIME = 2;
   }
 
   // required
@@ -128,16 +129,28 @@ message Schedule {
     optional string cron_expression = 1;
   }
 
+  // The parameters for a one-time rule.
+  message OneTimeParams {
+    // required
+    // The cron expression representing the one-time schedule.
+    optional string cron_expression = 1;
+
+    // required
+    // The year of the one-time date.
+    optional int32 year = 2;
+  }
+
   // required
   // The parameters used for each type of scheduling.
   oneof params {
     RepeatingParams repeating_params = 2;
+    OneTimeParams one_time_params = 3;
   }
 
   // required
   // The timezone name of the scheduled job from the tz database.
   // See: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-  optional string timezone = 3;
+  optional string timezone = 4;
 }
 
 // A message representing the condition for a rule.

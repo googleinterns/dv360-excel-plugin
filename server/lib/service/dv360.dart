@@ -68,18 +68,26 @@ class DisplayVideo360Client {
 
   /// Runs the rule to manipulate DV360 line items and logs the result.
   Future<void> run(Rule rule, String userId, String ruleId) async {
+    // If the rule is one-time and the year doesn't match, do not run the rule.
+    // Cloud Scheduler uses cron expressions that do not specify the year.
+    if (!rule.isRepeating && rule.year != DateTime.now().year) {
+      return;
+    }
+
     for (final target in rule.scope.targets) {
       try {
-        switch (rule.action.runtimeType) {
-          case ChangeLineItemStatusAction:
-            await runStatusAction(rule.action, target);
-            break;
-          case ChangeLineItemBiddingStrategyAction:
-            await runBiddingStrategyAction(rule.action, target);
-            break;
-          default:
-            throw UnsupportedError(
-                '${rule.action.runtimeType} is an invalid action runtime type.');
+        if (await rule.condition.isTrue(target)) {
+          switch (rule.action.runtimeType) {
+            case ChangeLineItemStatusAction:
+              await runStatusAction(rule.action, target);
+              break;
+            case ChangeLineItemBiddingStrategyAction:
+              await runBiddingStrategyAction(rule.action, target);
+              break;
+            default:
+              throw UnsupportedError(
+                  '${rule.action.runtimeType} is an invalid action runtime type.');
+          }
         }
       } on ApiRequestError catch (e) {
         // If there is an API error, return the message returned by the API.
@@ -91,7 +99,7 @@ class DisplayVideo360Client {
         // The messages we log should be user-friendly, actionable and
         // understandable. We can expect this for DV360 API error messages, but
         // probably not for lower level exception messages. Also, there might be
-        // security issues if we just directly report raw exception messages.
+        // security issues if we directly report the raw exception messages.
         return await _firestoreClient.logRunHistory(userId, ruleId, false,
             message: 'Internal error encountered');
       }
