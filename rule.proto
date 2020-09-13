@@ -29,6 +29,7 @@ message Action {
     UNSPECIFIED_TYPE = 0;
     CHANGE_LINE_ITEM_STATUS = 1;
     CHANGE_LINE_ITEM_BIDDING_STRATEGY = 2;
+    DUPLICATE_LINE_ITEM = 3;
   }
 
   // required
@@ -40,7 +41,19 @@ message Action {
   oneof params {
     ChangeLineItemStatusParams change_line_item_status_params = 2;
     ChangeLineItemBiddingStrategyParams change_line_item_bidding_strategy_params = 3;
+    DuplicateLineItemParams duplicate_line_item_params = 4;
   }
+}
+
+// The action parameters to duplicate line items.
+message DuplicateLineItemParams {
+  // required
+  // The ID of the advertiser destination.
+  optional int64 advertiser_id = 1;
+
+  // required
+  // The ID of the insertion order destination.
+  optional int64 insertion_order_id = 2;
 }
 
 // The action parameters to change line items' status.
@@ -53,7 +66,7 @@ message ChangeLineItemStatusParams {
 
   // required
   // The status of which the line item will be changed to.
-  optional Status status = 3;
+  optional Status status = 1;
 }
 
 // The action parameters to change line items' bidding strategy.

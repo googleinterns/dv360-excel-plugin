@@ -59,6 +59,10 @@ class RuleCreatorComponent {
   String freq;
   String year, month, day, hour, minute;
 
+  // Duplicate line item input.
+  String advertiserIdDestination;
+  String insertionOrderIdDestination;
+
   // Condition input.
   String conditionType;
   String relation;
@@ -140,6 +144,12 @@ class RuleCreatorComponent {
                 lineItemIds.replaceAll(' ', '').split(',').map(Int64.parseInt))
             ..advertiserId = Int64.parseInt(advertiserId));
         break;
+      case Action_Type.DUPLICATE_LINE_ITEM:
+        rule.action = (Action()
+          ..type = actionTypes[actionType]
+          ..duplicateLineItemParams = (DuplicateLineItemParams()
+            ..advertiserId = Int64.parseInt(advertiserIdDestination)
+            ..insertionOrderId = Int64.parseInt(insertionOrderIdDestination)));
       case Action_Type.CHANGE_LINE_ITEM_BIDDING_STRATEGY:
         rule.action = (Action()..type = actionTypes[actionType]);
         rule.scope = Scope()
@@ -241,6 +251,7 @@ class RuleCreatorComponent {
     isAlertVisible = true;
     name = actionType = lineItemIds = advertiserId = null;
     status = null;
+    advertiserIdDestination = insertionOrderIdDestination = null;
     biddingStrategy = bidAmount = performanceGoal = goalAmount = null;
     timezone = scheduleType = freq = year = month = day = hour = minute = null;
     relation = value = conditionType = null;

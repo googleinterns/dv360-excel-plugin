@@ -36,6 +36,40 @@ class DisplayVideo360Client {
         updateMask: 'entityStatus');
   }
 
+  /// Duplicates the line item to [insertionOrderIdDestination].
+  ///
+  /// The [advertiserIdDestination] is the ID of the destination advertiser.
+  ///
+  /// Throws an [ApiRequestError] if API returns an error.
+  Future<void> duplicateLineItem(Int64 advertiserId, Int64 lineItemId,
+      Int64 advertiserIdDestination, Int64 insertionOrderIdDestination) async {
+    final source = await _api.advertisers.lineItems
+        .get(advertiserId.toString(), lineItemId.toString());
+
+    // Stores the current entity status because only ENTITY_STATUS_DRAFT is
+    // allowed at creation.
+    final currentStatus = source.entityStatus;
+
+    // Sets the correct fields for line item creation.
+    // Inherits flight dates from the destination parent insertion order.
+    source
+      ..insertionOrderId = insertionOrderIdDestination.toString()
+      ..entityStatus = 'ENTITY_STATUS_DRAFT'
+      ..advertiserId = null
+      ..campaignId = null
+      ..lineItemId = null
+      ..updateTime = null
+      ..partnerCosts = null
+      ..name = null;
+
+    // Creates a duplicate of the line item at destination.
+    final duplicate = await _api.advertisers.lineItems
+        .create(source, advertiserIdDestination.toString());
+
+    // Matches the new line item's current status to the old status.
+    await changeLineItemStatus(Int64.parseInt(duplicate.advertiserId),
+        Int64.parseInt(duplicate.lineItemId), currentStatus);
+  }
   /// Changes the bidding strategy of the line item to [strategy].
   ///
   /// Throws an [ApiRequestError] if API returns an error.
@@ -81,6 +115,9 @@ class DisplayVideo360Client {
             case ChangeLineItemStatusAction:
               await runStatusAction(rule.action, target);
               break;
+            case DuplicateLineItemAction:
+              await runDuplicateAction(rule.action, target);
+              break;
             case ChangeLineItemBiddingStrategyAction:
               await runBiddingStrategyAction(rule.action, target);
               break;
@@ -114,11 +151,23 @@ class DisplayVideo360Client {
     final changeStatusAction = action as ChangeLineItemStatusAction;
 
     final shortStatusName = proto.ChangeLineItemStatusParams_Status.valueOf(
-        changeStatusAction.statusValue.index);
+        changeStatusAction.statusValue);
     final status = 'ENTITY_STATUS_${shortStatusName.name}';
 
     await changeLineItemStatus(
         lineItemTarget.advertiserId, lineItemTarget.lineItemId, status);
+  }
+
+  /// Duplicates the line items using the DV360 client.
+  Future<void> runDuplicateAction(Action action, Target target) async {
+    final lineItemTarget = target as LineItemTarget;
+    final duplicateAction = action as DuplicateLineItemAction;
+
+    await duplicateLineItem(
+        lineItemTarget.advertiserId,
+        lineItemTarget.lineItemId,
+        duplicateAction.advertiserId,
+        duplicateAction.insertionOrderId);
   }
 
   /// Changes the bidding strategy of the line item.
