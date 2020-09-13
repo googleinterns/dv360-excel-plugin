@@ -5,6 +5,8 @@ import 'package:googleapis/displayvideo/v1.dart';
 import 'package:http/http.dart';
 
 import '../model/action.dart';
+import '../model/change_line_item_bidding_strategy_action.dart';
+import '../model/change_line_item_status_action.dart';
 import '../model/rule.dart';
 import '../model/scope.dart';
 import '../proto/rule.pb.dart' as proto;
@@ -68,21 +70,61 @@ class DisplayVideo360Client {
     await changeLineItemStatus(Int64.parseInt(duplicate.advertiserId),
         Int64.parseInt(duplicate.lineItemId), currentStatus);
   }
+  /// Changes the bidding strategy of the line item to [strategy].
+  ///
+  /// Throws an [ApiRequestError] if API returns an error.
+  Future<void> changeLineItemBiddingStrategy(
+      Int64 advertiserId, Int64 lineItemId, String strategy,
+      {Int64 bidAmount, String goal, Int64 goalAmount}) async {
+    final request = LineItem()..bidStrategy = BiddingStrategy();
+    switch (strategy) {
+      case 'FIXED':
+        request.bidStrategy.fixedBid =
+            (FixedBidStrategy()..bidAmountMicros = bidAmount.toString());
+        break;
+      case 'MAXIMIZE_SPEND':
+        request.bidStrategy.maximizeSpendAutoBid =
+            (MaximizeSpendBidStrategy()..performanceGoalType = goal);
+        break;
+      case 'PERFORMANCE_GOAL':
+        request.bidStrategy.performanceGoalAutoBid =
+            (PerformanceGoalBidStrategy()
+              ..performanceGoalType = goal
+              ..performanceGoalAmountMicros = goalAmount.toString());
+        break;
+      default:
+        throw UnsupportedError('$strategy is not a supported strategy.');
+    }
+    await _api.advertisers.lineItems.patch(
+        request, advertiserId.toString(), lineItemId.toString(),
+        updateMask: 'bidStrategy');
+  }
 
   /// Runs the rule to manipulate DV360 line items and logs the result.
   Future<void> run(Rule rule, String userId, String ruleId) async {
+    // If the rule is one-time and the year doesn't match, do not run the rule.
+    // Cloud Scheduler uses cron expressions that do not specify the year.
+    if (!rule.isRepeating && rule.year != DateTime.now().year) {
+      return;
+    }
+
     for (final target in rule.scope.targets) {
       try {
-        switch (rule.action.runtimeType) {
-          case ChangeLineItemStatusAction:
-            await runStatusAction(rule.action, target);
-            break;
-          case DuplicateLineItemAction:
-            await runDuplicateAction(rule.action, target);
-            break;
-          default:
-            throw UnsupportedError(
-                '${rule.action.runtimeType} is an invalid action runtime type.');
+        if (await rule.condition.isTrue(target)) {
+          switch (rule.action.runtimeType) {
+            case ChangeLineItemStatusAction:
+              await runStatusAction(rule.action, target);
+              break;
+            case DuplicateLineItemAction:
+              await runDuplicateAction(rule.action, target);
+              break;
+            case ChangeLineItemBiddingStrategyAction:
+              await runBiddingStrategyAction(rule.action, target);
+              break;
+            default:
+              throw UnsupportedError(
+                  '${rule.action.runtimeType} is an invalid action runtime type.');
+          }
         }
       } on ApiRequestError catch (e) {
         // If there is an API error, return the message returned by the API.
@@ -94,7 +136,7 @@ class DisplayVideo360Client {
         // The messages we log should be user-friendly, actionable and
         // understandable. We can expect this for DV360 API error messages, but
         // probably not for lower level exception messages. Also, there might be
-        // security issues if we just directly report the raw exception messages.
+        // security issues if we directly report the raw exception messages.
         return await _firestoreClient.logRunHistory(userId, ruleId, false,
             message: 'Internal error encountered');
       }
@@ -126,5 +168,62 @@ class DisplayVideo360Client {
         lineItemTarget.lineItemId,
         duplicateAction.advertiserId,
         duplicateAction.insertionOrderId);
+  }
+
+  /// Changes the bidding strategy of the line item.
+  Future<void> runBiddingStrategyAction(Action action, Target target) async {
+    final lineItemTarget = target as LineItemTarget;
+    final changeStrategyAction = action as ChangeLineItemBiddingStrategyAction;
+    String goal;
+    String strategy;
+
+    switch (changeStrategyAction.biddingStrategy) {
+      case BidStrategyType.fixed:
+        strategy = 'FIXED';
+        break;
+      case BidStrategyType.maximizeSpend:
+        strategy = 'MAXIMIZE_SPEND';
+        break;
+      case BidStrategyType.performanceGoal:
+        strategy = 'PERFORMANCE_GOAL';
+        break;
+      default:
+        throw UnsupportedError(
+            '${changeStrategyAction.biddingStrategy} is an '
+                'invalid bidding strategy.');
+    }
+
+    if (changeStrategyAction.biddingStrategy != BidStrategyType.fixed) {
+      // If the bidding strategy is maximize spend, performance goal, or
+      // unspecified.
+      switch (changeStrategyAction.performanceGoal) {
+        case PerformanceGoalType.cpa:
+          goal = 'BIDDING_STRATEGY_PERFORMANCE_GOAL_TYPE_CPA';
+          break;
+        case PerformanceGoalType.cpc:
+          goal = 'BIDDING_STRATEGY_PERFORMANCE_GOAL_TYPE_CPC';
+          break;
+        case PerformanceGoalType.viewableImpressions:
+          if (changeStrategyAction.biddingStrategy ==
+              BidStrategyType.maximizeSpend) {
+            goal = 'BIDDING_STRATEGY_PERFORMANCE_GOAL_TYPE_AV_VIEWED';
+          }
+          if (changeStrategyAction.biddingStrategy ==
+              BidStrategyType.performanceGoal) {
+            goal = 'BIDDING_STRATEGY_PERFORMANCE_GOAL_TYPE_VIEWABLE_CPM';
+          }
+          break;
+        default:
+          throw UnsupportedError(
+              '${changeStrategyAction.performanceGoal} is an '
+                  'invalid performance goal.');
+      }
+    }
+
+    await changeLineItemBiddingStrategy(
+        lineItemTarget.advertiserId, lineItemTarget.lineItemId, strategy,
+        bidAmount: changeStrategyAction.bidAmount,
+        goal: goal,
+        goalAmount: changeStrategyAction.goalAmount);
   }
 }

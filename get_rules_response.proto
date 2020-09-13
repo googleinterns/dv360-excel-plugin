@@ -1,0 +1,11 @@
+syntax = "proto2";
+package dv360_excel_plugin;
+
+import "rule.proto";
+
+// A message that represents the response of rules for a user.
+message GetRulesResponse {
+  // required
+  // The user's rules.
+  repeated Rule rules = 1;
+}

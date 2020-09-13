@@ -1,6 +1,8 @@
 import 'package:fixnum/fixnum.dart';
 
 import '../proto/rule.pb.dart' as proto;
+import 'change_line_item_bidding_strategy_action.dart';
+import 'change_line_item_status_action.dart';
 
 /// An interface that represents an action to manipulate DV360 entities.
 abstract class Action {
@@ -13,6 +15,8 @@ abstract class Action {
         return ChangeLineItemStatusAction(action);
       case proto.Action_Type.DUPLICATE_LINE_ITEM:
         return DuplicateLineItemAction(action);
+      case proto.Action_Type.CHANGE_LINE_ITEM_BIDDING_STRATEGY:
+        return ChangeLineItemBiddingStrategyAction(action);
       default:
         throw UnsupportedError(
             '${action.type} is not a supported action type.');

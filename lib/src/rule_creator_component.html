@@ -96,6 +96,55 @@
                                   [minlength]="1"
                                   pattern="\d+"
                                   patternMessage="Field should only contain an advertiser ID">
+                    </div>
+                </div>
+                <div *ngSwitchCase="'Change line item bidding strategy'">
+                    <div class="form-group">
+                        <bs-input class="is-valid"
+                                  label="Line Item IDs"
+                                  [(ngModel)]="lineItemIds"
+                                  [minlength]="1"
+                                  pattern="(\d+)(,\s*\d+)*"
+                                  patternMessage="Field should only contain comma-separated line item IDs">
+                        </bs-input>
+                    </div>
+                    <div class="form-group">
+                        <bs-input class="is-valid"
+                                  label="Advertiser ID"
+                                  [(ngModel)]="advertiserId"
+                                  [minlength]="1"
+                                  pattern="\d+"
+                                  patternMessage="Field should only contain an advertiser ID">
+                        </bs-input>
+                    </div>
+                    <div class="form-group">
+                        <label class="parameter-name">Strategy</label>
+                        <select class="form-control" [(ngModel)]="biddingStrategy" ngControl="biddingStrategy" required>
+                            <option *ngFor="let strategy of strategyTypes.keys" [value]="strategy">{{strategy}}</option>
+                        </select>
+                    </div>
+                    <div *ngIf="biddingStrategy == 'Fixed'" class="form-group">
+                        <bs-input class="is-valid"
+                                  label="Bid Amount"
+                                  [(ngModel)]="bidAmount"
+                                  [minlength]="1"
+                                  pattern="\d+(\.\d{1,6})?"
+                                  patternMessage="Field should only contain a monetary value">
+                        </bs-input>
+                    </div>
+                    <div *ngIf="biddingStrategy == 'Maximize spend' || biddingStrategy == 'Performance goal'" class="form-group">
+                        <label class="parameter-name">Performance Goal</label>
+                        <select class="form-control" [(ngModel)]="performanceGoal" ngControl="performanceGoal" required>
+                            <option *ngFor="let goal of performanceGoalTypes.keys" [value]="goal">{{goal}}</option>
+                        </select>
+                    </div>
+                    <div *ngIf="biddingStrategy == 'Performance goal'" class="form-group">
+                        <bs-input class="is-valid"
+                                  label="Goal Amount"
+                                  [(ngModel)]="goalAmount"
+                                  [minlength]="1"
+                                  pattern="\d+(\.\d{1,6})?"
+                                  patternMessage="Field should only contain a monetary value">
                         </bs-input>
                     </div>
                 </div>
@@ -167,6 +216,48 @@
                                           patternMessage="Field should contain a valid minute (0-59)">
                                 </bs-input>
                             </div>
+                        </div>
+                    </div>
+                    <div *ngSwitchCase="'One time'">
+                        <div class="form-group">
+                            <bs-input class="is-valid"
+                                      label="Year"
+                                      [(ngModel)]="year"
+                                      pattern="^(20[2-9]\d+|2[1-9]\d{2,}|[3-9]\d{3,})$"
+                                      patternMessage="Field should contain a valid year (2020 onwards)">
+                            </bs-input>
+                        </div>
+                        <div class="form-group">
+                            <bs-input class="is-valid"
+                                      label="Month"
+                                      [(ngModel)]="month"
+                                      pattern="^([1-9]|1[0-2])$"
+                                      patternMessage="Field should contain a valid month (1-12)">
+                            </bs-input>
+                        </div>
+                        <div class="form-group">
+                            <bs-input class="is-valid"
+                                      label="Day"
+                                      [(ngModel)]="day"
+                                      pattern="^([1-9]|[12][0-9]|3[01])$"
+                                      patternMessage="Field should contain a valid day (1-31)">
+                            </bs-input>
+                        </div>
+                        <div class="form-group">
+                            <bs-input class="is-valid"
+                                      label="Hour"
+                                      [(ngModel)]="hour"
+                                      pattern="^([1-9]|[1][0-9]|2[0-3])$"
+                                      patternMessage="Field should contain a valid hour (0-23)">
+                            </bs-input>
+                        </div>
+                        <div class="form-group">
+                            <bs-input class="is-valid"
+                                      label="Minute"
+                                      [(ngModel)]="minute"
+                                      pattern="^[0-5]?[0-9]$"
+                                      patternMessage="Field should contain a valid minute (0-59)">
+                            </bs-input>
                         </div>
                     </div>
                 </div>
