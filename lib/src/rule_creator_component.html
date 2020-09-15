@@ -267,13 +267,13 @@
         <bs-accordion-panel heading="Condition Parameters (Optional)" (click)="firstPanelOpen = false">
             <div class="form-group">
                 <label class="parameter-name">Condition Type</label>
-                <select class="form-control" #field="ngForm" [(ngModel)]="conditionType" ngControl="conditionType" required>
+                <select class="form-control" #field="ngForm" [(ngModel)]="conditionType" ngControl="conditionType">
                     <option *ngFor="let t of conditionTypes.keys" [value]="t">{{t}}</option>
                 </select>
             </div>
             <div class="form-group">
                 <label class="parameter-name">Relation</label>
-                <select class="form-control" #field="ngForm" [(ngModel)]="relation" ngControl="relation" required>
+                <select class="form-control" #field="ngForm" [(ngModel)]="relation" ngControl="relation">
                     <option *ngFor="let t of relationTypes.keys" [value]="t">{{t}}</option>
                 </select>
             </div>
@@ -281,7 +281,7 @@
                 <bs-input class="is-valid"
                           label="Value"
                           [(ngModel)]="value"
-                          pattern="^(?:[1-9]\d*|0)?(?:\.\d+)?$"
+                          pattern="((^$)|(^(?:[1-9]\d*|0)?(?:\.\d+)?$))"
                           patternMessage="Field should only contain a double">
                 </bs-input>
             </div>

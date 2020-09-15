@@ -223,7 +223,7 @@ class RuleCreatorComponent {
     }
 
     // Sets the condition parameters if set.
-    if (conditionTypes[conditionType] != Condition_Type.UNSPECIFIED_TYPE) {
+    if (conditionTypes[conditionType] != null) {
       rule.condition = Condition()
         ..type = conditionTypes[conditionType]
         ..relation = relationTypes[relation]

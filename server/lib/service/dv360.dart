@@ -70,6 +70,7 @@ class DisplayVideo360Client {
     await changeLineItemStatus(Int64.parseInt(duplicate.advertiserId),
         Int64.parseInt(duplicate.lineItemId), currentStatus);
   }
+
   /// Changes the bidding strategy of the line item to [strategy].
   ///
   /// Throws an [ApiRequestError] if API returns an error.
@@ -110,7 +111,8 @@ class DisplayVideo360Client {
 
     for (final target in rule.scope.targets) {
       try {
-        if (await rule.condition.isTrue(target)) {
+        if (rule.condition != null ||
+            await rule.condition.isTrue(target, client: _reportingClient)) {
           switch (rule.action.runtimeType) {
             case ChangeLineItemStatusAction:
               await runStatusAction(rule.action, target);
@@ -188,9 +190,8 @@ class DisplayVideo360Client {
         strategy = 'PERFORMANCE_GOAL';
         break;
       default:
-        throw UnsupportedError(
-            '${changeStrategyAction.biddingStrategy} is an '
-                'invalid bidding strategy.');
+        throw UnsupportedError('${changeStrategyAction.biddingStrategy} is an '
+            'invalid bidding strategy.');
     }
 
     if (changeStrategyAction.biddingStrategy != BidStrategyType.fixed) {
@@ -216,7 +217,7 @@ class DisplayVideo360Client {
         default:
           throw UnsupportedError(
               '${changeStrategyAction.performanceGoal} is an '
-                  'invalid performance goal.');
+              'invalid performance goal.');
       }
     }
 
