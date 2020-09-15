@@ -107,7 +107,7 @@ class RuleCreatorComponent {
     for (var element in Condition_Type.values.sublist(1)) element.name: element
   };
   Map<String, Condition_Relation> relationTypes = {
-    '<=': Condition_Relation.LESSER_EQUAL,
+    '≤': Condition_Relation.LESSER_EQUAL,
     '>': Condition_Relation.GREATER
   };
 

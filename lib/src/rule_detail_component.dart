@@ -37,7 +37,7 @@ class RuleDetailComponent implements AfterChanges {
       element: element.name.sentenceCase
   };
   Map<Condition_Relation, String> relationTypes = {
-    Condition_Relation.LESSER_EQUAL: '<=',
+    Condition_Relation.LESSER_EQUAL: '≤',
     Condition_Relation.GREATER: '>',
   };
 
