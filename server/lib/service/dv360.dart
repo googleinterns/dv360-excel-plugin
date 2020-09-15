@@ -12,6 +12,7 @@ import '../model/rule.dart';
 import '../model/scope.dart';
 import '../proto/rule.pb.dart' as proto;
 import '../service/firestore.dart';
+import '../service/reporting.dart';
 
 /// A class that wraps around Display & Video 360.
 class DisplayVideo360Client {
@@ -21,9 +22,13 @@ class DisplayVideo360Client {
   /// The Firestore client.
   final FirestoreClient _firestoreClient;
 
+  /// The reporting API client.
+  final ReportingClient _reportingClient;
+
   /// Creates an instance of [DisplayVideo360Client].
   DisplayVideo360Client(Client client, this._firestoreClient, String baseUrl)
-      : _api = DisplayvideoApi(client, rootUrl: baseUrl);
+      : _api = DisplayvideoApi(client, rootUrl: baseUrl),
+        _reportingClient = ReportingClient(client);
 
   /// Changes the entity status of the line item to [status].
   ///
@@ -112,7 +117,7 @@ class DisplayVideo360Client {
 
     for (final target in rule.scope.targets) {
       try {
-        if (await rule.condition.isTrue(target)) {
+        if (await rule.condition.isTrue(target, client: _reportingClient)) {
           switch (rule.action.runtimeType) {
             case ChangeLineItemStatusAction:
               await runStatusAction(rule.action, target);
