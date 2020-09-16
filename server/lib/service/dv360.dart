@@ -7,10 +7,12 @@ import 'package:http/http.dart';
 import '../model/action.dart';
 import '../model/change_line_item_bidding_strategy_action.dart';
 import '../model/change_line_item_status_action.dart';
+import '../model/duplicate_line_item_action.dart';
 import '../model/rule.dart';
 import '../model/scope.dart';
 import '../proto/rule.pb.dart' as proto;
 import '../service/firestore.dart';
+import '../service/reporting.dart';
 
 /// A class that wraps around Display & Video 360.
 class DisplayVideo360Client {
@@ -20,9 +22,13 @@ class DisplayVideo360Client {
   /// The Firestore client.
   final FirestoreClient _firestoreClient;
 
+  /// The reporting API client.
+  final ReportingClient _reportingClient;
+
   /// Creates an instance of [DisplayVideo360Client].
   DisplayVideo360Client(Client client, this._firestoreClient, String baseUrl)
-      : _api = DisplayvideoApi(client, rootUrl: baseUrl);
+      : _api = DisplayvideoApi(client, rootUrl: baseUrl),
+        _reportingClient = ReportingClient(client);
 
   /// Changes the entity status of the line item to [status].
   ///
@@ -70,6 +76,7 @@ class DisplayVideo360Client {
     await changeLineItemStatus(Int64.parseInt(duplicate.advertiserId),
         Int64.parseInt(duplicate.lineItemId), currentStatus);
   }
+
   /// Changes the bidding strategy of the line item to [strategy].
   ///
   /// Throws an [ApiRequestError] if API returns an error.
@@ -110,7 +117,7 @@ class DisplayVideo360Client {
 
     for (final target in rule.scope.targets) {
       try {
-        if (await rule.condition.isTrue(target)) {
+        if (await rule.condition.isTrue(target, client: _reportingClient)) {
           switch (rule.action.runtimeType) {
             case ChangeLineItemStatusAction:
               await runStatusAction(rule.action, target);
@@ -151,7 +158,7 @@ class DisplayVideo360Client {
     final changeStatusAction = action as ChangeLineItemStatusAction;
 
     final shortStatusName = proto.ChangeLineItemStatusParams_Status.valueOf(
-        changeStatusAction.statusValue);
+        changeStatusAction.statusValue.index);
     final status = 'ENTITY_STATUS_${shortStatusName.name}';
 
     await changeLineItemStatus(
@@ -188,9 +195,8 @@ class DisplayVideo360Client {
         strategy = 'PERFORMANCE_GOAL';
         break;
       default:
-        throw UnsupportedError(
-            '${changeStrategyAction.biddingStrategy} is an '
-                'invalid bidding strategy.');
+        throw UnsupportedError('${changeStrategyAction.biddingStrategy} is an '
+            'invalid bidding strategy.');
     }
 
     if (changeStrategyAction.biddingStrategy != BidStrategyType.fixed) {
@@ -216,7 +222,7 @@ class DisplayVideo360Client {
         default:
           throw UnsupportedError(
               '${changeStrategyAction.performanceGoal} is an '
-                  'invalid performance goal.');
+              'invalid performance goal.');
       }
     }
 

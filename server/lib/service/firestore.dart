@@ -1,6 +1,5 @@
 import 'package:googleapis/firestore/v1.dart';
 import 'package:http/http.dart';
-import 'package:meta/meta.dart';
 
 import '../proto/get_run_history.pb.dart';
 import '../proto/rule.pb.dart';
@@ -115,7 +114,7 @@ class FirestoreClient {
       String userId, String ruleId) async {
     final documentList = await _listDocuments(
         '/$usersName/$userId/$rulesName/$ruleId', runHistoryName,
-        pageSize: maxHistoryEntries, orderBy: 'timestamp desc');
+        maxPageSize: maxHistoryEntries, orderBy: 'timestamp desc');
 
     final response = GetRunHistoryResponse();
     documentList.documents?.forEach((document) {
@@ -153,7 +152,7 @@ class FirestoreClient {
   /// Throws an [ApiRequestError] if Firestore API returns an error.
   Future<List<Rule>> getUserRules(String userId) async {
     final response = await _listDocuments('/$usersName/$userId', rulesName,
-        pageSize: maxRules);
+        maxPageSize: maxRules);
     response.documents?.forEach((Document element) => element.fields['id'] =
         Value()..stringValue = element.name.split('/').last);
     final rules = response.documents?.map((e) => e.toProto())?.toList() ?? [];
@@ -177,12 +176,13 @@ class FirestoreClient {
   ///
   /// Throws an [ApiRequestError] if Firestore API returns an error.
   Future<ListDocumentsResponse> _listDocuments(String parent, String collection,
-      {int maxPageSize, String pageToken}) async {
+      {int maxPageSize, String pageToken, String orderBy}) async {
     final documents = await _api.projects.databases.documents.list(
       'projects/$_projectId/databases/$_databaseId/documents$parent',
       collection,
       pageSize: maxPageSize,
       pageToken: pageToken,
+      orderBy: orderBy,
     );
 
     return documents;

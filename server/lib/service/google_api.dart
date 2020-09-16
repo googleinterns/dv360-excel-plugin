@@ -16,6 +16,7 @@ class GoogleApi {
   /// The scopes the user account client needs to access the DV360 API.
   static const List<String> userAccountScope = [
     'https://www.googleapis.com/auth/display-video',
+    'https://www.googleapis.com/auth/doubleclickbidmanager',
   ];
 
   /// The client ID for OAuth2.
