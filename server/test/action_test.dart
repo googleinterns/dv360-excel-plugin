@@ -2,9 +2,9 @@ import 'package:fixnum/fixnum.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
+import 'package:proto/rule.pb.dart' as proto;
 import 'package:server/model/action.dart';
 import 'package:server/model/scope.dart';
-import 'package:server/proto/rule.pb.dart' as proto;
 import 'package:server/service/dv360.dart';
 
 class MockDisplayVideo360Client extends Mock implements DisplayVideo360Client {}

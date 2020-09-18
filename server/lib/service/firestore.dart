@@ -1,8 +1,8 @@
 import 'package:googleapis/firestore/v1.dart';
 import 'package:http/http.dart';
+import 'package:proto/get_run_history.pb.dart';
+import 'package:proto/rule.pb.dart';
 
-import '../proto/get_run_history.pb.dart';
-import '../proto/rule.pb.dart';
 import '../utils.dart';
 
 /// A class that wraps around Cloud Firestore.

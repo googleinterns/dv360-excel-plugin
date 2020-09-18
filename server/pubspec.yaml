@@ -16,6 +16,8 @@ dependencies:
   jose: ^0.2.1+1
   encrypt: ^4.0.2
   mock_request: ^1.0.7
+  proto:
+    path: ../proto
 
 dev_dependencies:
   test: ^1.0.0

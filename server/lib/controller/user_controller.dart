@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:aqueduct/aqueduct.dart';
+import 'package:proto/create_user_request.pb.dart';
 
-import '../proto/create_user_request.pb.dart';
 import '../service/firestore.dart';
 import '../utils.dart';
 

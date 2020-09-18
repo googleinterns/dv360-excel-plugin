@@ -7,10 +7,10 @@ import 'package:angular_forms/angular_forms.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:ng_bootstrap/ng_bootstrap.dart';
 import 'package:recase/recase.dart';
+import 'package:proto/rule.pb.dart';
 import 'package:timezone/timezone.dart';
 import 'package:timezone/data/latest.dart';
 
-import 'data_model/rule.pb.dart';
 import 'service/credential_service.dart';
 import 'service/rule_service.dart';
 

@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:meta/meta.dart';
 import 'package:http/http.dart';
+import 'package:proto/rule.pb.dart' as proto;
 
-import '../proto/rule.pb.dart' as proto;
 import '../service/reporting.dart';
 import 'scope.dart';
 

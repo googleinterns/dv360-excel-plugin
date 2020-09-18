@@ -2,7 +2,7 @@ import 'package:encrypt/encrypt.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:googleapis/firestore/v1.dart';
 import 'package:jose/jose.dart';
-import 'package:server/proto/rule.pb.dart' as proto;
+import 'package:proto/rule.pb.dart' as proto;
 import 'package:server/utils.dart';
 import 'package:test/test.dart';
 

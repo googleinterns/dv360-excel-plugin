@@ -6,7 +6,7 @@ import 'package:googleapis/discovery/v1.dart';
 import 'package:http/http.dart' as http;
 import 'package:test/test.dart';
 
-import 'package:server/proto/rule.pb.dart' as proto;
+import 'package:proto/rule.pb.dart' as proto;
 import 'package:server/service/firestore.dart';
 import 'package:server/utils.dart';
 

@@ -28,16 +28,15 @@ jobs:
       run: PATH="$PATH:/usr/lib/dart/bin" pub get
     - name: Generate protobufs for query builder
       run: PATH="$PATH:$HOME/.pub-cache/bin" protoc --dart_out=. lib/src/data_model/insertion_order_query.proto
+    - name: Generate protobufs for rules builder
+      run: |
+        PATH="$PATH:$HOME/.pub-cache/bin" protoc --dart_out=proto/lib -I=proto/lib proto/lib/*.proto
+      if: always()
     - name: Run tests
       run: PATH="$PATH:/usr/lib/dart/bin" pub run build_runner test -- -p chrome
     - name: Install dependencies for rules builder
       run: PATH="$PATH:/usr/lib/dart/bin" pub get
       working-directory: ./server
-      if: always()
-    - name: Generate protobufs for rules builder
-      run: |
-        mkdir -p server/lib/proto
-        PATH="$PATH:$HOME/.pub-cache/bin" protoc --dart_out=server/lib/proto/ *.proto
       if: always()
     - name: Run tests for rules builder
       run: PATH="$PATH:/usr/lib/dart/bin" pub run test test/*

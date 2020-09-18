@@ -1,6 +1,5 @@
 import 'package:fixnum/fixnum.dart';
-
-import '../proto/rule.pb.dart' as proto;
+import 'package:proto/rule.pb.dart' as proto;
 
 /// A class that represents the target entities for the rule.
 class Scope {

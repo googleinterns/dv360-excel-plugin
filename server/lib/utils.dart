@@ -5,8 +5,7 @@ import 'package:encrypt/encrypt.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:googleapis/firestore/v1.dart';
 import 'package:jose/jose.dart';
-
-import 'proto/rule.pb.dart';
+import 'package:proto/rule.pb.dart';
 
 /// An extension on the [Rule] protobuf generated class.
 extension DocumentConversion on Rule {

@@ -4,8 +4,8 @@ import 'package:mock_request/mock_request.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
+import 'package:proto/create_user_request.pb.dart';
 import 'package:server/controller/user_controller.dart';
-import 'package:server/proto/create_user_request.pb.dart';
 import 'package:server/service/firestore.dart';
 import 'package:server/utils.dart';
 import 'package:server/server.dart';
