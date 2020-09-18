@@ -32,11 +32,10 @@ class RuleCreatorComponent {
   final RuleService _ruleService;
   final CredentialService _credentialService;
 
-  // Stores and retrieves the ID token from local storage.
-  // TODO(@thu5): Use HttpOnly cookies instead of local storage.
-  String get idToken => window.localStorage['idToken'];
-  set idToken(String value) => window.localStorage['idToken'] = value;
-  bool get hasIdToken => window.localStorage.containsKey('idToken');
+  // Stores and retrieves the ID token from session storage.
+  String get idToken => window.sessionStorage['idToken'];
+  set idToken(String value) => window.sessionStorage['idToken'] = value;
+  bool get hasIdToken => window.sessionStorage.containsKey('idToken');
 
   // Rule details and scope input.
   String name;
@@ -107,7 +106,7 @@ class RuleCreatorComponent {
     for (var element in Condition_Type.values.sublist(1)) element.name: element
   };
   Map<String, Condition_Relation> relationTypes = {
-    '<=': Condition_Relation.LESSER_EQUAL,
+    '≤': Condition_Relation.LESSER_EQUAL,
     '>': Condition_Relation.GREATER
   };
 
@@ -116,15 +115,6 @@ class RuleCreatorComponent {
   RuleCreatorComponent(this._ruleService, this._credentialService) {
     initializeTimeZones();
     timeZoneDatabase.locations.keys.forEach((e) => timezones.add(e));
-  }
-
-  // TODO(@thu5): Move user creation logic outside this component.
-  Future<void> createUser() async {
-    final tokens = await _credentialService.obtainTokens();
-    final refreshToken = tokens['refresh_token'];
-    idToken = tokens['id_token'];
-
-    await _ruleService.createUser(idToken, refreshToken);
   }
 
   Future<void> onSubmit() async {
@@ -224,7 +214,7 @@ class RuleCreatorComponent {
     }
 
     // Sets the condition parameters if set.
-    if (conditionTypes[conditionType] != Condition_Type.UNSPECIFIED_TYPE) {
+    if (conditionTypes[conditionType] != null) {
       rule.condition = Condition()
         ..type = conditionTypes[conditionType]
         ..relation = relationTypes[relation]

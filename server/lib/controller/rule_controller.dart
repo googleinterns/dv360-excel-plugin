@@ -33,14 +33,9 @@ class RuleController extends ResourceController {
   /// error. Returns an OK 200 response upon success.
   @Operation.post()
   Future<Response> createRule(@Bind.body() List<int> body) async {
-    // The ID token is sent in the `Authorization` header of the request.
-    final authorizationHeader = request.raw.headers.value('Authorization');
-    if (authorizationHeader == null) {
-      throw ArgumentError('Request does not contain an Authorization header');
-    }
-    final idToken = authorizationHeader.split(' ').last;
+    final encodedIdToken = getEncodedIdToken(request);
 
-    final userId = getUserId(idToken);
+    final userId = getUserId(encodedIdToken);
     final rule = Rule.fromBuffer(body);
     final ruleId = await _firestoreClient.createRule(userId, rule);
 
@@ -59,14 +54,9 @@ class RuleController extends ResourceController {
   /// Returns an OK 200 response upon success.
   @Operation.get()
   Future<Response> getRules() async {
-    // The ID token is sent in the `Authorization` header of the request.
-    final authorizationHeader = request.raw.headers.value('Authorization');
-    if (authorizationHeader == null) {
-      throw ArgumentError('Request does not contain an Authorization header');
-    }
-    final idToken = authorizationHeader.split(' ').last;
+    final encodedIdToken = getEncodedIdToken(request);
 
-    final userId = getUserId(idToken);
+    final userId = getUserId(encodedIdToken);
     final rules = await _firestoreClient.getUserRules(userId);
 
     final response = GetRulesResponse()..rules.addAll(rules);

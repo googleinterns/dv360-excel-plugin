@@ -34,15 +34,10 @@ class UserController extends ResourceController {
   Future<Response> createUser(@Bind.body() List<int> body) async {
     final message = CreateUserRequest.fromBuffer(body);
 
-    // The ID token is sent in the `Authorization` header of the request.
-    final authorizationHeader = request.raw.headers.value('Authorization');
-    if (authorizationHeader == null) {
-      throw ArgumentError('Request does not contain an Authorization header');
-    }
-    final idToken = authorizationHeader.split(' ').last;
+    final encodedIdToken = getEncodedIdToken(request);
 
     // Gets the user's obfuscated Gaia ID and encrypt the refresh token.
-    final userId = getUserId(idToken);
+    final userId = getUserId(encodedIdToken);
     final encryptedToken = encryptRefreshToken(message.refreshToken, _aesKey);
 
     await _client.createUser(userId, encryptedToken);

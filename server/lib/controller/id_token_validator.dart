@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:jose/jose.dart';
 import 'package:aqueduct/aqueduct.dart';
+import 'package:server/utils.dart';
 
 /// A middleware controller to validate the user's ID token.
 ///
@@ -10,10 +11,15 @@ class IdTokenValidator extends Controller {
   /// The url to Google's public keys in JWK format.
   final String _keysUrl;
 
+  /// The url to Google IAP's public keys in JWK format.
+  final String _iapKeysUrl;
+
   /// Creates an instance of [IdTokenValidator].
   IdTokenValidator(
-      {String keysUrl = 'https://www.googleapis.com/oauth2/v3/certs'})
-      : _keysUrl = keysUrl;
+      {String keysUrl = 'https://www.googleapis.com/oauth2/v3/certs',
+      String iapKeysUrl = 'https://www.gstatic.com/iap/verify/public_key-jwk'})
+      : _keysUrl = keysUrl,
+        _iapKeysUrl = iapKeysUrl;
 
   /// Verifies the ID token is valid.
   ///
@@ -22,12 +28,7 @@ class IdTokenValidator extends Controller {
   /// when the Authorization header is missing.
   @override
   Future<RequestOrResponse> handle(Request request) async {
-    // The ID token is sent in the `Authorization` header of the request.
-    final authorizationHeader = request.raw.headers.value('Authorization');
-    if (authorizationHeader == null) {
-      throw ArgumentError('Request does not contain an Authorization header');
-    }
-    final encodedIdToken = authorizationHeader.split(' ').last;
+    final encodedIdToken = getEncodedIdToken(request);
 
     // Decodes the ID token.
     final jwt = JsonWebToken.unverified(encodedIdToken);
@@ -35,6 +36,7 @@ class IdTokenValidator extends Controller {
     // Creates a key store and adds Google's public keys.
     final keyStore = JsonWebKeyStore();
     keyStore.addKeySetUrl(Uri.parse(_keysUrl));
+    keyStore.addKeySetUrl(Uri.parse(_iapKeysUrl));
 
     // Verifies the ID token.
     final isVerified = await jwt.verify(keyStore);

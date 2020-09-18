@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:aqueduct/aqueduct.dart' as aqueduct;
 import 'package:encrypt/encrypt.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:googleapis/firestore/v1.dart';
@@ -145,5 +146,19 @@ String decryptRefreshToken(String encrypted, String aesKey) {
 /// Gets the obfuscated Gaia id of the user from [idToken].
 String getUserId(String idToken) {
   final jwt = JsonWebToken.unverified(idToken);
-  return jwt.claims.subject;
+  return jwt.claims.subject.split(':').last;
+}
+
+/// Gets the encoded ID token from either the 'Authorization' header or
+/// 'x-goog-iap-jwt-assertion` if IAP is turned on.
+///
+/// See: https://cloud.google.com/iap/docs/identity-howto
+String getEncodedIdToken(aqueduct.Request request) {
+  if (request.raw.headers.value('Authorization') != null) {
+    return request.raw.headers.value('Authorization').split(' ').last;
+  } else if (request.raw.headers.value('x-goog-iap-jwt-assertion') != null) {
+    return request.raw.headers.value('x-goog-iap-jwt-assertion');
+  } else {
+    throw ArgumentError('Request does not contain an Authorization header');
+  }
 }

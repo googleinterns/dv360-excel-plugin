@@ -15,9 +15,10 @@ import 'service/rule_service.dart';
   providers: [ClassProvider(ScheduleParser), ClassProvider(RuleService)],
 )
 class RuleDetailComponent implements AfterChanges {
-  String get idToken => window.localStorage['idToken'];
-  set idToken(String value) => window.localStorage['idToken'] = value;
-  bool get hasIdToken => window.localStorage.containsKey('idToken');
+  // Stores and retrieves the ID token from session storage.
+  String get idToken => window.sessionStorage['idToken'];
+  set idToken(String value) => window.sessionStorage['idToken'] = value;
+  bool get hasIdToken => window.sessionStorage.containsKey('idToken');
 
   // Maps from actual values to UI name.
   Map<Action_Type, String> actionTypes = {
@@ -37,7 +38,7 @@ class RuleDetailComponent implements AfterChanges {
       element: element.name.sentenceCase
   };
   Map<Condition_Relation, String> relationTypes = {
-    Condition_Relation.LESSER_EQUAL: '<=',
+    Condition_Relation.LESSER_EQUAL: '≤',
     Condition_Relation.GREATER: '>',
   };
 
