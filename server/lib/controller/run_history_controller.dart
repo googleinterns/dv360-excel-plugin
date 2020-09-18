@@ -26,13 +26,8 @@ class RunHistoryController extends ResourceController {
   /// Returns a 200 OK response upon success.
   @Operation.get()
   Future<Response> getRunHistory(@Bind.query('ruleId') String ruleId) async {
-    // The ID token is sent in the `Authorization` header of the request.
-    final authorizationHeader = request.raw.headers.value('Authorization');
-    if (authorizationHeader == null) {
-      throw ArgumentError('Request does not contain an Authorization header');
-    }
-    final idToken = authorizationHeader.split(' ').last;
-    final userId = getUserId(idToken);
+    final encodedIdToken = getEncodedIdToken(request);
+    final userId = getUserId(encodedIdToken);
 
     final response = await _firestoreClient.getRunHistory(userId, ruleId);
 
