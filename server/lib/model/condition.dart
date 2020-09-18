@@ -42,7 +42,7 @@ class LineItemCpmCondition implements Condition {
   Future<bool> isTrue(Target target, {@required ReportingClient client}) async {
     final lineItemTarget = target as LineItemTarget;
 
-    final cpm = await _reportingClient.getLineItemCpm(
+    final cpm = await client.getLineItemCpm(
         lineItemTarget.advertiserId, lineItemTarget.lineItemId);
 
     switch (_relation) {

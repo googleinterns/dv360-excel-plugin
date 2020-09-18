@@ -150,6 +150,7 @@ class RuleCreatorComponent {
           ..duplicateLineItemParams = (DuplicateLineItemParams()
             ..advertiserId = Int64.parseInt(advertiserIdDestination)
             ..insertionOrderId = Int64.parseInt(insertionOrderIdDestination)));
+        break;
       case Action_Type.CHANGE_LINE_ITEM_BIDDING_STRATEGY:
         rule.action = (Action()..type = actionTypes[actionType]);
         rule.scope = Scope()
