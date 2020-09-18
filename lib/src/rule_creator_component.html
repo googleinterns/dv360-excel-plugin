@@ -289,11 +289,7 @@
         </bs-accordion-panel>
     </bs-accordion>
 
-    <div *ngIf="hasIdToken" class="row my-3">
+    <div class="row my-3">
         <div class="col"><button type="submit" class="btn btn-success">Create Rule</button></div>
     </div>
 </form>
-
-<div *ngIf="!hasIdToken" class="row my-3">
-    <div class="col"><button class="btn btn-primary" (click)="createUser()">Grant Offline Access</button></div>
-</div>
