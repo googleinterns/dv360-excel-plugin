@@ -1,7 +1,9 @@
 <div class="mb-3" *ngIf="view == View.listView">
     <div class="flex-column">
         <rule-list (detailedRule)="changeDetailedRule($event)" class="mb-5"></rule-list>
-        <button type="button" (click)="toCreateView()" class="mt-3 btn btn-success">Create Rule</button>
+
+        <button *ngIf="!hasIdToken" class="btn btn-primary" (click)="createUser()">Grant Offline Access</button>
+        <button *ngIf="hasIdToken" type="button" (click)="toCreateView()" class="mt-3 btn btn-success">Create Rule</button>
     </div>
 </div>
 <div *ngIf="view == View.createView">
