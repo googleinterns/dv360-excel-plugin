@@ -117,7 +117,8 @@ class DisplayVideo360Client {
 
     for (final target in rule.scope.targets) {
       try {
-        if (await rule.condition.isTrue(target, client: _reportingClient)) {
+        if (rule.condition == null ||
+            await rule.condition.isTrue(target, client: _reportingClient)) {
           switch (rule.action.runtimeType) {
             case ChangeLineItemStatusAction:
               await runStatusAction(rule.action, target);

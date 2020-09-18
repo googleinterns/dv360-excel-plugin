@@ -24,7 +24,9 @@ class Rule {
   Rule.fromProto(proto.Rule protoRule)
       : action = Action.getActionFromProto(protoRule.action),
         scope = Scope.getScopeFromProto(protoRule.scope),
-        condition = Condition.getConditionFromProto(protoRule.condition),
+        condition = protoRule.hasField(5)
+            ? Condition.getConditionFromProto(protoRule.condition)
+            : null,
         isRepeating = protoRule.schedule.type == proto.Schedule_Type.REPEATING {
     if (!isRepeating) {
       year = protoRule.schedule.oneTimeParams.year;
