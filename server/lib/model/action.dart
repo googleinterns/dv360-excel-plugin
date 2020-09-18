@@ -1,4 +1,5 @@
-import '../proto/rule.pb.dart' as proto;
+import 'package:proto/rule.pb.dart' as proto;
+
 import 'change_line_item_bidding_strategy_action.dart';
 import 'change_line_item_status_action.dart';
 import 'duplicate_line_item_action.dart';

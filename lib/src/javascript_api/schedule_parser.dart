@@ -3,8 +3,7 @@ library cronstrue;
 
 import 'package:js/js.dart';
 import 'package:angular/angular.dart';
-
-import '../data_model/rule.pb.dart';
+import 'package:proto/rule.pb.dart';
 
 @JS('toString')
 external String toString(String obj);

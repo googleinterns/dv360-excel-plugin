@@ -1,6 +1,6 @@
 import 'package:fixnum/fixnum.dart';
+import 'package:proto/rule.pb.dart' as proto;
 
-import '../proto/rule.pb.dart' as proto;
 import 'action.dart';
 
 enum BidStrategyType {

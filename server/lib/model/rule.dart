@@ -1,4 +1,4 @@
-import '../proto/rule.pb.dart' as proto;
+import 'package:proto/rule.pb.dart' as proto;
 import 'action.dart';
 import 'condition.dart';
 import 'scope.dart';

@@ -7,9 +7,9 @@ import 'package:mock_request/mock_request.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
+import 'package:proto/scheduled_rule.pb.dart';
+import 'package:proto/rule.pb.dart' as proto;
 import 'package:server/controller/run_rule_controller.dart';
-import 'package:server/proto/scheduled_rule.pb.dart';
-import 'package:server/proto/rule.pb.dart' as proto;
 import 'package:server/service/firestore.dart';
 import 'package:server/service/google_api.dart';
 import 'package:server/utils.dart';

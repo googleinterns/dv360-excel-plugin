@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:aqueduct/aqueduct.dart';
+import 'package:proto/scheduled_rule.pb.dart';
 
 import '../model/rule.dart';
-import '../proto/scheduled_rule.pb.dart';
 import '../service/dv360.dart';
 import '../service/firestore.dart';
 import '../service/google_api.dart';

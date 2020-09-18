@@ -1,9 +1,9 @@
 import 'dart:html';
 
 import 'package:angular/angular.dart';
+import 'package:proto/rule.pb.dart';
 import 'package:recase/recase.dart';
 
-import 'data_model/rule.pb.dart';
 import 'javascript_api/schedule_parser.dart';
 import 'service/rule_service.dart';
 

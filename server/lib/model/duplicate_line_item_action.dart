@@ -1,6 +1,6 @@
 import 'package:fixnum/fixnum.dart';
 
-import '../proto/rule.pb.dart' as proto;
+import 'package:proto/rule.pb.dart' as proto;
 import 'action.dart';
 
 /// A class that represents duplicating line items.

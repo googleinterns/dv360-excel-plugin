@@ -2,11 +2,10 @@ import 'dart:async';
 
 import 'package:angular/angular.dart';
 import 'package:http/http.dart';
-
-import '../data_model/create_user_request.pb.dart';
-import '../data_model/get_rules_response.pb.dart';
-import '../data_model/get_run_history.pb.dart';
-import '../data_model/rule.pb.dart';
+import 'package:proto/create_user_request.pb.dart';
+import 'package:proto/get_rules_response.pb.dart';
+import 'package:proto/get_run_history.pb.dart';
+import 'package:proto/rule.pb.dart';
 
 /// A class to interact with the Rules Builder server.
 @Injectable()

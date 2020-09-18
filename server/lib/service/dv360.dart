@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:fixnum/fixnum.dart';
 import 'package:googleapis/displayvideo/v1.dart';
 import 'package:http/http.dart';
+import 'package:proto/rule.pb.dart' as proto;
 
 import '../model/action.dart';
 import '../model/change_line_item_bidding_strategy_action.dart';
@@ -10,7 +11,6 @@ import '../model/change_line_item_status_action.dart';
 import '../model/duplicate_line_item_action.dart';
 import '../model/rule.dart';
 import '../model/scope.dart';
-import '../proto/rule.pb.dart' as proto;
 import '../service/firestore.dart';
 import '../service/reporting.dart';
 
