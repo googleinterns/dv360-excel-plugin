@@ -281,7 +281,7 @@
                 <bs-input class="is-valid"
                           label="Value"
                           [(ngModel)]="value"
-                          pattern="((^$)|(^(?:[1-9]\d*|0)?(?:\.\d+)?$))"
+                          pattern="^(?:[1-9]\d*|0)?(?:\.\d+)?$"
                           patternMessage="Field should only contain a double">
                 </bs-input>
             </div>
