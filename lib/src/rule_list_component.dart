@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:html';
 
 import 'package:angular/angular.dart';
@@ -17,6 +18,7 @@ class RuleListComponent implements OnInit {
   final ScheduleParser scheduleParser;
   final RuleService _ruleService;
   final List<Rule> rules = [];
+  final _detailedRule = StreamController<Rule>();
 
   // Stores and retrieves the ID token from session storage.
   String get idToken => window.sessionStorage['idToken'];
@@ -28,10 +30,17 @@ class RuleListComponent implements OnInit {
       element: element.name.sentenceCase
   };
 
+  @Output()
+  Stream<Rule> get detailedRule => _detailedRule.stream;
+
   RuleListComponent(this._ruleService, this.scheduleParser);
 
   @override
   void ngOnInit() async {
     rules.addAll(await _ruleService.getRules(idToken));
+  }
+
+  void addToStream(Rule rule) {
+    _detailedRule.add(rule);
   }
 }
