@@ -27,7 +27,7 @@ A server for the Excel rules builder plugin for [Display & Video 360](https://ma
 ## Dependencies
 
 **Install Dart**:
-```
+``` bash
 sudo apt-get update
 sudo apt-get install wget gnupg
 sudo sh -c 'wget -qO- https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -'
@@ -37,19 +37,19 @@ sudo apt-get install dart
 ```
 
 **Install Protoc**:
-```
+``` bash
 sudo apt-get install protobuf-compiler
 PATH="$PATH:/usr/lib/dart/bin" pub global activate protoc_plugin
 ```
 
 **Install server dependencies**:
-```
+``` bash
 cd app
 PATH="$PATH:/usr/lib/dart/bin" pub get 
 ```
 
 **Install the Aqueduct command line tool**:
-```
+``` bash
 PATH="$PATH:/usr/lib/dart/bin" pub global activate aqueduct
 export PATH="$PATH":"$HOME/.pub-cache/bin"
 ```
@@ -61,7 +61,7 @@ Follow the instructions [here](https://cloud.google.com/sdk/docs/quickstart).
 ## Setup
 
 **Generate protobufs**:
-```
+``` bash
 PATH="$PATH:$HOME/.pub-cache/bin" protoc --dart_out=pkg/proto/lib -I=pkg/proto/lib pkg/proto/lib/*.proto
 ```
 
@@ -82,7 +82,7 @@ Follow the instructions [here](https://console.cloud.google.com/firestore) and s
 Follow the instructions [here](https://console.cloud.google.com/cloudscheduler).
 
 **Generate a refresh token encryption key**:
-```
+``` bash
 PATH="$PATH:/usr/lib/dart/bin" pub global activate encrypt
 secure-random
 ```
@@ -92,18 +92,18 @@ secure-random
 To optionally use Google Cloud Identity-Aware Proxy, set it up for your application [here](https://console.cloud.google.com/security/iap).
 
 If you have trouble using the web UI, try using the command line interface:
-```
+``` bash
 gcloud alpha iap web enable --oauth2-client-id=INSERT_CLIENT_ID  --oauth2-client-secret=INSERT_CLIENT_SECRET --resource-type=app-engine
 ```
 
 Then, allow [CORS preflight](https://cloud.google.com/iap/docs/customizing#allowing_http_options_requests_cors_preflight): 
 
-```
+``` bash
 gcloud iap settings set cors.json --project=INSERT_PROJECT_ID --resource-type=app-engine
 ```
 
 cors.json:
-```
+``` json
 {"access_settings":{"cors_settings":{"allow_http_options":{"value": true}}}}
 ```
 
@@ -115,7 +115,7 @@ cors.json:
 ## Running locally
 
 **Generate local ApplicationDefaultCredentials**:
-```
+``` bash
 gcloud auth application-default login --scopes=https://www.googleapis.com/auth/datastore,https://www.googleapis.com/auth/cloud-platform,https://www.googleapis.com/auth/cloud-scheduler,https://www.googleapis.com/auth/doubleclickbidmanager
 ```
 
@@ -124,13 +124,13 @@ gcloud auth application-default login --scopes=https://www.googleapis.com/auth/d
 Look at `env_variables.yaml` and set them to the correct values.
 
 **Start the server**:
-```
+``` bash
 cd app
 PATH="$PATH:/usr/lib/dart/bin" aqueduct serve
 ```
 
 **Running Tests**:
-```
+``` bash
 cd app
 PATH="$PATH:/usr/lib/dart/bin" pub run test  
 ```
@@ -139,7 +139,10 @@ PATH="$PATH:/usr/lib/dart/bin" pub run test
 
 **Deploying to App Engine**:
 
-Use `gcloud app deploy` to deploy to App Engine.
+Run the following command to deploy to App Engine:
+``` bash
+gcloud app deploy
+```
 
 ## License
 
