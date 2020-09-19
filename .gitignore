@@ -29,8 +29,8 @@ proto/lib/*.pb*.dart
 server/.buildlog
 server/.pub/
 server/build/
-server/packages
-server/.packages
+server/pkg
+server/app/.packages
 server/**/*.dart.js
 server/**/*.js_
 server/**/*.js.deps
@@ -38,7 +38,7 @@ server/**/*.js.map
 server/workspace.xml
 server/Dart_Packages.xml
 server/**/*.aqueduct.pid
-server/lib/proto
+server/pkg/proto
 server/.gcloudignore 
 server/Dockerfile
 server/app.yaml

@@ -1,9 +1,0 @@
-syntax = "proto2";
-package dv360_excel_plugin;
-
-// A message that represents a user creation request sent to the server.
-message CreateUserRequest {
-  // required
-  // The user's refresh token.
-  optional string refresh_token = 1;
-}

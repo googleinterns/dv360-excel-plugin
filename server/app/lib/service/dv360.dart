@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:aqueduct/aqueduct.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:googleapis/displayvideo/v1.dart';
 import 'package:http/http.dart';
@@ -24,6 +25,9 @@ class DisplayVideo360Client {
 
   /// The reporting API client.
   final ReportingClient _reportingClient;
+
+  /// Logger for the server.
+  final _logger = Logger('aqueduct');
 
   /// Creates an instance of [DisplayVideo360Client].
   DisplayVideo360Client(Client client, this._firestoreClient, String baseUrl)
@@ -134,11 +138,17 @@ class DisplayVideo360Client {
                   '${rule.action.runtimeType} is an invalid action runtime type.');
           }
         }
-      } on ApiRequestError catch (e) {
+      } on ApiRequestError catch (e, s) {
+        // Log the error.
+        _logger.severe('API Error', e, s);
+
         // If there is an API error, return the message returned by the API.
         return await _firestoreClient.logRunHistory(userId, ruleId, false,
             message: e.message);
-      } catch (e) {
+      } catch (e, s) {
+        // Log the error.
+        _logger.severe('Internal Error', e, s);
+
         // If there is another kind of exception, do not include the message.
         //
         // The messages we log should be user-friendly, actionable and

@@ -17,7 +17,7 @@ dependencies:
   encrypt: ^4.0.2
   mock_request: ^1.0.7
   proto:
-    path: ../proto
+    path: ../pkg/proto
 
 dev_dependencies:
   test: ^1.0.0
