@@ -55,6 +55,9 @@ class RootComponent implements OnInit {
   // Controls when to the show the sideload message in landing page.
   bool get showSideloadMessage => !_isExcelEnvironment;
 
+  // Loads the rules builder component if true.
+  bool isRulesBuilderView = false;
+
   final CredentialService _credential;
   final ExcelDart _excelDart;
 
