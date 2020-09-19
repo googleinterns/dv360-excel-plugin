@@ -11,6 +11,9 @@
 
 The server for the Excel rules builder plugin for [Display & Video 360](https://marketingplatform.google.com/about/display-video-360/). This project aims to allow users to create bulk automation and scheduled rules for DV360 line items. 
 
+![Rule Creator View](images/rule_creator.gif?raw=true)
+![Rule List View](images/rule_list_view.gif?raw=true)
+
 ## Dependencies
 
 **Install Dart**:
@@ -29,7 +32,7 @@ sudo apt-get install protobuf-compiler
 PATH="$PATH:/usr/lib/dart/bin" pub global activate protoc_plugin
 ```
 
-**Install dependencies**:
+**Install server dependencies**:
 ```
 cd app
 PATH="$PATH:/usr/lib/dart/bin" pub get 
