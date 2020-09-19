@@ -61,13 +61,13 @@ To optionally use Google Cloud Identity-Aware Proxy, set it up for your applicat
 
 If you have trouble using the web UI, try using the command line interface:
 ```
-gcloud alpha iap web enable --oauth2-client-id=*INSERT_CLIENT_ID*  --oauth2-client-secret=*INSERT_CLIENT_SECRET* --resource-type=app-engine
+gcloud alpha iap web enable --oauth2-client-id=INSERT_CLIENT_ID  --oauth2-client-secret=INSERT_CLIENT_SECRET --resource-type=app-engine
 ```
 
 Then, allow [CORS preflight](https://cloud.google.com/iap/docs/customizing#allowing_http_options_requests_cors_preflight): 
 
 ```
-gcloud iap settings set cors.json --project=*INSERT_PROJECT_ID* --resource-type=app-engine
+gcloud iap settings set cors.json --project=INSERT_PROJECT_ID --resource-type=app-engine
 ```
 
 cors.json:
@@ -81,6 +81,11 @@ cors.json:
 2. In `env_variables.yaml`, add the client ID, client, secret, refresh token encryption key, and the Google Cloud project ID (you can find this in the project info panel on the [console](https://console.cloud.google.com) where indicated.
 
 ## Running locally
+
+### Generate local ApplicationDefaultCredentials:
+```
+gcloud auth application-default login --scopes=https://www.googleapis.com/auth/datastore,https://www.googleapis.com/auth/cloud-platform,https://www.googleapis.com/auth/cloud-scheduler,https://www.googleapis.com/auth/doubleclickbidmanager
+```
 
 ### Set the environment variables
 Look at `env_variables.yaml` and set them to the correct values.
