@@ -1,18 +1,23 @@
 # Rules Builder Server 
 
+The server for the Excel rules builder plugin for [Display & Video 360](https://marketingplatform.google.com/about/display-video-360/). This project aims to allow users to create bulk automation and scheduled rules for DV360 line items. 
+
+<p align="center">
+  <img src="images/rule_list.png?raw=true" align="center" width="30%" height="30%" alt="List view">
+</p>
+
 ## Table of contents
-* [Introduction](#introduction)
+* [Overview](#overview)
 * [Dependencies](#dependencies)
 * [Setup](#setup)
 * [Running Locally](#running-locally)
 * [Deploying to Google Cloud App Engine](#deploying-to-google-cloud-app-engine)
 
-## Introduction
+## Overview
 
-The server for the Excel rules builder plugin for [Display & Video 360](https://marketingplatform.google.com/about/display-video-360/). This project aims to allow users to create bulk automation and scheduled rules for DV360 line items. 
-
-![Rule Creator View](images/rule_creator.gif?raw=true)
-![Rule List View](images/rule_list_view.gif?raw=true)
+<p align="center">
+  <img src="images/overview.png?raw=true" align="center" width="80%" height="80%" alt="Overview">
+</p>
 
 ## Dependencies
 
