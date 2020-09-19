@@ -1,10 +1,14 @@
-# Rules Builder Server 
+# Rules Builder Server
 
-The server for the Excel rules builder plugin for [Display & Video 360](https://marketingplatform.google.com/about/display-video-360/). This project aims to allow users to create bulk automation and scheduled rules for DV360 line items. 
+ [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://choosealicense.com/licenses/apache-2.0/)
+ ![](https://github.com/googleinterns/dv360-excel-plugin/workflows/Dart%20CI/badge.svg)
 
-<p align="center">
-  <img src="images/rule_list.png?raw=true" align="center" width="30%" height="30%" alt="List view">
-</p>
+A server for the Excel rules builder plugin for [Display & Video 360](https://marketingplatform.google.com/about/display-video-360/). This project aims to allow users to create bulk automation and scheduled rules for DV360 line items. 
+
+**Supported rule types**:
+1. Activate/Pause line items
+2. Change bidding strategy for line items
+3. Duplicate line items
 
 ## Table of contents
 * [Overview](#overview)
@@ -12,6 +16,7 @@ The server for the Excel rules builder plugin for [Display & Video 360](https://
 * [Setup](#setup)
 * [Running Locally](#running-locally)
 * [Deploying to Google Cloud App Engine](#deploying-to-google-cloud-app-engine)
+* [License](#license)
 
 ## Overview
 
@@ -135,3 +140,7 @@ PATH="$PATH:/usr/lib/dart/bin" pub run test
 **Deploying to App Engine**:
 
 Use `gcloud app deploy` to deploy to App Engine.
+
+## License
+
+[Apache License 2.0](https://choosealicense.com/licenses/apache-2.0/)
