@@ -5,7 +5,6 @@ import 'package:mock_request/mock_request.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
-import 'package:proto/create_rule_request.pb.dart';
 import 'package:proto/rule.pb.dart' as proto;
 import 'package:server/controller/rule_controller.dart';
 import 'package:server/service/firestore.dart';
@@ -37,7 +36,6 @@ Future<void> main() async {
       ..lineItemScopeParams = (proto.LineItemScopeParams()
         ..lineItemIds.add(Int64(12345))
         ..advertiserId = Int64(67890)));
-  final createRuleRequest = CreateRuleRequest()..rule = rule;
 
   // Sets up the mock Firestore client, Scheduler client and rule controller.
   final mockFirestoreClient = MockFirestoreClient();
@@ -61,8 +59,7 @@ Future<void> main() async {
           MockHttpRequest('POST', Uri.parse('/rules'))
             ..headers.add('Content-Type', 'application/x-protobuf')
             ..headers.add('Authorization', 'Bearer $idToken'));
-      response =
-          await ruleController.createRule(createRuleRequest.writeToBuffer());
+      response = await ruleController.createRule(rule.writeToBuffer());
       ruleWithId = rule.clone()..id = ruleId;
     });
 
@@ -89,7 +86,7 @@ Future<void> main() async {
 
     test('throws an ArgumentError if Authorization header missing', () async {
       Future<void> actual() async {
-        await ruleController.createRule(createRuleRequest.writeToBuffer());
+        await ruleController.createRule(ruleWithId.writeToBuffer());
       }
 
       expect(actual, throwsA(const TypeMatcher<ArgumentError>()));

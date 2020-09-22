@@ -67,9 +67,11 @@ void main() {
       final ruleAsDocument = rule.toDocument();
       ruleAsDocument.name = documentName;
 
+      mockFirestoreServer.queueResponse(Response.ok({}));
       mockFirestoreServer.queueResponse(Response.ok(ruleAsDocument.toJson()));
 
       returnedString = await firestoreClient.createRule(userId, rule);
+      await mockFirestoreServer.next();
       request = await mockFirestoreServer.next();
     });
 
