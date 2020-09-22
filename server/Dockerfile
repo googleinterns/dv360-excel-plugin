@@ -1,5 +1,10 @@
-FROM google/dart-runtime
+FROM google/dart-runtime-base
 
-EXPOSE 8080
+WORKDIR /server/app
 
-ENV GOOGLE_CLOUD_PROJECT INSERT_PROJECT_NAME_HERE
+ADD pkg/proto/pubspec.yaml /server/pkg/proto/
+
+ADD app/pubspec.* /server/app/
+RUN pub get
+ADD . /server
+RUN pub get --offline
