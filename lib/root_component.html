@@ -60,9 +60,9 @@
         </bs-tabx>
 
         <!-- rules builder-->
-        <bs-tabx header="{{rulesBuilderTabName}}">
+        <bs-tabx (select)="isRulesBuilderView=true" header="{{rulesBuilderTabName}}">
             <div class="jumbotron d-flex align-items-center">
-                <div class="container-fluid">
+                <div *ngIf="isRulesBuilderView" class="container-fluid">
                     <!-- rule component-->
                     <rule></rule>
                     <!-- sign off button-->
